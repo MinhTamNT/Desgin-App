@@ -2,9 +2,15 @@ import React, { useState } from "react";
 import { Avatar, IconButton, Menu, MenuItem } from "@mui/material";
 import { ArrowDropDown } from "@mui/icons-material";
 import { FaUser, FaCog, FaSignOutAlt } from "react-icons/fa"; // Biểu tượng từ react-icons
+import { useSelector } from "react-redux";
+import { RootState } from "../Redux/store";
 
 export const Header = () => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const user = useSelector(
+    (state: RootState) => state?.user?.user?.user?.currentUser
+  );
+  console.log(user);
   const open = Boolean(anchorEl);
 
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
@@ -33,7 +39,7 @@ export const Header = () => {
           size="small"
         >
           <Avatar
-            src="https://via.placeholder.com/40"
+            src={user?.picture}
             alt="Profile Picture"
             sx={{ width: 40, height: 40 }}
           />
