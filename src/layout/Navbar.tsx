@@ -1,11 +1,5 @@
+import { FaHome, FaProjectDiagram } from "react-icons/fa";
 import { image } from "../assets/image/image";
-import {
-  FaHome,
-  FaProjectDiagram,
-  FaUser,
-  FaCog,
-  FaSignOutAlt,
-} from "react-icons/fa";
 
 const recentItems = [
   { id: "1", name: "Project Alpha" },
