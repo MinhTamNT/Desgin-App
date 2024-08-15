@@ -24,7 +24,10 @@ const dummyProjects = [
 ];
 
 export const Home = () => {
-  const user = useSelector((state: RootState) => state?.user?.user);
+  const user = useSelector(
+    (state: RootState) => state?.user?.user?.currentUser
+  );
+  console.log(user);
 
   const projects = user?.projects || dummyProjects;
 

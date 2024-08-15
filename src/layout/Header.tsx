@@ -8,9 +8,8 @@ import { RootState } from "../Redux/store";
 export const Header = () => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const user = useSelector(
-    (state: RootState) => state?.user?.user?.user?.currentUser
+    (state: RootState) => state?.user?.user?.currentUser
   );
-  console.log(user);
   const open = Boolean(anchorEl);
 
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {

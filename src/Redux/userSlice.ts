@@ -2,19 +2,15 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { User } from "../lib/interface";
 
 interface UserState {
-  user: {
-    currentUser: User | null;
-    pending: boolean;
-    error: boolean;
-  };
+  currentUser: User | null;
+  pending: boolean;
+  error: boolean;
 }
 
 const initialState: UserState = {
-  user: {
-    currentUser: null, // Initialize currentUser as null
-    pending: false, // Initialize pending as false
-    error: false, // Initialize error as false
-  },
+  currentUser: null, // Initialize currentUser as null
+  pending: false, // Initialize pending as false
+  error: false, // Initialize error as false
 };
 
 const userSlice = createSlice({
@@ -22,22 +18,22 @@ const userSlice = createSlice({
   initialState,
   reducers: {
     setUser: (state, action: PayloadAction<User | null>) => {
-      state.user.currentUser = action.payload;
-      state.user.pending = false;
-      state.user.error = false;
+      state.currentUser = action.payload;
+      state.pending = false;
+      state.error = false;
     },
     setPending: (state) => {
-      state.user.pending = true;
-      state.user.error = false;
+      state.pending = true;
+      state.error = false;
     },
     setError: (state) => {
-      state.user.pending = false;
-      state.user.error = true;
+      state.pending = false;
+      state.error = true;
     },
     clearUser: (state) => {
-      state.user.currentUser = null;
-      state.user.pending = false;
-      state.user.error = false;
+      state.currentUser = null;
+      state.pending = false;
+      state.error = false;
     },
   },
 });

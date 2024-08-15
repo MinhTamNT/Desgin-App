@@ -1,9 +1,11 @@
-import { useEffect, useRef } from "react";
 import { fabric } from "fabric";
-import Room from "../../components/Room/Room";
+import { useEffect, useRef } from "react";
 import { Live } from "../../components/Live/Live";
+import Room from "../../components/Room/Room";
+import NavbarProject from "../../layout/Project/NavbarProject";
 export const Project = () => {
   const canvanRef = useRef(null);
+
   useEffect(() => {
     const canvas = new fabric.Canvas(canvanRef.current);
     const test = new fabric.Rect({
@@ -20,9 +22,12 @@ export const Project = () => {
   }, []);
   return (
     <Room>
-      <div>
-        <Live />
-      </div>
+      <main className="h-screen overflow-hidden">
+        <NavbarProject activeElement={""} />
+        <section className="flex h-full flex-row">
+          <Live />
+        </section>
+      </main>
     </Room>
   );
 };

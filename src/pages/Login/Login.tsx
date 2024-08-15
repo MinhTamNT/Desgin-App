@@ -2,7 +2,7 @@ import { GoogleLogin } from "@react-oauth/google";
 import React from "react";
 import { useCookies } from "react-cookie";
 import { useDispatch } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { setError, setUser } from "../../Redux/userSlice";
 import { jwtDecode } from "jwt-decode";
 import { User } from "../../lib/interface";
@@ -85,9 +85,9 @@ const Login: React.FC = () => {
             features and a user-friendly interface. Explore our features and see
             how we can help you achieve your goals.
           </p>
-          <a href="/" className="text-blue-600 hover:underline font-semibold">
+          <Link to="/" className="text-blue-600 hover:underline font-semibold">
             Learn More
-          </a>
+          </Link>
         </div>
       </footer>
     </div>

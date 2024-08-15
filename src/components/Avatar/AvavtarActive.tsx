@@ -1,28 +1,48 @@
-import { useOthers, useSelf } from "@liveblocks/react";
+import { useOthers, useUpdateMyPresence } from "@liveblocks/react";
+import { useEffect } from "react";
+import { useSelector } from "react-redux";
+import { RootState } from "../../Redux/store";
 import { Avatar } from "./Avatar";
 
 export const ActiveUser = () => {
   const users = useOthers();
-  const currentUser = useSelf();
+  const currentUser = useSelector(
+    (state: RootState) => state?.user?.user?.currentUser
+  );
+  console.log(users);
   const hasMoreUsers = users.length > 3;
+  const updateMyPresence = useUpdateMyPresence();
 
+  useEffect(() => {
+    if (currentUser) {
+      updateMyPresence({
+        name: currentUser.name,
+        picture: currentUser.picture,
+      });
+    }
+  }, [currentUser, updateMyPresence]);
+  console.log(users);
   return (
-    <main className="flex h-screen w-full select-none place-content-center place-items-center">
+    <main className="flex items-center h-[60px] justify-center gap-1 py-2">
       <div className="flex pl-3">
-        {users.slice(0, 3).map(({ connectionId, info }) => {
+        {currentUser && (
+          <Avatar name={currentUser?.name} src={currentUser?.picture} />
+        )}
+        {users.slice(0, 3).map((user) => {
           return (
-            <Avatar key={connectionId} src={info.avatar} name={info.name} />
+            <Avatar
+              key={user.connectionId}
+              src={user.presence?.picture as string}
+              name={user.presence?.name as string}
+            />
           );
         })}
-
-        {hasMoreUsers && <div className={styles.more}>+{users.length - 3}</div>}
-
-        {currentUser && (
-          <div className="relative ml-8 first:ml-0">
-            <Avatar src={currentUser.info.avatar} name="You" />
-          </div>
-        )}
       </div>
+      {hasMoreUsers && (
+        <div className="pl-3">
+          <span>+{users.length - 3} more</span>
+        </div>
+      )}
     </main>
   );
 };
