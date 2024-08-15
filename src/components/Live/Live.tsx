@@ -4,20 +4,23 @@ import {
   useMyPresence,
   useOthers,
 } from "@liveblocks/react/suspense";
-import { LiveCursor } from "../Cursor/LiveCursor";
 import React, { useCallback, useEffect, useState } from "react";
-import { CursorChat } from "../Cursor/CursorChat";
+import { useInterval } from "../../hook/useInterval";
 import {
   CursorMode,
   CursorState,
   Reaction,
   ReactionEvent,
 } from "../../type/type";
-import ReactionSelector from "../Reaction/ReactionButton";
+import { CursorChat } from "../Cursor/CursorChat";
+import { LiveCursor } from "../Cursor/LiveCursor";
 import FlyingReaction from "../Reaction/FlyingReact";
-import { useInterval } from "../../hook/useInterval";
+import ReactionSelector from "../Reaction/ReactionButton";
+interface Props {
+  canvasRef: React.MutableRefObject<HTMLCanvasElement | null>;
+}
 
-export const Live = () => {
+export const Live = ({ canvasRef }: Props) => {
   const others = useOthers();
   const [{ cursor }, updatePersence] = useMyPresence() as any;
   const [cursorState, setCursorState] = useState<CursorState>({
@@ -152,12 +155,14 @@ export const Live = () => {
 
   return (
     <div
+      id="canvas"
       onPointerMove={handlePointterMove}
       onPointerLeave={handlePointterLeave}
       onPointerDown={handlePointterDown}
       onPointerUp={handlePointerUp}
       className="border-red-400 w-full min-h-screen"
     >
+      <canvas ref={canvasRef} />
       {reactions.map((reaction) => (
         <FlyingReaction
           key={reaction.timestamp.toString()}
