@@ -27,7 +27,7 @@ const Login: React.FC = () => {
             name: newUser?.name,
             roleId: 2,
             profilePicture: newUser?.picture,
-            uuid: newUser?.sub,
+            idUser: newUser?.sub,
           },
         });
         navigate("/");

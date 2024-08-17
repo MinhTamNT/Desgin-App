@@ -1,19 +1,20 @@
 import { gql } from "@apollo/client";
 
 const ADD_USER = gql`
-  mutation AddUser(
+  mutation Mutation(
+    $idUser: String!
     $name: String!
     $roleId: Int!
     $profilePicture: String
-    $uuid: String
   ) {
     addUser(
+      idUser: $idUser
       name: $name
       roleId: $roleId
       profilePicture: $profilePicture
-      uuid: $uuid
     ) {
-      idUser
+      createdAt
+      updatedAt
     }
   }
 `;

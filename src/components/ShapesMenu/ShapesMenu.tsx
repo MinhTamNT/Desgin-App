@@ -1,13 +1,11 @@
 "use client";
 
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from "../Menu/dropdown-menu";
+import React from "react";
+import Menu from "@mui/material/Menu";
+import ListItem from "@mui/material/ListItem";
+import Button from "@mui/material/Button";
 import { ShapesMenuProps } from "../../type/type";
-import { Button } from "../Button/Button";
-import Rectangle from "../../assets/rectangle.svg";
+
 const ShapesMenu = ({
   item,
   activeElement,
@@ -15,64 +13,83 @@ const ShapesMenu = ({
   handleImageUpload,
   imageInputRef,
 }: ShapesMenuProps) => {
+  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+
+  const handleClick = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
   const isDropdownElem = item.value.some(
     (elem) => elem?.value === activeElement.value
   );
-  console.log(item);
+
   return (
     <>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild className="no-ring">
-          <Button
-            className="relative h-5 w-5 object-contain"
-            onClick={() => handleActiveElement(item)}
+      <Button
+        onClick={handleClick}
+        className="relative h-10 w-10 object-contain"
+        variant="contained"
+      >
+        <img
+          src={isDropdownElem ? activeElement.icon : item.icon}
+          alt={item.name}
+          className={isDropdownElem ? "invert" : ""}
+        />
+      </Button>
+      <Menu
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={handleClose}
+        sx={{
+          "& .MuiPaper-root": {
+            backgroundColor: "#333",
+            color: "#fff",
+            minWidth: "150px",
+          },
+        }}
+      >
+        {item.value.map((elem) => (
+          <ListItem
+            button
+            key={elem?.name}
+            sx={{
+              backgroundColor:
+                activeElement.value === elem?.value ? "#3f51b5" : "#333",
+              color: activeElement.value === elem?.value ? "#fff" : "#ddd",
+              "&:hover": {
+                backgroundColor: "#555",
+              },
+            }}
+            onClick={() => {
+              handleActiveElement(elem);
+              handleClose();
+            }}
+            selected={activeElement.value === elem?.value}
           >
             <img
-              src={isDropdownElem ? activeElement.icon : item.icon}
-              alt={item.name}
-              className={isDropdownElem ? "invert" : ""}
+              src={elem?.icon}
+              alt={elem?.name}
+              width={20}
+              height={20}
+              className={activeElement.value === elem?.value ? "invert" : ""}
+              style={{ marginRight: "8px" }}
             />
-          </Button>
-        </DropdownMenuTrigger>
-
-        <DropdownMenuContent className="mt-5 flex flex-col gap-y-1 border-none bg-primary-black py-4 text-white">
-          {item.value.map((elem) => (
-            <Button
-              key={elem?.name}
-              onClick={() => {
-                handleActiveElement(elem);
-              }}
-              className={`flex h-fit justify-between gap-10 rounded-none px-5 py-3 focus:border-none ${
+            <p
+              className={`text-sm ${
                 activeElement.value === elem?.value
-                  ? "bg-primary-green"
-                  : "hover:bg-primary-grey-200"
+                  ? "text-primary-black"
+                  : "text-white"
               }`}
             >
-              <div className="group flex items-center gap-2">
-                <img
-                  src={elem?.icon as string}
-                  alt={elem?.name as string}
-                  width={20}
-                  height={20}
-                  className={
-                    activeElement.value === elem?.value ? "invert" : ""
-                  }
-                />
-                <p
-                  className={`text-sm  ${
-                    activeElement.value === elem?.value
-                      ? "text-primary-black"
-                      : "text-white"
-                  }`}
-                >
-                  {elem?.name}
-                </p>
-              </div>
-            </Button>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
-
+              {elem?.name}
+            </p>
+          </ListItem>
+        ))}
+      </Menu>
       <input
         type="file"
         className="hidden"

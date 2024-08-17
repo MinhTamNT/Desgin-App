@@ -1,19 +1,18 @@
 import { useState } from "react";
 import { GoPlus } from "react-icons/go";
-import { User } from "../lib/interface"; // Assume you have a User interface defined
+import { User } from "../lib/interface";
 import ProjectList from "../components/ListProject/ListProject";
-
-// Sample user data - replace with your actual data source
-const sampleUsers: any[] = [
-  { id: "1", name: "John Doe" },
-  { id: "2", name: "Jane Smith" },
-  { id: "3", name: "Alice Johnson" },
-  { id: "4", name: "Bob Brown" },
-];
+import { useMutation, useQuery } from "@apollo/client";
+import { ADD_PROJECT, GET_PROJECT } from "../utils/Project/Project";
 
 interface Project {
-  id: string;
+  idProject: string;
   name: string;
+  description: string;
+  createdAt: string;
+  updatedAt: string;
+  access: string;
+  is_host_user: boolean;
 }
 
 export const Sidebar = () => {
@@ -23,11 +22,15 @@ export const Sidebar = () => {
   const [step, setStep] = useState<"details" | "invite">("details");
   const [selectedMembers, setSelectedMembers] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [projects, setProjects] = useState<Project[]>([
-    { id: "1", name: "Project Alpha" },
-    { id: "2", name: "Project Beta" },
-    { id: "3", name: "Project Gamma" },
-  ]);
+
+  const { data, refetch } = useQuery<{ getUserProjects: Project[] }>(
+    GET_PROJECT
+  );
+  const projects = data?.getUserProjects || [];
+
+  const [createProject] = useMutation(ADD_PROJECT, {
+    onCompleted: () => refetch(),
+  });
 
   const handleClickOpen = () => {
     setOpen(true);
@@ -50,18 +53,23 @@ export const Sidebar = () => {
     }
   };
 
-  const handleCreateProject = () => {
-    console.log("Project Created:", {
-      name: projectName,
-      description: projectDescription,
-      members: selectedMembers,
-    });
-    handleClose();
+  const handleCreateProject = async () => {
+    try {
+      await createProject({
+        variables: {
+          name: projectName,
+          description: projectDescription,
+        },
+      });
+      handleClose();
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   const handleAddMember = (user: User) => {
     setSelectedMembers((prev) => [...prev, user]);
-    setSearchQuery(""); // Clear search query after adding
+    setSearchQuery("");
   };
 
   const handleSelectProject = (projectId: string) => {

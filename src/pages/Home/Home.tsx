@@ -27,13 +27,11 @@ export const Home = () => {
   const user = useSelector(
     (state: RootState) => state?.user?.user?.currentUser
   );
-  console.log(user);
 
   const projects = user?.projects || dummyProjects;
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Hero Section */}
       <section className="relative text-white py-24 overflow-hidden">
         <video
           autoPlay
