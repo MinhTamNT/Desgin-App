@@ -17,7 +17,7 @@ const publicKey = import.meta.env.VITE_LIVE_BLOCK;
 export const AuthLayout: React.FC = () => {
   const location = useLocation();
   const isLoginPage = location.pathname === "/auth";
-  const isProjectPage = location.pathname === "/project";
+  const isProjectPage = location.pathname.startsWith("/project/");
   const client = createApolloClient();
 
   return (

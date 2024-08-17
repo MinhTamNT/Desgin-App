@@ -27,7 +27,6 @@ export const Home = () => {
   const user = useSelector(
     (state: RootState) => state?.user?.user?.currentUser
   );
-
   const projects = user?.projects || dummyProjects;
 
   return (

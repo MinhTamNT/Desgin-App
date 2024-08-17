@@ -4,6 +4,7 @@ import { User } from "../lib/interface";
 import ProjectList from "../components/ListProject/ListProject";
 import { useMutation, useQuery } from "@apollo/client";
 import { ADD_PROJECT, GET_PROJECT } from "../utils/Project/Project";
+import { useNavigate } from "react-router-dom";
 
 interface Project {
   idProject: string;
@@ -22,7 +23,7 @@ export const Sidebar = () => {
   const [step, setStep] = useState<"details" | "invite">("details");
   const [selectedMembers, setSelectedMembers] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-
+  const navigate = useNavigate();
   const { data, refetch } = useQuery<{ getUserProjects: Project[] }>(
     GET_PROJECT
   );
@@ -74,6 +75,7 @@ export const Sidebar = () => {
 
   const handleSelectProject = (projectId: string) => {
     console.log("Selected Project ID:", projectId);
+    navigate(`/project/${projectId}`);
   };
 
   return (

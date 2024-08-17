@@ -18,7 +18,7 @@ export default createBrowserRouter([
       },
       {
         element: <Project />,
-        path: "/project",
+        path: `/project/:idProject`,
       },
     ],
   },

@@ -11,8 +11,10 @@ import {
   initializeFabric,
 } from "../../lib/cavans";
 import { ActiveElement } from "../../type/type";
+import { useParams } from "react-router-dom";
 
 export const Project = () => {
+  const { idProject } = useParams();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fabricRef = useRef<fabric.Canvas | null>(null);
   const isDrawing = useRef(false);
@@ -54,7 +56,7 @@ export const Project = () => {
   }, []);
 
   return (
-    <Room>
+    <Room idRoom={idProject ?? ""}>
       <main className="h-screen overflow-hidden">
         <NavbarProject
           activeElement={activeElement}

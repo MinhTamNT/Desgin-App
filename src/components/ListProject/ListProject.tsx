@@ -20,7 +20,7 @@ const ProjectList: React.FC<ProjectListProps> = ({
           <li
             key={project.idProject}
             className="bg-gray-100 border border-gray-300 rounded-md px-4 py-2 cursor-pointer hover:bg-gray-200"
-            onClick={() => onSelectProject(project.id)}
+            onClick={() => onSelectProject(project.idProject)}
           >
             {capitalizeFirstLetter(project.name)}
           </li>

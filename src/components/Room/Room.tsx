@@ -9,10 +9,10 @@ interface RoomProp {
   idRoom: string;
 }
 
-const Room = ({ children }: { children: React.ReactNode }) => {
+const Room = ({ children, idRoom }: RoomProp) => {
   return (
     <RoomProvider
-      id="fig-room"
+      id={idRoom}
       initialPresence={{ cursor: null, cursorColor: null, editingText: null }}
       initialStorage={{
         canvasObjects: new LiveMap(),
