@@ -1,8 +1,9 @@
 export interface User {
+  idUser: string;
   sub: string;
   name: string;
   email: string;
-  picture: string;
+  profilePicture: string;
   exp: Date;
   iat: Date;
 }

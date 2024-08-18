@@ -34,7 +34,7 @@ const NavbarProject = ({ activeElement }: NavbarProps) => {
       <nav className="flex select-none items-center justify-between gap-4 bg-[#2c2c2c] shadow-md px-5 text-black">
         <button
           onClick={handleOpenDialog}
-          className="bg-blue-500 uppercase flex items-center hover:bg-blue-700 text-white font-bold lg:py-2 lg:px-4 p-2 rounded shadow-md transition duration-300 ease-in-out transform hover:-translate-y-1 hover:scale-110"
+          className="bg-blue-500 uppercase flex items-center hover:bg-blue-700 text-white font-bold lg:py-2 lg:px-4 rounded shadow-md transition duration-300 ease-in-out transform hover:-translate-y-1 hover:scale-110"
         >
           <GoPlus size={24} />
           Invite member

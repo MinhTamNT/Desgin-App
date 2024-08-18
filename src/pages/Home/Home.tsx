@@ -1,3 +1,4 @@
+import React from "react";
 import { useQuery } from "@apollo/client";
 import { useSelector } from "react-redux";
 import { RootState } from "../../Redux/store";
@@ -5,24 +6,30 @@ import { Project } from "../../lib/interface";
 import { GET_PROJECT } from "../../utils/Project/Project";
 import { dummyImages } from "../../assets/randomImage";
 import { RiEdit2Line } from "react-icons/ri";
+import { useNavigate } from "react-router-dom";
 
-export const Home = () => {
+export const Home: React.FC = () => {
   const user = useSelector(
     (state: RootState) => state?.user?.user?.currentUser
   );
 
-  const { data, loading, error, refetch } = useQuery<{
-    getUserProjects: Project[];
-  }>(GET_PROJECT);
+  // Fetch projects using the query
+  const { data, loading, error } = useQuery<{ getUserProjects: Project[] }>(
+    GET_PROJECT
+  );
 
+  // Navigate function
+  const navigate = useNavigate();
+
+  // Handle loading and error states
   if (loading) return <p>Loading...</p>;
   if (error) return <p>Error: {error.message}</p>;
 
-  const projects =
-    data?.getUserProjects.map((project) => ({
-      ...project,
-      image: dummyImages[Math.floor(Math.random() * dummyImages.length)],
-    })) || [];
+  // Prepare projects data
+  const projects = (data?.getUserProjects || []).map((project) => ({
+    ...project,
+    image: dummyImages[Math.floor(Math.random() * dummyImages.length)],
+  }));
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -65,7 +72,10 @@ export const Home = () => {
                 />
                 <h3 className="text-xl font-semibold mb-4">{project.name}</h3>
                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black bg-opacity-60 rounded-lg">
-                  <button className="bg-teal-600 flex items-center text-white py-2 px-4 rounded-full shadow-lg hover:bg-teal-700 transition-colors duration-300">
+                  <button
+                    onClick={() => navigate(`/project/${project.idProject}`)}
+                    className="bg-teal-600 flex items-center text-white py-2 px-4 rounded-full shadow-lg hover:bg-teal-700 transition-colors duration-300"
+                  >
                     Edit
                     <RiEdit2Line size={24} />
                   </button>

@@ -18,6 +18,8 @@ import {
 import { SEARCH_USER } from "../../utils/User/User";
 import { User } from "../../lib/interface";
 import { useLazyQuery } from "@apollo/client";
+import { useSelector } from "react-redux";
+import { RootState } from "../../Redux/store";
 
 interface DialogSearchProps {
   open: boolean;
@@ -35,6 +37,9 @@ const DialogSearch: React.FC<DialogSearchProps> = ({
   const [searchUser, { loading, data }] = useLazyQuery<{
     searchUserByName: User[];
   }>(SEARCH_USER);
+  const currentUser = useSelector(
+    (state: RootState) => state?.user?.user?.currentUser
+  );
 
   useEffect(() => {
     if (searchTerm) {
@@ -59,13 +64,8 @@ const DialogSearch: React.FC<DialogSearchProps> = ({
 
   return (
     <Dialog open={open} onClose={onClose}>
-      <DialogTitle
-        style={{ fontSize: "1.25rem", fontWeight: "bold", padding: "16px" }}
-        className="ldg:w-[500px] w-full"
-      >
-        Search User
-      </DialogTitle>
-      <DialogContent style={{ padding: "16px", paddingBottom: 0 }}>
+      <DialogTitle className="text-xl font-bold p-4">Search User</DialogTitle>
+      <DialogContent className="p-4">
         <TextField
           autoFocus
           margin="dense"
@@ -76,46 +76,42 @@ const DialogSearch: React.FC<DialogSearchProps> = ({
           onChange={(e) => setSearchTerm(e.target.value)}
           className="mb-4"
           variant="outlined"
-          style={{ marginBottom: "16px" }}
         />
-        {loading && (
-          <CircularProgress style={{ display: "block", margin: "16px auto" }} />
-        )}
+        {loading && <CircularProgress className="block mx-auto my-4" />}
         <List>
-          {data?.searchUserByName?.map((user) => (
-            <ListItem
-              key={user.sub}
-              onClick={() => handleSelectUser(user)}
-              selected={!!selectedUsers.find((u) => u.sub === user.sub)}
-              style={{
-                marginBottom: "8px",
-                border: "1px solid #e0e0e0",
-                borderRadius: "8px",
-                transition: "background-color 0.3s",
-              }}
-            >
-              <ListItemAvatar>
-                <Avatar src={user.picture} />
-              </ListItemAvatar>
-              <ListItemText primary={user.name} secondary={user.email} />
-              <ListItemSecondaryAction>
-                <Checkbox
-                  edge="end"
-                  checked={!!selectedUsers.find((u) => u.sub === user.sub)}
-                  tabIndex={-1}
-                  disableRipple
-                />
-              </ListItemSecondaryAction>
-            </ListItem>
-          ))}
+          {searchTerm.length > 0 && (
+            <>
+              {data?.searchUserByName
+                ?.filter((user) => user.idUser !== currentUser?.sub) // Filter out the current user
+                .map((user) => (
+                  <ListItem
+                    key={user.idUser}
+                    onClick={() => handleSelectUser(user)}
+                    selected={!!selectedUsers.find((u) => u.sub === user.sub)}
+                    className="mb-2 border border-gray-300 rounded-lg transition-colors hover:bg-gray-100"
+                  >
+                    <ListItemAvatar>
+                      <Avatar src={user.profilePicture} />
+                    </ListItemAvatar>
+                    <ListItemText primary={user.name} secondary={user.email} />
+                    <ListItemSecondaryAction>
+                      <Checkbox
+                        edge="end"
+                        checked={
+                          !!selectedUsers.find((u) => u.sub === user.sub)
+                        }
+                        tabIndex={-1}
+                        disableRipple
+                      />
+                    </ListItemSecondaryAction>
+                  </ListItem>
+                ))}
+            </>
+          )}
         </List>
       </DialogContent>
-      <DialogActions style={{ padding: "16px" }}>
-        <Button
-          onClick={onClose}
-          color="primary"
-          style={{ marginRight: "8px" }}
-        >
+      <DialogActions className="p-4">
+        <Button onClick={onClose} color="primary" className="mr-2">
           Cancel
         </Button>
         <Button onClick={handleInvite} color="primary" variant="contained">

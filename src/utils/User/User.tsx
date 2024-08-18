@@ -22,6 +22,7 @@ const ADD_USER = gql`
 const SEARCH_USER = gql`
   query SearchUserByName($searchText: String!) {
     searchUserByName(searchText: $searchText) {
+      idUser
       updatedAt
       profilePicture
       name
