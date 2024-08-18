@@ -1,20 +1,10 @@
 import { useState } from "react";
 import { GoPlus } from "react-icons/go";
-import { User } from "../lib/interface";
+import { Project, User } from "../lib/interface";
 import ProjectList from "../components/ListProject/ListProject";
 import { useMutation, useQuery } from "@apollo/client";
 import { ADD_PROJECT, GET_PROJECT } from "../utils/Project/Project";
 import { useNavigate } from "react-router-dom";
-
-interface Project {
-  idProject: string;
-  name: string;
-  description: string;
-  createdAt: string;
-  updatedAt: string;
-  access: string;
-  is_host_user: boolean;
-}
 
 export const Sidebar = () => {
   const [open, setOpen] = useState(false);

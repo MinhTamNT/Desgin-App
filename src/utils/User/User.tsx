@@ -19,4 +19,15 @@ const ADD_USER = gql`
   }
 `;
 
-export { ADD_USER };
+const SEARCH_USER = gql`
+  query SearchUserByName($searchText: String!) {
+    searchUserByName(searchText: $searchText) {
+      updatedAt
+      profilePicture
+      name
+      createdAt
+    }
+  }
+`;
+
+export { ADD_USER, SEARCH_USER };

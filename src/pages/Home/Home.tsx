@@ -1,33 +1,28 @@
+import { useQuery } from "@apollo/client";
 import { useSelector } from "react-redux";
 import { RootState } from "../../Redux/store";
-
-const dummyProjects = [
-  {
-    id: "1",
-    name: "Modern Web Design",
-    image:
-      "https://cdn.dribbble.com/userupload/14512098/file/original-6570865dd7c56b1961b54c5fa599d3b0.png?resize=1024x768",
-  },
-
-  {
-    id: "2",
-    name: "App Design Mockup",
-    image:
-      "https://cdn.dribbble.com/userupload/14584755/file/original-36ef3e6dd5d9c5f68df5039ed368f50c.png?resize=1024x768",
-  },
-  {
-    id: "3",
-    name: "Creative Workspace Setup",
-    image:
-      "https://cdn.dribbble.com/userupload/13028668/file/original-a9166bf7c9ca9544813928b26880462c.png?resize=1024x768",
-  },
-];
+import { Project } from "../../lib/interface";
+import { GET_PROJECT } from "../../utils/Project/Project";
+import { dummyImages } from "../../assets/randomImage";
+import { RiEdit2Line } from "react-icons/ri";
 
 export const Home = () => {
   const user = useSelector(
     (state: RootState) => state?.user?.user?.currentUser
   );
-  const projects = user?.projects || dummyProjects;
+
+  const { data, loading, error, refetch } = useQuery<{
+    getUserProjects: Project[];
+  }>(GET_PROJECT);
+
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p>Error: {error.message}</p>;
+
+  const projects =
+    data?.getUserProjects.map((project) => ({
+      ...project,
+      image: dummyImages[Math.floor(Math.random() * dummyImages.length)],
+    })) || [];
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -58,9 +53,9 @@ export const Home = () => {
             Your Creative Projects
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-12">
-            {projects.map((project: any) => (
+            {projects.map((project) => (
               <div
-                key={project.id}
+                key={project.idProject}
                 className="relative bg-white p-6 rounded-xl shadow-lg hover:shadow-2xl transition-shadow duration-300 group"
               >
                 <img
@@ -70,8 +65,9 @@ export const Home = () => {
                 />
                 <h3 className="text-xl font-semibold mb-4">{project.name}</h3>
                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black bg-opacity-60 rounded-lg">
-                  <button className="bg-teal-600 text-white py-2 px-4 rounded-full shadow-lg hover:bg-teal-700 transition-colors duration-300">
-                    View Details
+                  <button className="bg-teal-600 flex items-center text-white py-2 px-4 rounded-full shadow-lg hover:bg-teal-700 transition-colors duration-300">
+                    Edit
+                    <RiEdit2Line size={24} />
                   </button>
                 </div>
               </div>
