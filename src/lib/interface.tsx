@@ -17,3 +17,11 @@ export interface Project {
   access: string;
   is_host_user: Boolean;
 }
+
+export interface Notification {
+  idNotification: string;
+  message: string;
+  is_read: Boolean;
+  createdAt: Date;
+  userTaker: [User];
+}

@@ -26,8 +26,10 @@ const NavbarProject = ({ activeElement }: NavbarProps) => {
     setDialogOpen(false);
   };
 
-  const handleSelectUser = (user: User) => {
-    setSelectedUser(user);
+  const handleSelectUsers = (users: User[]) => {
+    if (users.length > 0) {
+      setSelectedUser(users[0]);
+    }
   };
   return (
     <>
@@ -74,7 +76,7 @@ const NavbarProject = ({ activeElement }: NavbarProps) => {
       <DialogSearch
         open={dialogOpen}
         onClose={handleCloseDialog}
-        onSelectUser={handleSelectUser}
+        onSelectUsers={handleSelectUsers}
       />
     </>
   );

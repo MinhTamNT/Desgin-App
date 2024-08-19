@@ -1,15 +1,45 @@
 import React, { useState } from "react";
 import { Avatar, IconButton, Menu, MenuItem, Badge } from "@mui/material";
-import { ArrowDropDown, Notifications as NotificationsIcon } from "@mui/icons-material";
+import {
+  ArrowDropDown,
+  Notifications as NotificationsIcon,
+} from "@mui/icons-material";
 import { FaUser, FaCog, FaSignOutAlt } from "react-icons/fa"; // Icons from react-icons
 import { useSelector } from "react-redux";
 import { RootState } from "../Redux/store";
+import { useQuery, useSubscription } from "@apollo/client";
+import {
+  GET_NOTIFICATION,
+  NOTIFICATION_SUBSCRIPTION,
+} from "../utils/Notify/Notify";
+
+const DEFAULT_IMAGE_URL =
+  "https://cdn.dribbble.com/userupload/15166587/file/original-cf8f815408f5908c3c2fe4b24d35af18.png?resize=1024x768";
 
 export const Header = () => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [notificationAnchorEl, setNotificationAnchorEl] = useState<null | HTMLElement>(null);
-  const user = useSelector((state: RootState) => state?.user?.user?.currentUser);
-  
+  const [notificationAnchorEl, setNotificationAnchorEl] =
+    useState<null | HTMLElement>(null);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  useQuery(GET_NOTIFICATION, {
+    onCompleted: (data) => {
+      setNotifications(data?.getNotificationsByUserId || []);
+    },
+  });
+  useSubscription(NOTIFICATION_SUBSCRIPTION, {
+    onSubscriptionData: ({ subscriptionData }) => {
+      if (subscriptionData?.data) {
+        setNotifications((prevNotifications) => [
+          ...prevNotifications,
+          subscriptionData.data.notificationCreated,
+        ]);
+      }
+    },
+  });
+  const user = useSelector(
+    (state: RootState) => state?.user?.user?.currentUser
+  );
+
   const open = Boolean(anchorEl);
   const openNotifications = Boolean(notificationAnchorEl);
 
@@ -26,6 +56,8 @@ export const Header = () => {
     setNotificationAnchorEl(null);
   };
 
+  const notificationCount = notifications.length;
+
   return (
     <header className="flex items-center justify-between p-5 shadow-lg bg-white">
       <div className="flex-1 hidden lg:flex lg:flex-1 rounded-lg">
@@ -38,14 +70,13 @@ export const Header = () => {
         </div>
       </div>
       <div className="flex items-center space-x-4">
-        {/* Notification Bell */}
         <IconButton
           onClick={handleNotificationClick}
           className="relative flex items-center"
           size="small"
         >
           <Badge
-            badgeContent={4} // Replace with dynamic value
+            badgeContent={notificationCount}
             color="secondary"
             className="text-gray-600"
           >
@@ -58,46 +89,54 @@ export const Header = () => {
           onClose={handleClose}
           PaperProps={{
             sx: {
-              width: "300px",
+              width: "400px",
               maxHeight: "400px",
             },
           }}
         >
-          <MenuItem
-            onClick={handleClose}
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              gap: "12px",
-              padding: "12px 16px",
-              fontSize: "14px",
-              transition: "background-color 0.3s",
-            }}
-          >
-            <div className="bg-blue-200 rounded-full w-8 h-8 flex items-center justify-center text-blue-600">
-              N
-            </div>
-            Notification 1
-          </MenuItem>
-          <MenuItem
-            onClick={handleClose}
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              gap: "12px",
-              padding: "12px 16px",
-              fontSize: "14px",
-              transition: "background-color 0.3s",
-            }}
-          >
-            <div className="bg-red-200 rounded-full w-8 h-8 flex items-center justify-center text-red-600">
-              N
-            </div>
-            Notification 2
-          </MenuItem>
+          {notificationCount > 0 ? (
+            notifications.map((notification: any) => (
+              <MenuItem
+                key={notification?.idNotification}
+                onClick={handleClose}
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "12px",
+                  padding: "12px 16px",
+                  fontSize: "14px",
+                  transition: "background-color 0.3s",
+                }}
+              >
+                <div className="bg-blue-200 rounded-full w-8 h-8 flex items-center justify-center text-blue-600">
+                  New
+                </div>
+                {notification?.message}
+              </MenuItem>
+            ))
+          ) : (
+            <MenuItem
+              onClick={handleClose}
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: "12px",
+                padding: "12px 16px",
+                fontSize: "14px",
+                transition: "background-color 0.3s",
+              }}
+            >
+              <img
+                src={DEFAULT_IMAGE_URL}
+                alt="No new notifications"
+                className="w-50 h-50 object-cover"
+              />
+              <p>No new notifications</p>
+            </MenuItem>
+          )}
         </Menu>
 
-        {/* User Menu */}
         <IconButton
           onClick={handleClick}
           className="flex items-center space-x-2"

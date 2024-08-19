@@ -17,9 +17,11 @@ import {
 } from "@mui/material";
 import { SEARCH_USER } from "../../utils/User/User";
 import { User } from "../../lib/interface";
-import { useLazyQuery } from "@apollo/client";
+import { useLazyQuery, useMutation } from "@apollo/client";
 import { useSelector } from "react-redux";
 import { RootState } from "../../Redux/store";
+import { INVITE_USER } from "../../utils/Inivitation/inivitaton";
+import { useParams } from "react-router-dom";
 
 interface DialogSearchProps {
   open: boolean;
@@ -32,8 +34,10 @@ const DialogSearch: React.FC<DialogSearchProps> = ({
   onClose,
   onSelectUsers,
 }) => {
+  const { idProject } = useParams();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedUsers, setSelectedUsers] = useState<User[]>([]);
+  const [InvitedUser] = useMutation(INVITE_USER);
   const [searchUser, { loading, data }] = useLazyQuery<{
     searchUserByName: User[];
   }>(SEARCH_USER);
@@ -57,9 +61,20 @@ const DialogSearch: React.FC<DialogSearchProps> = ({
     });
   };
 
-  const handleInvite = () => {
-    onSelectUsers(selectedUsers);
-    onClose();
+  const handleInvite = async () => {
+    try {
+      for (const user of selectedUsers) {
+        await InvitedUser({
+          variables: {
+            emailContent: `Invite ${user.name} to join the project`,
+            projectId: idProject,
+            userInvited: user?.idUser,
+          },
+        });
+      }
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   return (
