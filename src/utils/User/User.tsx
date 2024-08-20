@@ -1,19 +1,26 @@
 import { gql } from "@apollo/client";
 
 const ADD_USER = gql`
-  mutation Mutation(
+  mutation AddUser(
     $idUser: String!
     $name: String!
     $roleId: Int!
+    $email: String!
     $profilePicture: String
   ) {
     addUser(
       idUser: $idUser
       name: $name
       roleId: $roleId
+      email: $email
       profilePicture: $profilePicture
     ) {
       createdAt
+      email
+      idUser
+      name
+      profilePicture
+      roleId
       updatedAt
     }
   }

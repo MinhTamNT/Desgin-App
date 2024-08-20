@@ -6,17 +6,18 @@ export const GET_NOTIFICATION = gql`
       message
       is_read
       idNotification
+      createdAt
     }
   }
 `;
 
 export const NOTIFICATION_SUBSCRIPTION = gql`
-  subscription NotificationCreated {
+  subscription Subscription {
     notificationCreated {
       message
-      createdAt
-      idNotification
       is_read
+      idNotification
+      createdAt
     }
   }
 `;

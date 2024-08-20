@@ -4,7 +4,7 @@ import {
   ArrowDropDown,
   Notifications as NotificationsIcon,
 } from "@mui/icons-material";
-import { FaUser, FaCog, FaSignOutAlt } from "react-icons/fa"; // Icons from react-icons
+import { FaUser, FaCog, FaSignOutAlt } from "react-icons/fa";
 import { useSelector } from "react-redux";
 import { RootState } from "../Redux/store";
 import { useQuery, useSubscription } from "@apollo/client";
@@ -89,8 +89,8 @@ export const Header = () => {
           onClose={handleClose}
           PaperProps={{
             sx: {
-              width: "400px",
-              maxHeight: "400px",
+              width: "600px",
+              maxHeight: "500px",
             },
           }}
         >

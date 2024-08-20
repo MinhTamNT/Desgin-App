@@ -72,6 +72,8 @@ const DialogSearch: React.FC<DialogSearchProps> = ({
           },
         });
       }
+      onClose();
+      setSearchTerm("");
     } catch (error) {
       console.log(error);
     }
