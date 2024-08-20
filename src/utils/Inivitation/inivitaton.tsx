@@ -17,4 +17,18 @@ const INVITE_USER = gql`
     }
   }
 `;
-export { INVITE_USER };
+
+const UPDATE_INVITE = gql`
+  mutation Mutation($invitationIdInvitation: String!, $status: Status) {
+    updateInivitation(
+      invitation_idInvitation: $invitationIdInvitation
+      status: $status
+    ) {
+      Project_idProject
+      createdAt
+      idInvitation
+      email_content
+    }
+  }
+`;
+export { INVITE_USER, UPDATE_INVITE };

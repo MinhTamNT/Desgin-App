@@ -1,5 +1,13 @@
 import React, { useState } from "react";
-import { Avatar, IconButton, Menu, MenuItem, Badge } from "@mui/material";
+import {
+  Avatar,
+  IconButton,
+  Menu,
+  MenuItem,
+  Badge,
+  Box,
+  Typography,
+} from "@mui/material";
 import {
   ArrowDropDown,
   Notifications as NotificationsIcon,
@@ -7,11 +15,12 @@ import {
 import { FaUser, FaCog, FaSignOutAlt } from "react-icons/fa";
 import { useSelector } from "react-redux";
 import { RootState } from "../Redux/store";
-import { useQuery, useSubscription } from "@apollo/client";
+import { useMutation, useQuery, useSubscription } from "@apollo/client";
 import {
   GET_NOTIFICATION,
   NOTIFICATION_SUBSCRIPTION,
 } from "../utils/Notify/Notify";
+import { UPDATE_INVITE } from "../utils/Inivitation/inivitaton";
 
 const DEFAULT_IMAGE_URL =
   "https://cdn.dribbble.com/userupload/15166587/file/original-cf8f815408f5908c3c2fe4b24d35af18.png?resize=1024x768";
@@ -21,21 +30,32 @@ export const Header = () => {
   const [notificationAnchorEl, setNotificationAnchorEl] =
     useState<null | HTMLElement>(null);
   const [notifications, setNotifications] = useState<Notification[]>([]);
+
   useQuery(GET_NOTIFICATION, {
     onCompleted: (data) => {
-      setNotifications(data?.getNotificationsByUserId || []);
+      setNotifications(
+        data?.getNotificationsByUserId.filter(
+          (notification: any) => !notification.is_read
+        ) || []
+      );
     },
   });
+
   useSubscription(NOTIFICATION_SUBSCRIPTION, {
     onSubscriptionData: ({ subscriptionData }) => {
       if (subscriptionData?.data) {
-        setNotifications((prevNotifications) => [
-          ...prevNotifications,
-          subscriptionData.data.notificationCreated,
-        ]);
+        const newNotification = subscriptionData.data.notificationCreated;
+        if (!newNotification.is_read) {
+          setNotifications((prevNotifications) => [
+            ...prevNotifications,
+            newNotification,
+          ]);
+        }
       }
     },
   });
+
+  const [updateInvite] = useMutation(UPDATE_INVITE);
   const user = useSelector(
     (state: RootState) => state?.user?.user?.currentUser
   );
@@ -58,28 +78,37 @@ export const Header = () => {
 
   const notificationCount = notifications.length;
 
+  const handlerAccpetInivite = async (idInivite: string) => {
+    try {
+      await updateInvite({
+        variables: {
+          invitationIdInvitation: idInivite,
+          status: "ACCEPTED",
+        },
+      });
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   return (
-    <header className="flex items-center justify-between p-5 shadow-lg bg-white">
-      <div className="flex-1 hidden lg:flex lg:flex-1 rounded-lg">
-        <div className="w-full relative">
+    <header className="flex items-center justify-between p-4 shadow-md bg-white">
+      <div className="hidden lg:flex flex-1 rounded-lg">
+        <Box className="relative w-full max-w-lg">
           <input
             type="text"
             placeholder="Search..."
-            className="w-full max-w-[516px] p-2 rounded-lg border border-gray-300 placeholder-gray-600"
+            className="w-full p-2 rounded-lg border border-gray-300 placeholder-gray-600 focus:outline-none focus:border-blue-500"
           />
-        </div>
+        </Box>
       </div>
       <div className="flex items-center space-x-4">
         <IconButton
           onClick={handleNotificationClick}
-          className="relative flex items-center"
           size="small"
+          color="inherit"
         >
-          <Badge
-            badgeContent={notificationCount}
-            color="secondary"
-            className="text-gray-600"
-          >
+          <Badge badgeContent={notificationCount} color="error">
             <NotificationsIcon />
           </Badge>
         </IconButton>
@@ -89,8 +118,9 @@ export const Header = () => {
           onClose={handleClose}
           PaperProps={{
             sx: {
-              width: "600px",
-              maxHeight: "500px",
+              width: "550px",
+              maxHeight: "400px",
+              overflowY: "auto",
             },
           }}
         >
@@ -106,12 +136,33 @@ export const Header = () => {
                   padding: "12px 16px",
                   fontSize: "14px",
                   transition: "background-color 0.3s",
+                  "&:hover": {
+                    backgroundColor: "#f0f0f0",
+                  },
                 }}
               >
-                <div className="bg-blue-200 rounded-full w-8 h-8 flex items-center justify-center text-blue-600">
+                <Box className="bg-blue-200 rounded-full w-8 h-8 flex items-center justify-center text-blue-600">
                   New
-                </div>
-                {notification?.message}
+                </Box>
+                <Typography variant="body2">{notification?.message}</Typography>
+                {!notification?.is_read &&
+                  notification?.type === "INIVITED" && (
+                    <Box className="ml-auto flex gap-2">
+                      <button
+                        className="bg-green-300 p-1 rounded-md uppercase text-gray-800 hover:bg-green-400 transition"
+                        onClick={() =>
+                          handlerAccpetInivite(
+                            notification?.invitation_idInvitation
+                          )
+                        }
+                      >
+                        Accept
+                      </button>
+                      <button className="bg-red-300 p-1 rounded-md uppercase text-white hover:bg-red-400 transition">
+                        Reject
+                      </button>
+                    </Box>
+                  )}
               </MenuItem>
             ))
           ) : (
@@ -130,18 +181,13 @@ export const Header = () => {
               <img
                 src={DEFAULT_IMAGE_URL}
                 alt="No new notifications"
-                className="w-50 h-50 object-cover"
+                className="w-16 h-16 object-cover"
               />
-              <p>No new notifications</p>
+              <Typography variant="body2">No new notifications</Typography>
             </MenuItem>
           )}
         </Menu>
-
-        <IconButton
-          onClick={handleClick}
-          className="flex items-center space-x-2"
-          size="small"
-        >
+        <IconButton onClick={handleClick} size="small" color="inherit">
           <Avatar
             src={user?.picture}
             alt="Profile Picture"
@@ -168,10 +214,13 @@ export const Header = () => {
               padding: "12px 16px",
               fontSize: "14px",
               transition: "background-color 0.3s",
+              "&:hover": {
+                backgroundColor: "#f0f0f0",
+              },
             }}
           >
             <FaUser size={18} />
-            Profile
+            <Typography variant="body2">Profile</Typography>
           </MenuItem>
           <MenuItem
             onClick={handleClose}
@@ -189,7 +238,7 @@ export const Header = () => {
             }}
           >
             <FaCog size={18} />
-            Settings
+            <Typography variant="body2">Settings</Typography>
           </MenuItem>
           <MenuItem
             onClick={handleClose}
@@ -207,7 +256,7 @@ export const Header = () => {
             }}
           >
             <FaSignOutAlt size={18} />
-            Logout
+            <Typography variant="body2">Logout</Typography>
           </MenuItem>
         </Menu>
       </div>
