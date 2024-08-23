@@ -25,3 +25,9 @@ export interface Notification {
   createdAt: Date;
   userTaker: [User];
 }
+
+export interface Message {
+  conversationId: string;
+  sender: string;
+  text: string;
+}

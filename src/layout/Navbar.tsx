@@ -1,5 +1,6 @@
 import { FaHome, FaProjectDiagram } from "react-icons/fa";
 import { image } from "../assets/image/image";
+import { useNavigate } from "react-router-dom";
 
 const recentItems = [
   { id: "1", name: "Project Alpha" },
@@ -8,8 +9,9 @@ const recentItems = [
 ];
 
 export const Navbar = () => {
+  const navigate = useNavigate();
   const navigateTo = (path: string) => {
-    // history.push(path);
+    navigate(path);
   };
 
   return (
@@ -26,7 +28,7 @@ export const Navbar = () => {
           <span className="font-medium">Home</span>
         </div>
         <div
-          onClick={() => navigateTo("/projects")}
+          onClick={() => navigateTo("/conversation")}
           className="flex items-center shadow-md space-x-4 p-4 rounded-lg cursor-pointer hover:bg-gray-400 transition-colors duration-300"
         >
           <FaProjectDiagram size={24} className="text-gray-300" />
