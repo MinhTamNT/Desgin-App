@@ -20,20 +20,23 @@ export const Project = () => {
   const isDrawing = useRef(false);
   const shapeRef = useRef<fabric.Object | null>(null);
   const selectedShapeRef = useRef<string | null>("rectangle");
-  const [activeElement, setActiveElement] = useState<ActiveElement | any>({
+  const [activeElement, setActiveElement] = useState<ActiveElement>({
     name: "",
     value: "",
     icon: "",
   });
+
   const handleActiveElement = (element: ActiveElement) => {
     setActiveElement(element);
     selectedShapeRef.current = element?.value as string;
   };
+
   useEffect(() => {
     const canvas = initializeFabric({ canvasRef, fabricRef });
+
     if (canvas) {
+      console.log("cc");
       canvas.on("mouse:down", (options) => {
-        console.log("Mouse down event triggered"); // Thêm log để kiểm tra
         handleCanvasMouseDown({
           options,
           canvas,
@@ -42,18 +45,23 @@ export const Project = () => {
           shapeRef,
         });
       });
+
+      const handleResizeEvent = () => {
+        handleResize({ canvas: fabricRef.current });
+      };
+
+      window.addEventListener("resize", handleResizeEvent);
+
+      return () => {
+        window.removeEventListener("resize", handleResizeEvent);
+      };
+    } else {
+      console.log("Canvas not initialized");
     }
+  }, [canvasRef]);
 
-    const handleResizeEvent = () => {
-      handleResize({ canvas });
-    };
-
-    window.addEventListener("resize", handleResizeEvent);
-
-    return () => {
-      window.removeEventListener("resize", handleResizeEvent);
-    };
-  }, []);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {};
 
   return (
     <Room idRoom={idProject ?? ""}>
@@ -61,6 +69,8 @@ export const Project = () => {
         <NavbarProject
           activeElement={activeElement}
           handleActiveElement={handleActiveElement}
+          handleImageUpload={handleImageUpload}
+          imageInputRef={imageInputRef}
         />
         <section className="flex h-full flex-row">
           <LeftSidebar />

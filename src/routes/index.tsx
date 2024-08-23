@@ -3,6 +3,7 @@ import { AuthLayout } from "../layout/AuthLayout";
 import { Home } from "../pages/Home/Home";
 import Login from "../pages/Login/Login";
 import { Project } from "../pages/Project/Project";
+import { ProtectedRoute } from "./ProtectedRoute";
 
 export default createBrowserRouter([
   {
@@ -13,12 +14,17 @@ export default createBrowserRouter([
         path: "/auth/",
       },
       {
-        element: <Home />,
-        path: "/",
-      },
-      {
-        element: <Project />,
-        path: `/project/:idProject`,
+        element: <ProtectedRoute />,
+        children: [
+          {
+            element: <Home />,
+            path: "/",
+          },
+          {
+            element: <Project />,
+            path: `/project/:idProject`,
+          },
+        ],
       },
     ],
   },

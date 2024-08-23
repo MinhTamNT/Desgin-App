@@ -32,7 +32,6 @@ const ShapesMenu = ({
       <Button
         onClick={handleClick}
         className="relative h-10 w-10 object-contain"
-        variant="contained"
       >
         <img
           src={isDropdownElem ? activeElement.icon : item.icon}

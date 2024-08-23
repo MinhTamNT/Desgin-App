@@ -9,7 +9,6 @@ export const ActiveUser = () => {
   const currentUser = useSelector(
     (state: RootState) => state?.user?.user?.currentUser
   );
-  console.log(users);
   const hasMoreUsers = users.length > 3;
   const updateMyPresence = useUpdateMyPresence();
 
@@ -21,7 +20,6 @@ export const ActiveUser = () => {
       });
     }
   }, [currentUser, updateMyPresence]);
-  console.log(users);
   return (
     <main className="flex items-center h-[60px] justify-center gap-1 py-2">
       <div className="flex pl-3">
