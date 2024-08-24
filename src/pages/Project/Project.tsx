@@ -1,18 +1,24 @@
+import { LiveMap } from "@liveblocks/client";
+import { useMutation, useStorage } from "@liveblocks/react";
 import { fabric } from "fabric";
 import { useEffect, useRef, useState } from "react";
+import { useParams } from "react-router-dom";
 import { Live } from "../../components/Live/Live";
-import Room from "../../components/Room/Room";
-import NavbarProject from "../../layout/Project/NavbarProject";
 import LeftSidebar from "../../layout/Project/LeftSidebar";
+import NavbarProject from "../../layout/Project/NavbarProject";
 import RightSidebar from "../../layout/Project/RightSidebar";
 import {
+  handleCanvaseMouseMove,
   handleCanvasMouseDown,
+  handleCanvasMouseUp,
+  handleCanvasObjectModified,
   handleResize,
   initializeFabric,
+  renderCanvas,
 } from "../../lib/cavans";
 import { ActiveElement } from "../../type/type";
-import { useParams } from "react-router-dom";
-import { useStorage } from "@liveblocks/react";
+import { defaultNavElement } from "../../utils";
+import { handleDelete } from "../../utils/Key/key-event";
 
 export const Project = () => {
   const { idProject } = useParams();
@@ -26,10 +32,69 @@ export const Project = () => {
     value: "",
     icon: "",
   });
-  const canvasObject = useStorage((root) => root.canvasObjects);
+  const activeObjectRef = useRef<fabric.Object | null>(null);
+
+  // Explicitly type canvasObjects as LiveMap
+  const canvasObjects = useStorage((root) => root.canvasObjects) as LiveMap<
+    string,
+    any
+  >;
+
+  const syncShapeInStorage = useMutation(({ storage }, object) => {
+    if (!object) return;
+
+    const { objectId } = object;
+    const shapeData = object.toJSON();
+    shapeData.objectId = objectId;
+
+    const canvasObjects = storage.get("canvasObjects") as LiveMap<string, any>;
+    if (canvasObjects && canvasObjects.set) {
+      canvasObjects.set(objectId, shapeData);
+    } else {
+      console.error(
+        "canvasObjects is not a LiveMap or doesn't have a set method"
+      );
+    }
+  }, []);
+
+  const deleteAllShapes = useMutation(({ storage }) => {
+    const canvasObjects = storage.get("canvasObjects") as LiveMap<string, any>;
+
+    if (!canvasObjects || canvasObjects.size === 0) {
+      return true;
+    }
+
+    // Using a type-safe way to iterate and delete entries
+    for (const [key] of canvasObjects.entries()) {
+      canvasObjects.delete(key);
+    }
+    return canvasObjects.size === 0;
+  }, []);
+
+  const deleteShapeFromStorage = useMutation(({ storage }, object) => {
+    const canvasObjects = storage.get("canvasObjects") as LiveMap<string, any>;
+    if (canvasObjects) {
+      canvasObjects.delete(object);
+    }
+  }, []);
+
   const handleActiveElement = (element: ActiveElement) => {
     setActiveElement(element);
     selectedShapeRef.current = element?.value as string;
+
+    switch (element?.value) {
+      case "reset":
+        deleteAllShapes();
+        fabricRef?.current?.clear();
+        setActiveElement(defaultNavElement);
+        break;
+      case "delete":
+        handleDelete(fabricRef.current as any, deleteShapeFromStorage);
+        setActiveElement(defaultNavElement);
+        break;
+      default:
+        break;
+    }
   };
 
   useEffect(() => {
@@ -37,7 +102,7 @@ export const Project = () => {
 
     if (canvas) {
       console.log("canvas init", canvas.on);
-      canvas?.on("mouse:down", (options) => {
+      canvas.on("mouse:down", (options) => {
         console.log("mouse down");
         handleCanvasMouseDown({
           options,
@@ -45,6 +110,37 @@ export const Project = () => {
           selectedShapeRef,
           isDrawing,
           shapeRef,
+        });
+      });
+      canvas.on("mouse:move", (options) => {
+        console.log("mouse down");
+        handleCanvaseMouseMove({
+          options,
+          canvas,
+          isDrawing,
+          shapeRef,
+          selectedShapeRef,
+          syncShapeInStorage,
+        });
+      });
+      canvas.on("mouse:up", (options) => {
+        console.log("mouse down");
+        handleCanvasMouseUp({
+          canvas,
+          isDrawing,
+          shapeRef,
+          selectedShapeRef,
+          syncShapeInStorage,
+          setActiveElement,
+          activeObjectRef,
+        });
+      });
+
+      canvas.on("object:modified", (options) => {
+        console.log("Object Modified");
+        handleCanvasObjectModified({
+          options,
+          syncShapeInStorage,
         });
       });
 
@@ -61,6 +157,14 @@ export const Project = () => {
       console.log("Canvas not initialized");
     }
   }, [canvasRef]);
+
+  useEffect(() => {
+    if (canvasObjects) {
+      renderCanvas({ fabricRef, activeObjectRef, canvasObjects });
+    } else {
+      console.warn("canvasObjects is null or undefined");
+    }
+  }, [canvasObjects]);
 
   console.log("canvasRef Change", canvasRef);
 
