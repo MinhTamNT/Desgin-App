@@ -12,10 +12,11 @@ import {
 } from "../../lib/cavans";
 import { ActiveElement } from "../../type/type";
 import { useParams } from "react-router-dom";
+import { useStorage } from "@liveblocks/react";
 
 export const Project = () => {
   const { idProject } = useParams();
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const fabricRef = useRef<fabric.Canvas | null>(null);
   const isDrawing = useRef(false);
   const shapeRef = useRef<fabric.Object | null>(null);
@@ -25,7 +26,7 @@ export const Project = () => {
     value: "",
     icon: "",
   });
-
+  const canvasObject = useStorage((root) => root.canvasObjects);
   const handleActiveElement = (element: ActiveElement) => {
     setActiveElement(element);
     selectedShapeRef.current = element?.value as string;
@@ -35,8 +36,9 @@ export const Project = () => {
     const canvas = initializeFabric({ canvasRef, fabricRef });
 
     if (canvas) {
-      console.log("cc");
-      canvas.on("mouse:down", (options) => {
+      console.log("canvas init", canvas.on);
+      canvas?.on("mouse:down", (options) => {
+        console.log("mouse down");
         handleCanvasMouseDown({
           options,
           canvas,
@@ -60,24 +62,24 @@ export const Project = () => {
     }
   }, [canvasRef]);
 
+  console.log("canvasRef Change", canvasRef);
+
   const imageInputRef = useRef<HTMLInputElement>(null);
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {};
 
   return (
-    <Room idRoom={idProject ?? ""}>
-      <main className="h-screen overflow-hidden">
-        <NavbarProject
-          activeElement={activeElement}
-          handleActiveElement={handleActiveElement}
-          handleImageUpload={handleImageUpload}
-          imageInputRef={imageInputRef}
-        />
-        <section className="flex h-full flex-row">
-          <LeftSidebar />
-          <Live canvasRef={canvasRef} />
-          <RightSidebar />
-        </section>
-      </main>
-    </Room>
+    <main className="h-screen overflow-hidden">
+      <NavbarProject
+        activeElement={activeElement}
+        handleActiveElement={handleActiveElement}
+        handleImageUpload={handleImageUpload}
+        imageInputRef={imageInputRef}
+      />
+      <section className="flex h-full flex-row">
+        <LeftSidebar />
+        <Live canvasRef={canvasRef} />
+        <RightSidebar />
+      </section>
+    </main>
   );
 };

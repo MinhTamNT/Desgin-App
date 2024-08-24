@@ -160,9 +160,9 @@ export const Live = ({ canvasRef }: Props) => {
       onPointerLeave={handlePointterLeave}
       onPointerDown={handlePointterDown}
       onPointerUp={handlePointerUp}
-      className="border-red-400 w-full min-h-screen"
+      className="relative flex h-full w-full items-center justify-center"
     >
-      <canvas ref={canvasRef} />
+      <canvas ref={canvasRef} className="w-full h-full" />
       {reactions.map((reaction) => (
         <FlyingReaction
           key={reaction.timestamp.toString()}
