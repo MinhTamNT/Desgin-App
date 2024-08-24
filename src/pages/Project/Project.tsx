@@ -1,8 +1,7 @@
 import { LiveMap } from "@liveblocks/client";
-import { useMutation, useStorage } from "@liveblocks/react";
+import { useMutation, useRedo, useStorage, useUndo } from "@liveblocks/react";
 import { fabric } from "fabric";
 import { useEffect, useRef, useState } from "react";
-import { useParams } from "react-router-dom";
 import { Live } from "../../components/Live/Live";
 import LeftSidebar from "../../layout/Project/LeftSidebar";
 import NavbarProject from "../../layout/Project/NavbarProject";
@@ -18,10 +17,11 @@ import {
 } from "../../lib/cavans";
 import { ActiveElement } from "../../type/type";
 import { defaultNavElement } from "../../utils";
-import { handleDelete } from "../../utils/Key/key-event";
+import { handleDelete, handleKeyDown } from "../../utils/Key/key-event";
 
 export const Project = () => {
-  const { idProject } = useParams();
+  const undo = useUndo();
+  const redo = useRedo();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const fabricRef = useRef<fabric.Canvas | null>(null);
   const isDrawing = useRef(false);
@@ -149,6 +149,16 @@ export const Project = () => {
       };
 
       window.addEventListener("resize", handleResizeEvent);
+      window.addEventListener("keydown", (e) => {
+        handleKeyDown({
+          e,
+          canvas,
+          undo,
+          redo,
+          syncShapeInStorage,
+          deleteShapeFromStorage,
+        });
+      });
 
       return () => {
         window.removeEventListener("resize", handleResizeEvent);

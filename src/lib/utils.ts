@@ -1,25 +1,12 @@
+import { type ClassValue, clsx } from "clsx";
 import jsPDF from "jspdf";
 import { twMerge } from "tailwind-merge";
-import { type ClassValue, clsx } from "clsx";
-import Rectangle from "../assets/rectangle.svg";
 import Circle from "../assets/circle.svg";
-import Triangle from "../assets/triangle.svg";
-import Line from "../assets/line.svg";
 import Image from "../assets/image.svg";
-import Freeform from "../assets/freeform.svg";
-import Select from "../assets/select.svg";
+import Line from "../assets/line.svg";
+import Rectangle from "../assets/rectangle.svg";
 import Text from "../assets/text.svg";
-import Delete from "../assets/delete.svg";
-import Reset from "../assets/reset.svg";
-import Comments from "../assets/comments.svg";
-import Front from "../assets/front.svg";
-import Back from "../assets/back.svg";
-import AlignLeft from "../assets/align-left.svg";
-import AlignHorizontalCenter from "../assets/align-horizontal-center.svg";
-import AlignRight from "../assets/align-right.svg";
-import AlignTop from "../assets/align-top.svg";
-import AlignVerticalCenter from "../assets/align-vertical-center.svg";
-import AlignBottom from "../assets/align-bottom.svg";
+import Triangle from "../assets/triangle.svg";
 const adjectives = [
   "Happy",
   "Creative",
