@@ -1,7 +1,25 @@
 import jsPDF from "jspdf";
 import { twMerge } from "tailwind-merge";
 import { type ClassValue, clsx } from "clsx";
-
+import Rectangle from "../assets/rectangle.svg";
+import Circle from "../assets/circle.svg";
+import Triangle from "../assets/triangle.svg";
+import Line from "../assets/line.svg";
+import Image from "../assets/image.svg";
+import Freeform from "../assets/freeform.svg";
+import Select from "../assets/select.svg";
+import Text from "../assets/text.svg";
+import Delete from "../assets/delete.svg";
+import Reset from "../assets/reset.svg";
+import Comments from "../assets/comments.svg";
+import Front from "../assets/front.svg";
+import Back from "../assets/back.svg";
+import AlignLeft from "../assets/align-left.svg";
+import AlignHorizontalCenter from "../assets/align-horizontal-center.svg";
+import AlignRight from "../assets/align-right.svg";
+import AlignTop from "../assets/align-top.svg";
+import AlignVerticalCenter from "../assets/align-vertical-center.svg";
+import AlignBottom from "../assets/align-bottom.svg";
 const adjectives = [
   "Happy",
   "Creative",
@@ -50,37 +68,37 @@ export const getShapeInfo = (shapeType: string) => {
   switch (shapeType) {
     case "rect":
       return {
-        icon: "../assets/rectangle.svg",
+        icon: Rectangle,
         name: "Rectangle",
       };
 
     case "circle":
       return {
-        icon: "../assets/circle.svg",
+        icon: Circle,
         name: "Circle",
       };
 
     case "triangle":
       return {
-        icon: "../assets/triangle.svg",
+        icon: Triangle,
         name: "Triangle",
       };
 
     case "line":
       return {
-        icon: "../assets/line.svg",
+        icon: Line,
         name: "Line",
       };
 
     case "i-text":
       return {
-        icon: "../assets/text.svg",
+        icon: Text,
         name: "Text",
       };
 
     case "image":
       return {
-        icon: "../assets/image.svg",
+        icon: Image,
         name: "Image",
       };
 

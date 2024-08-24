@@ -180,7 +180,7 @@ export const Project = () => {
         imageInputRef={imageInputRef}
       />
       <section className="flex h-full flex-row">
-        <LeftSidebar />
+        <LeftSidebar allShape={Array.from(canvasObjects ?? "")} />
         <Live canvasRef={canvasRef} />
         <RightSidebar />
       </section>
