@@ -17,6 +17,7 @@ import { useLazyQuery, useMutation } from "@apollo/client";
 import { SEARCH_USER } from "../../utils/User/User";
 import { Avatar } from "../Avatar/Avatar";
 import { useNavigate } from "react-router-dom";
+import { useCookies } from "react-cookie";
 
 interface IConversation {
   id: string;
@@ -40,6 +41,7 @@ export const ConversationList = ({
     searchUserByName: User[];
   }>(SEARCH_USER);
   const navigate = useNavigate();
+  const [cookies, setCookies] = useCookies(["memberData"]);
   useEffect(() => {
     if (query) {
       searchUser({ variables: { searchText: query } });
@@ -135,7 +137,14 @@ export const ConversationList = ({
                   <ListItem
                     key={conv.id}
                     className="border-b border-gray-300"
-                    onClick={() => navigate(`/conversation/${conv.id}`)}
+                    onClick={() => {
+                      const memberData = otherMembers.map((member) => ({
+                        name: member.name,
+                        profilePicture: member.profilePicture,
+                      }));
+                      setCookies("memberData", memberData);
+                      navigate(`/conversation/${conv.id}`);
+                    }}
                   >
                     <ListItemAvatar>
                       {otherMembers.map((member, index) => (

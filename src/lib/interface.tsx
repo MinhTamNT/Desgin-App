@@ -28,6 +28,9 @@ export interface Notification {
 
 export interface Message {
   conversationId: string;
-  sender: string;
+  sender: {
+    uuid: string;
+    name?: string;
+  };
   text: string;
 }

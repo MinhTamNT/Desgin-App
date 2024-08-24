@@ -1,11 +1,5 @@
 import { useLazyQuery, useMutation, useSubscription } from "@apollo/client";
-import {
-  Box,
-  Button,
-  CircularProgress,
-  TextField,
-  Typography,
-} from "@mui/material";
+import { Button, CircularProgress, TextField, Typography } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
@@ -16,12 +10,14 @@ import {
   GET_MESSAGE_CONVERSATIONID,
   GET_MESSAGE_SUB,
 } from "../../utils/Message/Message";
+import Cookies from "universal-cookie";
 
 export const Message = () => {
   const { conversationId } = useParams<{ conversationId: string }>();
   const [messageText, setMessageText] = useState("");
   const [message, setMessage] = useState<MessageType[]>([]);
-
+  const cookie = new Cookies();
+  const conversationData = cookie.get("memberData");
   const currentUser = useSelector(
     (state: RootState) => state?.user?.user?.currentUser
   );
@@ -35,7 +31,7 @@ export const Message = () => {
   const [sendMessage] = useMutation(CREATE_MESSAGE, {
     onCompleted: () => {
       setMessageText("");
-      getMessages(); // Refetch messages after sending a new one
+      getMessages();
     },
   });
 
@@ -43,7 +39,6 @@ export const Message = () => {
     onSubscriptionData: ({ subscriptionData }) => {
       if (subscriptionData?.data?.messageCreated) {
         const newMessage = subscriptionData.data.messageCreated;
-        console.log(newMessage);
         setMessage((prevMessage) => [...prevMessage, newMessage]);
       }
     },
@@ -76,44 +71,61 @@ export const Message = () => {
   if (error) return <div>Error: {error.message}</div>;
 
   return (
-    <Box className="flex flex-col h-screen">
-      {/* Header */}
-      <Box className="p-4 bg-gray-100 flex items-center border-b">
-        {/* Header content such as user avatar and name can go here */}
-      </Box>
+    <div className="flex flex-col w-full h-screen">
+      <div className="p-4 bg-white   text-[#333] flex items-center justify-between shadow-lg">
+        <div className="flex items-center gap-3">
+          {conversationData?.map((data: any) => (
+            <>
+              <img
+                src={data.profilePicture}
+                className="w-10 h-10 rounded-full"
+              />
+              <span>{data.name}</span>
+            </>
+          ))}
+        </div>
+      </div>
 
       {/* Message List */}
-      <Box className="flex-grow p-4 overflow-y-auto">
+      <div className="flex w-full flex-col flex-1 p-4 overflow-y-auto bg-gray-50">
         {message.map((msg) => (
-          <Box
+          <div
             key={msg.conversationId}
-            className={`mb-4 p-3 rounded-lg max-w-md ${
+            className={`mb-4 p-3 flex rounded-xl max-w-lg ${
               msg?.sender?.uuid === currentUser?.sub
-                ? "bg-blue-100 self-start"
-                : "bg-green-100 self-end"
+                ? "bg-blue-500 text-white self-end rounded-br-none shadow-lg"
+                : "bg-white text-gray-800 self-start rounded-bl-none shadow-md"
             }`}
           >
-            <Typography variant="body1">{msg.text}</Typography>
-          </Box>
+            <Typography variant="body1" className="leading-relaxed">
+              {msg.text}
+            </Typography>
+          </div>
         ))}
-      </Box>
+      </div>
 
       {/* Input Area */}
-      <Box className="p-4 bg-gray-100 border-t flex items-center gap-2">
+      <div className="p-4 bg-gray-200 border-t flex items-center gap-2">
         <TextField
           variant="outlined"
           fullWidth
-          placeholder="Type your message..."
+          placeholder="Type a message..."
           value={messageText}
           onChange={(e) => setMessageText(e.target.value)}
           onKeyPress={(e) => {
             if (e.key === "Enter") handleSendMessage(); // Send message on Enter key press
           }}
+          className="rounded-lg"
         />
-        <Button variant="contained" color="primary" onClick={handleSendMessage}>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={handleSendMessage}
+          className="ml-2 rounded-full"
+        >
           Send
         </Button>
-      </Box>
-    </Box>
+      </div>
+    </div>
   );
 };

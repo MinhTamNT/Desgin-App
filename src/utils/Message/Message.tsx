@@ -21,7 +21,7 @@ const GET_MESSAGE_CONVERSATIONID = gql`
       sender {
         name
         profilePicture
-        idUser
+        uuid
       }
     }
   }
