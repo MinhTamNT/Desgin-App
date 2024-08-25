@@ -56,9 +56,7 @@ const NavbarProject = ({
               }}
               key={items.name}
               className={` px-2.5  flex justify-center items-center rounded-lg
-              ${
-                isActive(items.value) ? "bg-red-400" : "hover:bg-gray-500"
-              }
+              ${isActive(items.value) ? "bg-red-400" : "hover:bg-gray-500"}
               `}
             >
               {Array.isArray(items?.value) ? (

@@ -276,7 +276,6 @@ export const handleCanvasSelectionCreated = ({
   // if user is editing manually, return
   if (isEditingRef.current) return;
 
-  // if no element is selected, return
   if (!options?.selected) return;
 
   // get the selected element

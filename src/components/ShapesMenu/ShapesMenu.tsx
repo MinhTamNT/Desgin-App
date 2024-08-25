@@ -1,5 +1,3 @@
-"use client";
-
 import React from "react";
 import Menu from "@mui/material/Menu";
 import ListItem from "@mui/material/ListItem";
@@ -26,6 +24,13 @@ const ShapesMenu = ({
   const isDropdownElem = item.value.some(
     (elem) => elem?.value === activeElement.value
   );
+
+  // Trigger file input click
+  const handleUploadClick = () => {
+    if (imageInputRef.current) {
+      imageInputRef.current.click();
+    }
+  };
 
   return (
     <>
@@ -66,6 +71,9 @@ const ShapesMenu = ({
             onClick={() => {
               handleActiveElement(elem);
               handleClose();
+              if (elem?.value === "image") {
+                handleUploadClick();
+              }
             }}
             selected={activeElement.value === elem?.value}
           >

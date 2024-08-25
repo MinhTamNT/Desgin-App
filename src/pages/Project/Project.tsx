@@ -11,13 +11,16 @@ import {
   handleCanvasMouseDown,
   handleCanvasMouseUp,
   handleCanvasObjectModified,
+  handleCanvasObjectScaling,
+  handleCanvasSelectionCreated,
   handleResize,
   initializeFabric,
   renderCanvas,
 } from "../../lib/cavans";
-import { ActiveElement } from "../../type/type";
+import { ActiveElement, Attributes } from "../../type/type";
 import { defaultNavElement } from "../../utils";
 import { handleDelete, handleKeyDown } from "../../utils/Key/key-event";
+import { handleImageUpload } from "../../lib/shape";
 
 export const Project = () => {
   const undo = useUndo();
@@ -26,14 +29,33 @@ export const Project = () => {
   const fabricRef = useRef<fabric.Canvas | null>(null);
   const isDrawing = useRef(false);
   const shapeRef = useRef<fabric.Object | null>(null);
-  const selectedShapeRef = useRef<string | null>("rectangle");
+  const selectedShapeRef = useRef<string | null>(null);
   const [activeElement, setActiveElement] = useState<ActiveElement>({
     name: "",
     value: "",
     icon: "",
   });
   const activeObjectRef = useRef<fabric.Object | null>(null);
-
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const isEditingRef = useRef(false);
+  const [elementAtrributes, setElementAtrributes] = useState<Attributes>({
+    width: "",
+    height: "",
+    fontSize: "",
+    fontFamily: "",
+    fill: "#aabbcc",
+    fontWeight: "",
+    stroke: "#aabbcc",
+  });
+  const handleImageUploads = (event: any) => {
+    event.stopPropagation();
+    handleImageUpload({
+      file: event.target.files[0],
+      canvas: fabricRef as any,
+      shapeRef,
+      syncShapeInStorage,
+    });
+  };
   // Explicitly type canvasObjects as LiveMap
   const canvasObjects = useStorage((root) => root.canvasObjects) as LiveMap<
     string,
@@ -92,6 +114,13 @@ export const Project = () => {
         handleDelete(fabricRef.current as any, deleteShapeFromStorage);
         setActiveElement(defaultNavElement);
         break;
+      case "image":
+        imageInputRef.current?.click();
+        isDrawing.current = false;
+        if (fabricRef.current) {
+          fabricRef.current.isDrawingMode = false;
+        }
+        break;
       default:
         break;
     }
@@ -144,6 +173,19 @@ export const Project = () => {
         });
       });
 
+      canvas.on("selection:created", (options: any) => {
+        handleCanvasSelectionCreated({
+          options,
+          isEditingRef,
+          setElementAttributes: setElementAtrributes,
+        });
+      });
+      canvas.on("object:scaling", (options) => {
+        handleCanvasObjectScaling({
+          options,
+          setElementAttributes: setElementAtrributes,
+        });
+      });
       const handleResizeEvent = () => {
         handleResize({ canvas: fabricRef.current });
       };
@@ -178,21 +220,25 @@ export const Project = () => {
 
   console.log("canvasRef Change", canvasRef);
 
-  const imageInputRef = useRef<HTMLInputElement>(null);
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {};
-
   return (
     <main className="h-screen overflow-hidden">
       <NavbarProject
         activeElement={activeElement}
         handleActiveElement={handleActiveElement}
-        handleImageUpload={handleImageUpload}
+        handleImageUpload={handleImageUploads}
         imageInputRef={imageInputRef}
       />
       <section className="flex h-full flex-row">
         <LeftSidebar allShape={Array.from(canvasObjects ?? "")} />
         <Live canvasRef={canvasRef} />
-        <RightSidebar />
+        <RightSidebar
+          elementAttributes={elementAtrributes}
+          setElementAttributes={setElementAtrributes}
+          fabricRef={fabricRef}
+          activeObjectRef={activeObjectRef}
+          syncShapeInStorage={syncShapeInStorage}
+          isEditingRef={isEditingRef}
+        />
       </section>
     </main>
   );

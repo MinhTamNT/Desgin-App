@@ -1,9 +1,57 @@
-import React from "react";
+import Color from "../../components/Color/Color";
+import { Dimensions } from "../../components/Dimensions/Dimensions";
+import Text from "../../components/Text/Text";
+import { modifyShape } from "../../lib/shape";
+import { RightSidebarProps } from "../../type/type";
+import { fabric } from "fabric";
+export default function RightSidebar({
+  activeObjectRef,
+  elementAttributes,
+  fabricRef,
+  isEditingRef,
+  setElementAttributes,
+  syncShapeInStorage,
+}: RightSidebarProps) {
+  const handleInputChange = (property: string, value: string) => {
+    if (!fabricRef.current) isEditingRef.current = true;
+    setElementAttributes((prev) => ({ ...prev, [property]: value }));
 
-export default function RightSidebar() {
+    modifyShape({
+      canvas: fabricRef.current as fabric.Canvas,
+      property,
+      value,
+      activeObjectRef,
+      syncShapeInStorage,
+    });
+  };
+
   return (
-    <section className="flex flex-col  bg-white shadow-orange-50 text-black min-2-[227px] sticky left-0 h-full max-sm:hidden select-none overflow-y-auto pb-20">
-      <h3 className="px-5 pt-4 text-xs uppercase">Desgin</h3>
+    <section className="flex flex-col text-white rounded-md mt-1 bg-gradient-to-br from-[#3a3a3a] via-[#2b2b2b] to-[#1a1a1a] shadow-lg shadow-orange-50 min-w-[227px] max-w-xs sm:max-w-[300px] sticky left-0 h-full max-sm:hidden select-none overflow-y-auto pb-20">
+      <h3 className="px-5 pt-4 text-xs font-bold uppercase tracking-wide">
+        Design
+      </h3>
+      <span className="text-xs text-white mt-3 px-5 py-2 border-b border-primary-grey-300">
+        Make changes to canvas as you like
+      </span>
+      <Dimensions
+        width={elementAttributes.width}
+        height={elementAttributes.height}
+        handleInputChange={handleInputChange}
+        isEditingRef={isEditingRef}
+      />
+      <Text
+        fontFamily={elementAttributes.fontFamily}
+        fontSize={elementAttributes.fontSize}
+        fontWeight={elementAttributes.fontWeight}
+        handleInputChange={handleInputChange}
+      />
+      <Color
+        inputRef={activeObjectRef}
+        attribute={elementAttributes.fill}
+        placeholder="Color"
+        attributeType="fill"
+        handleInputChange={handleInputChange}
+      />
     </section>
   );
 }
