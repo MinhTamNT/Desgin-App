@@ -54,7 +54,6 @@ export const ConversationList = ({
 
   const conversations = listConversation ?? [];
 
-  console.log(conversations);
   return (
     <Box className="p-4">
       <Paper
@@ -132,7 +131,6 @@ export const ConversationList = ({
                 const otherMembers = conv.members.filter(
                   (member) => (member.uuid as string) !== currentUserId
                 );
-                console.log(otherMembers);
                 return (
                   <ListItem
                     key={conv.id}

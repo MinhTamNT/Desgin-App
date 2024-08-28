@@ -64,7 +64,6 @@ export const Sidebar = () => {
   };
 
   const handleSelectProject = (projectId: string) => {
-    console.log("Selected Project ID:", projectId);
     navigate(`/project/${projectId}`);
   };
 

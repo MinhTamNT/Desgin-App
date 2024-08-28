@@ -48,13 +48,15 @@ export const Project = () => {
     stroke: "#aabbcc",
   });
   const handleImageUploads = (event: any) => {
-    event.stopPropagation();
-    handleImageUpload({
-      file: event.target.files[0],
-      canvas: fabricRef as any,
-      shapeRef,
-      syncShapeInStorage,
-    });
+    const file = event.target.files ? event.target.files[0] : null;
+    if (file) {
+      handleImageUpload({
+        file,
+        canvas: fabricRef as any,
+        shapeRef,
+        syncShapeInStorage,
+      });
+    }
   };
   // Explicitly type canvasObjects as LiveMap
   const canvasObjects = useStorage((root) => root.canvasObjects) as LiveMap<
@@ -127,12 +129,99 @@ export const Project = () => {
   };
 
   useEffect(() => {
+    const canvasElement = canvasRef.current;
+
+    const handleDragOver = (event: DragEvent) => {
+      event.preventDefault();
+    };
+
+    const handleDrop = async (event: DragEvent) => {
+      event.preventDefault();
+
+      if (event.dataTransfer?.files && event.dataTransfer.files[0]) {
+        const file = event.dataTransfer.files[0];
+
+        if (file.type.startsWith("image/")) {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            const imgElement = new Image();
+            imgElement.src = e.target?.result as string;
+
+            imgElement.onload = () => {
+              const imgInstance = new fabric.Image(imgElement, {
+                left: 50,
+                top: 50,
+              });
+
+              fabricRef.current?.add(imgInstance);
+              handleImageUploads({
+                target: { files: [file] },
+              });
+            };
+          };
+          reader.readAsDataURL(file);
+        }
+      }
+    };
+
+    if (canvasElement) {
+      canvasElement.addEventListener("dragover", handleDragOver);
+      canvasElement.addEventListener("drop", handleDrop);
+    }
+
+    return () => {
+      if (canvasElement) {
+        canvasElement.removeEventListener("dragover", handleDragOver);
+        canvasElement.removeEventListener("drop", handleDrop);
+      }
+    };
+  }, [canvasRef, syncShapeInStorage]);
+
+  useEffect(() => {
+    const handlePaste = async (event: ClipboardEvent) => {
+      const items = event.clipboardData?.items;
+
+      if (items) {
+        for (const item of items) {
+          if (item.type.indexOf("image") !== -1) {
+            const file = item.getAsFile();
+            if (file) {
+              const reader = new FileReader();
+              reader.onload = (e) => {
+                const imgElement = new Image();
+                imgElement.src = e.target?.result as string;
+
+                imgElement.onload = () => {
+                  const imgInstance = new fabric.Image(imgElement, {
+                    left: 50,
+                    top: 50,
+                  });
+
+                  fabricRef.current?.add(imgInstance);
+                  handleImageUploads({
+                    target: { files: [file] },
+                  });
+                };
+              };
+              reader.readAsDataURL(file);
+            }
+          }
+        }
+      }
+    };
+
+    window.addEventListener("paste", handlePaste);
+
+    return () => {
+      window.removeEventListener("paste", handlePaste);
+    };
+  }, [syncShapeInStorage]);
+
+  useEffect(() => {
     const canvas = initializeFabric({ canvasRef, fabricRef });
 
     if (canvas) {
-      console.log("canvas init", canvas.on);
       canvas.on("mouse:down", (options) => {
-        console.log("mouse down");
         handleCanvasMouseDown({
           options,
           canvas,
@@ -142,7 +231,6 @@ export const Project = () => {
         });
       });
       canvas.on("mouse:move", (options) => {
-        console.log("mouse down");
         handleCanvaseMouseMove({
           options,
           canvas,
@@ -152,8 +240,7 @@ export const Project = () => {
           syncShapeInStorage,
         });
       });
-      canvas.on("mouse:up", (options) => {
-        console.log("mouse down");
+      canvas.on("mouse:up", (options: any) => {
         handleCanvasMouseUp({
           canvas,
           isDrawing,
@@ -166,7 +253,6 @@ export const Project = () => {
       });
 
       canvas.on("object:modified", (options) => {
-        console.log("Object Modified");
         handleCanvasObjectModified({
           options,
           syncShapeInStorage,
@@ -217,8 +303,6 @@ export const Project = () => {
       console.warn("canvasObjects is null or undefined");
     }
   }, [canvasObjects]);
-
-  console.log("canvasRef Change", canvasRef);
 
   return (
     <main className="h-screen overflow-hidden">
