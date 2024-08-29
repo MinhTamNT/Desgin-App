@@ -5,7 +5,7 @@ const ADD_PROJECT = gql`
     addProject(name: $name, description: $description) {
       updatedAt
       idProject
-}
+    }
   }
 `;
 
@@ -21,4 +21,12 @@ const GET_PROJECT = gql`
   }
 `;
 
-export { ADD_PROJECT, GET_PROJECT };
+const DELETED_PROJECT = gql`
+  mutation Mutation($projectId: String) {
+    deletedProjectId(projectId: $projectId) {
+      message
+    }
+  }
+`;
+
+export { ADD_PROJECT, GET_PROJECT, DELETED_PROJECT };

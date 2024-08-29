@@ -1,11 +1,11 @@
 import React from "react";
-import { useQuery } from "@apollo/client";
+import { useQuery, useMutation } from "@apollo/client";
 import { useSelector } from "react-redux";
 import { RootState } from "../../Redux/store";
 import { Project } from "../../lib/interface";
-import { GET_PROJECT } from "../../utils/Project/Project";
+import { GET_PROJECT, DELETED_PROJECT } from "../../utils/Project/Project";
 import { dummyImages } from "../../assets/randomImage";
-import { RiEdit2Line } from "react-icons/ri";
+import { RiEdit2Line, RiDeleteBinLine } from "react-icons/ri";
 import { useNavigate } from "react-router-dom";
 
 export const Home: React.FC = () => {
@@ -13,19 +13,28 @@ export const Home: React.FC = () => {
     (state: RootState) => state?.user?.user?.currentUser
   );
 
-  // Fetch projects using the query
   const { data, loading, error } = useQuery<{ getUserProjects: Project[] }>(
     GET_PROJECT
   );
 
-  // Navigate function
+  const [deleteProject] = useMutation(DELETED_PROJECT);
+
   const navigate = useNavigate();
 
-  // Handle loading and error states
   if (loading) return <p>Loading...</p>;
   if (error) return <p>Error: {error.message}</p>;
 
-  // Prepare projects data
+  const handleDelete = async (idProject: string) => {
+    try {
+      await deleteProject({
+        variables: { projectId: idProject },
+        refetchQueries: [{ query: GET_PROJECT }],
+      });
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   const projects = (data?.getUserProjects || []).map((project) => ({
     ...project,
     image: dummyImages[Math.floor(Math.random() * dummyImages.length)],
@@ -53,7 +62,6 @@ export const Home: React.FC = () => {
         </div>
       </section>
 
-      {/* Projects Section */}
       <section className="py-16 bg-gray-100">
         <div className="container mx-auto px-6 text-center">
           <h2 className="text-3xl font-semibold text-gray-900 mb-12">
@@ -71,13 +79,20 @@ export const Home: React.FC = () => {
                   className="w-full h-64 object-cover rounded-lg mb-6 transition-transform duration-300 group-hover:scale-105"
                 />
                 <h3 className="text-xl font-semibold mb-4">{project.name}</h3>
-                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black bg-opacity-60 rounded-lg">
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black bg-opacity-60 rounded-lg space-x-4">
                   <button
                     onClick={() => navigate(`/project/${project.idProject}`)}
                     className="bg-teal-600 flex items-center text-white py-2 px-4 rounded-full shadow-lg hover:bg-teal-700 transition-colors duration-300"
                   >
                     Edit
                     <RiEdit2Line size={24} />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(project.idProject)}
+                    className="bg-red-600 flex items-center text-white py-2 px-4 rounded-full shadow-lg hover:bg-red-700 transition-colors duration-300"
+                  >
+                    Delete
+                    <RiDeleteBinLine size={24} />
                   </button>
                 </div>
               </div>

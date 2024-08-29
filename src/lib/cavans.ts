@@ -205,7 +205,9 @@ export const handleCanvasObjectModified = ({
   if (!target) return;
 
   if (target?.type == "activeSelection") {
-    // fix this
+    target.toObject().forEach((object: fabric.Object) => {
+      syncShapeInStorage(object);
+    });
   } else {
     syncShapeInStorage(target);
   }

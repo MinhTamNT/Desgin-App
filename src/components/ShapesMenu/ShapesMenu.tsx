@@ -25,7 +25,6 @@ const ShapesMenu = ({
     (elem) => elem?.value === activeElement.value
   );
 
-  // Trigger file input click
   const handleUploadClick = () => {
     if (imageInputRef.current) {
       imageInputRef.current.click();
@@ -73,6 +72,7 @@ const ShapesMenu = ({
               handleClose();
               if (elem?.value === "image") {
                 handleUploadClick();
+                handleImageUpload();
               }
             }}
             selected={activeElement.value === elem?.value}

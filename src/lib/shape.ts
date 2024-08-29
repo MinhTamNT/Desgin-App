@@ -103,14 +103,20 @@ export const handleImageUpload = ({
       img.scaleToWidth(200);
       img.scaleToHeight(200);
 
+      // Add the image to the canvas
       canvas.current.add(img);
 
+      // Assign a unique ID to the image object
       // @ts-ignore
       img.objectId = uuidv4();
 
+      // Update the shapeRef to reference the new image object
       shapeRef.current = img;
 
+      // Sync the newly added image to storage
       syncShapeInStorage(img);
+
+      // Render the canvas with the new image
       canvas.current.requestRenderAll();
     });
   };

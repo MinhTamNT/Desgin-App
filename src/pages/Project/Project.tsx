@@ -11,8 +11,10 @@ import {
   handleCanvasMouseDown,
   handleCanvasMouseUp,
   handleCanvasObjectModified,
+  handleCanvasObjectMoving,
   handleCanvasObjectScaling,
   handleCanvasSelectionCreated,
+  handlePathCreated,
   handleResize,
   initializeFabric,
   renderCanvas,
@@ -48,17 +50,15 @@ export const Project = () => {
     stroke: "#aabbcc",
   });
   const handleImageUploads = (event: any) => {
-    const file = event.target.files ? event.target.files[0] : null;
-    if (file) {
-      handleImageUpload({
-        file,
-        canvas: fabricRef as any,
-        shapeRef,
-        syncShapeInStorage,
-      });
-    }
+    event.stopPropagation();
+    console.log(event.target);
+    handleImageUpload({
+      file: event.target.files[0],
+      canvas: fabricRef as any,
+      shapeRef,
+      syncShapeInStorage,
+    });
   };
-  // Explicitly type canvasObjects as LiveMap
   const canvasObjects = useStorage((root) => root.canvasObjects) as LiveMap<
     string,
     any
@@ -72,6 +72,7 @@ export const Project = () => {
     shapeData.objectId = objectId;
 
     const canvasObjects = storage.get("canvasObjects") as LiveMap<string, any>;
+    console.log("canvasObjects", canvasObjects);
     if (canvasObjects && canvasObjects.set) {
       canvasObjects.set(objectId, shapeData);
     } else {
@@ -124,103 +125,101 @@ export const Project = () => {
         }
         break;
       default:
+        selectedShapeRef.current = element?.value as string;
         break;
     }
   };
 
-  useEffect(() => {
-    const canvasElement = canvasRef.current;
+  // useEffect(() => {
+  //   const canvasElement = canvasRef.current;
 
-    const handleDragOver = (event: DragEvent) => {
-      event.preventDefault();
-    };
+  //   const handleDragOver = (event: DragEvent) => {
+  //     event.preventDefault();
+  //   };
 
-    const handleDrop = async (event: DragEvent) => {
-      event.preventDefault();
+  //   const handleDrop = async (event: DragEvent) => {
+  //     event.preventDefault();
 
-      if (event.dataTransfer?.files && event.dataTransfer.files[0]) {
-        const file = event.dataTransfer.files[0];
+  //     if (event.dataTransfer?.files && event.dataTransfer.files[0]) {
+  //       const file = event.dataTransfer.files[0];
 
-        if (file.type.startsWith("image/")) {
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            const imgElement = new Image();
-            imgElement.src = e.target?.result as string;
+  //       if (file.type.startsWith("image/")) {
+  //         const reader = new FileReader();
+  //         reader.onload = (e) => {
+  //           const imgElement = new Image();
+  //           imgElement.src = e.target?.result as string;
 
-            imgElement.onload = () => {
-              const imgInstance = new fabric.Image(imgElement, {
-                left: 50,
-                top: 50,
-              });
+  //           imgElement.onload = () => {
+  //             const imgInstance = new fabric.Image(imgElement, {
+  //               left: 50,
+  //               top: 50,
+  //             });
 
-              fabricRef.current?.add(imgInstance);
-              handleImageUploads({
-                target: { files: [file] },
-              });
-            };
-          };
-          reader.readAsDataURL(file);
-        }
-      }
-    };
+  //             fabricRef.current?.add(imgInstance);
+  //             handleImageUploads(event);
+  //           };
+  //         };
+  //         reader.readAsDataURL(file);
+  //       }
+  //     }
+  //   };
 
-    if (canvasElement) {
-      canvasElement.addEventListener("dragover", handleDragOver);
-      canvasElement.addEventListener("drop", handleDrop);
-    }
+  //   if (canvasElement) {
+  //     canvasElement.addEventListener("dragover", handleDragOver);
+  //     canvasElement.addEventListener("drop", handleDrop);
+  //   }
 
-    return () => {
-      if (canvasElement) {
-        canvasElement.removeEventListener("dragover", handleDragOver);
-        canvasElement.removeEventListener("drop", handleDrop);
-      }
-    };
-  }, [canvasRef, syncShapeInStorage]);
+  //   return () => {
+  //     if (canvasElement) {
+  //       canvasElement.removeEventListener("dragover", handleDragOver);
+  //       canvasElement.removeEventListener("drop", handleDrop);
+  //     }
+  //   };
+  // }, [canvasRef, syncShapeInStorage]);
 
-  useEffect(() => {
-    const handlePaste = async (event: ClipboardEvent) => {
-      const items = event.clipboardData?.items;
+  // useEffect(() => {
+  //   const handlePaste = async (event: ClipboardEvent) => {
+  //     const items = event.clipboardData?.items;
 
-      if (items) {
-        for (const item of items) {
-          if (item.type.indexOf("image") !== -1) {
-            const file = item.getAsFile();
-            if (file) {
-              const reader = new FileReader();
-              reader.onload = (e) => {
-                const imgElement = new Image();
-                imgElement.src = e.target?.result as string;
+  //     if (items) {
+  //       for (const item of items) {
+  //         if (item.type.indexOf("image") !== -1) {
+  //           const file = item.getAsFile();
+  //           if (file) {
+  //             const reader = new FileReader();
+  //             reader.onload = (e) => {
+  //               const imgElement = new Image();
+  //               imgElement.src = e.target?.result as string;
 
-                imgElement.onload = () => {
-                  const imgInstance = new fabric.Image(imgElement, {
-                    left: 50,
-                    top: 50,
-                  });
+  //               imgElement.onload = () => {
+  //                 const imgInstance = new fabric.Image(imgElement, {
+  //                   left: 50,
+  //                   top: 50,
+  //                 });
 
-                  fabricRef.current?.add(imgInstance);
-                  handleImageUploads({
-                    target: { files: [file] },
-                  });
-                };
-              };
-              reader.readAsDataURL(file);
-            }
-          }
-        }
-      }
-    };
+  //                 fabricRef.current?.add(imgInstance);
+  //                 handleImageUploads(event);
+  //               };
+  //             };
+  //             reader.readAsDataURL(file);
+  //           }
+  //         }
+  //       }
+  //     }
+  //   };
 
-    window.addEventListener("paste", handlePaste);
+  //   window.addEventListener("paste", handlePaste);
 
-    return () => {
-      window.removeEventListener("paste", handlePaste);
-    };
-  }, [syncShapeInStorage]);
+  //   return () => {
+  //     window.removeEventListener("paste", handlePaste);
+  //   };
+  // }, [syncShapeInStorage]);
 
   useEffect(() => {
     const canvas = initializeFabric({ canvasRef, fabricRef });
 
     if (canvas) {
+      console.log("canvas init", canvas.on);
       canvas.on("mouse:down", (options) => {
         handleCanvasMouseDown({
           options,
@@ -266,6 +265,20 @@ export const Project = () => {
           setElementAttributes: setElementAtrributes,
         });
       });
+
+      canvas.on("path:created", (options) => {
+        handlePathCreated({
+          options,
+          syncShapeInStorage,
+        });
+      });
+
+      canvas?.on("object:moving", (options) => {
+        handleCanvasObjectMoving({
+          options,
+        });
+      });
+
       canvas.on("object:scaling", (options) => {
         handleCanvasObjectScaling({
           options,
@@ -289,7 +302,18 @@ export const Project = () => {
       });
 
       return () => {
+        canvas.dispose();
         window.removeEventListener("resize", handleResizeEvent);
+        window.removeEventListener("keydown", (e) =>
+          handleKeyDown({
+            e,
+            canvas: fabricRef.current,
+            undo,
+            redo,
+            syncShapeInStorage,
+            deleteShapeFromStorage,
+          })
+        );
       };
     } else {
       console.log("Canvas not initialized");
@@ -299,10 +323,10 @@ export const Project = () => {
   useEffect(() => {
     if (canvasObjects) {
       renderCanvas({ fabricRef, activeObjectRef, canvasObjects });
-    } else {
-      console.warn("canvasObjects is null or undefined");
     }
   }, [canvasObjects]);
+
+  console.log("canvasRef Change", canvasRef);
 
   return (
     <main className="h-screen overflow-hidden">
