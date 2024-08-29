@@ -1,4 +1,4 @@
-import { memo, useRef, useState } from "react";
+import { memo, useState } from "react";
 import { GoPlus } from "react-icons/go";
 import { ActiveUser } from "../../components/Avatar/AvavtarActive";
 import { Button } from "../../components/Button/Button";
@@ -17,7 +17,6 @@ const NavbarProject = ({
   console.log("activeElement", activeElement);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const inputRef = useRef(null);
   const isActive = (value: string | Array<ActiveElement>) =>
     (activeElement && activeElement.value === value) ||
     (Array.isArray(value) &&
@@ -65,7 +64,7 @@ const NavbarProject = ({
                   activeElement={activeElement}
                   handleActiveElement={handleActiveElement}
                   handleImageUpload={handleImageUpload}
-                  imageInputRef={inputRef}
+                  imageInputRef={imageInputRef}
                 />
               ) : items?.value === "comments" ? (
                 <NewThread>

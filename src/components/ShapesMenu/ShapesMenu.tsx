@@ -25,12 +25,6 @@ const ShapesMenu = ({
     (elem) => elem?.value === activeElement.value
   );
 
-  const handleUploadClick = () => {
-    if (imageInputRef.current) {
-      imageInputRef.current.click();
-    }
-  };
-
   return (
     <>
       <Button
@@ -69,13 +63,9 @@ const ShapesMenu = ({
             }}
             onClick={() => {
               handleActiveElement(elem);
+              console.log(elem)
               handleClose();
-              if (elem?.value === "image") {
-                handleUploadClick();
-                handleImageUpload();
-              }
             }}
-            selected={activeElement.value === elem?.value}
           >
             <img
               src={elem?.icon}

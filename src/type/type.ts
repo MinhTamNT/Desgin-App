@@ -84,9 +84,10 @@ export type ElementDirection = {
 };
 
 export type ImageUpload = {
-  file: File;
+  file: string;
   canvas: React.MutableRefObject<fabric.Canvas>;
   shapeRef: React.MutableRefObject<fabric.Object | null>;
+
   syncShapeInStorage: (shape: fabric.Object) => void;
 };
 

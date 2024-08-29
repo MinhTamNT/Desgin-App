@@ -19,10 +19,11 @@ import {
   initializeFabric,
   renderCanvas,
 } from "../../lib/cavans";
+import { handleImageUpload } from "../../lib/shape";
 import { ActiveElement, Attributes } from "../../type/type";
 import { defaultNavElement } from "../../utils";
 import { handleDelete, handleKeyDown } from "../../utils/Key/key-event";
-import { handleImageUpload } from "../../lib/shape";
+import { uploadImageToCloudinary } from "../../helper/UpdateImage";
 
 export const Project = () => {
   const undo = useUndo();
@@ -49,11 +50,12 @@ export const Project = () => {
     fontWeight: "",
     stroke: "#aabbcc",
   });
-  const handleImageUploads = (event: any) => {
+  const handleImageUploads = async (event: any) => {
     event.stopPropagation();
-    console.log(event.target);
+    const newImage = await uploadImageToCloudinary(event.target.files[0]);
+    console.log(newImage);
     handleImageUpload({
-      file: event.target.files[0],
+      file: newImage?.url,
       canvas: fabricRef as any,
       shapeRef,
       syncShapeInStorage,
@@ -72,8 +74,7 @@ export const Project = () => {
     shapeData.objectId = objectId;
 
     const canvasObjects = storage.get("canvasObjects") as LiveMap<string, any>;
-    console.log("canvasObjects", canvasObjects);
-    if (canvasObjects && canvasObjects.set) {
+    if (canvasObjects) {
       canvasObjects.set(objectId, shapeData);
     } else {
       console.error(
@@ -89,7 +90,6 @@ export const Project = () => {
       return true;
     }
 
-    // Using a type-safe way to iterate and delete entries
     for (const [key] of canvasObjects.entries()) {
       canvasObjects.delete(key);
     }
@@ -106,7 +106,7 @@ export const Project = () => {
   const handleActiveElement = (element: ActiveElement) => {
     setActiveElement(element);
     selectedShapeRef.current = element?.value as string;
-
+    console.log(element?.value);
     switch (element?.value) {
       case "reset":
         deleteAllShapes();
@@ -118,7 +118,9 @@ export const Project = () => {
         setActiveElement(defaultNavElement);
         break;
       case "image":
-        imageInputRef.current?.click();
+        if (imageInputRef.current) {
+          imageInputRef.current.click();
+        }
         isDrawing.current = false;
         if (fabricRef.current) {
           fabricRef.current.isDrawingMode = false;
@@ -285,6 +287,7 @@ export const Project = () => {
           setElementAttributes: setElementAtrributes,
         });
       });
+
       const handleResizeEvent = () => {
         handleResize({ canvas: fabricRef.current });
       };

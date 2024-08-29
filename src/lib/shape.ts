@@ -90,38 +90,39 @@ export const createSpecificShape = (
   }
 };
 
-export const handleImageUpload = ({
+export const handleImageUpload = async ({
   file,
   canvas,
   shapeRef,
   syncShapeInStorage,
 }: ImageUpload) => {
-  const reader = new FileReader();
+  try {
+    // Ensure file is a valid URL or base64
+    if (typeof file === "string" && file.startsWith("http")) {
+      fabric.Image.fromURL(file, (img) => {
+        console.log("Img", img);
+        img.scaleToWidth(200);
+        img.scaleToHeight(200);
 
-  reader.onload = () => {
-    fabric.Image.fromURL(reader.result as string, (img) => {
-      img.scaleToWidth(200);
-      img.scaleToHeight(200);
+        canvas.current?.add(img);
 
-      // Add the image to the canvas
-      canvas.current.add(img);
+        // Generate a unique ID for the image
+        // @ts-ignore
+        img.objectId = uuidv4();
 
-      // Assign a unique ID to the image object
-      // @ts-ignore
-      img.objectId = uuidv4();
+        shapeRef.current = img;
 
-      // Update the shapeRef to reference the new image object
-      shapeRef.current = img;
+        // Sync the image object with your storage
+        syncShapeInStorage(img);
 
-      // Sync the newly added image to storage
-      syncShapeInStorage(img);
-
-      // Render the canvas with the new image
-      canvas.current.requestRenderAll();
-    });
-  };
-
-  reader.readAsDataURL(file);
+        canvas.current?.requestRenderAll();
+      });
+    } else {
+      console.error("Invalid file URL");
+    }
+  } catch (error) {
+    console.error("Error handling image upload", error);
+  }
 };
 
 export const createShape = (
