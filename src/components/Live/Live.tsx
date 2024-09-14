@@ -160,7 +160,7 @@ export const Live = ({ canvasRef }: Props) => {
       onPointerLeave={handlePointterLeave}
       onPointerDown={handlePointterDown}
       onPointerUp={handlePointerUp}
-      className="relative flex h-full w-full items-center justify-center"
+      className="relative over flex h-full w-full items-center justify-center"
     >
       <canvas ref={canvasRef} className="w-full h-full" />
       {reactions.map((reaction) => (

@@ -14,6 +14,7 @@ import {
   handleCanvasObjectMoving,
   handleCanvasObjectScaling,
   handleCanvasSelectionCreated,
+  handleCanvasZoom,
   handlePathCreated,
   handleResize,
   initializeFabric,
@@ -52,14 +53,22 @@ export const Project = () => {
   });
   const handleImageUploads = async (event: any) => {
     event.stopPropagation();
-    const newImage = await uploadImageToCloudinary(event.target.files[0]);
-    console.log(newImage);
-    handleImageUpload({
-      file: newImage?.url,
-      canvas: fabricRef as any,
-      shapeRef,
-      syncShapeInStorage,
-    });
+    console.log("Envent", event);
+    const files = event.target.files;
+    console.log("files", files);
+    try {
+      const newImage = await uploadImageToCloudinary(files[0]);
+      if (newImage) {
+        handleImageUpload({
+          file: newImage?.url,
+          canvas: fabricRef as any,
+          shapeRef,
+          syncShapeInStorage,
+        });
+      }
+    } catch (error) {
+      console.error("Error uploading the image:", error);
+    }
   };
   const canvasObjects = useStorage((root) => root.canvasObjects) as LiveMap<
     string,
@@ -132,90 +141,109 @@ export const Project = () => {
     }
   };
 
-  // useEffect(() => {
-  //   const canvasElement = canvasRef.current;
+  useEffect(() => {
+    const canvasElement = canvasRef.current;
 
-  //   const handleDragOver = (event: DragEvent) => {
-  //     event.preventDefault();
-  //   };
+    const handleDragOver = (event: DragEvent) => {
+      event.preventDefault();
+    };
 
-  //   const handleDrop = async (event: DragEvent) => {
-  //     event.preventDefault();
+    const handleDrop = async (event: DragEvent) => {
+      event.preventDefault();
 
-  //     if (event.dataTransfer?.files && event.dataTransfer.files[0]) {
-  //       const file = event.dataTransfer.files[0];
+      if (event.dataTransfer?.files && event.dataTransfer.files[0]) {
+        const file = event.dataTransfer.files[0];
 
-  //       if (file.type.startsWith("image/")) {
-  //         const reader = new FileReader();
-  //         reader.onload = (e) => {
-  //           const imgElement = new Image();
-  //           imgElement.src = e.target?.result as string;
+        if (file.type.startsWith("image/")) {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            const imgElement = new Image();
+            imgElement.src = e.target?.result as string;
 
-  //           imgElement.onload = () => {
-  //             const imgInstance = new fabric.Image(imgElement, {
-  //               left: 50,
-  //               top: 50,
-  //             });
+            imgElement.onload = () => {
+              if (!fabricRef.current) return;
 
-  //             fabricRef.current?.add(imgInstance);
-  //             handleImageUploads(event);
-  //           };
-  //         };
-  //         reader.readAsDataURL(file);
-  //       }
-  //     }
-  //   };
+              const imgInstance = new fabric.Image(imgElement, {
+                left: 50,
+                top: 50,
+              });
 
-  //   if (canvasElement) {
-  //     canvasElement.addEventListener("dragover", handleDragOver);
-  //     canvasElement.addEventListener("drop", handleDrop);
-  //   }
+              fabricRef.current.add(imgInstance);
+              handleImageUploads(event);
+            };
+          };
+          reader.readAsDataURL(file);
+        }
+      }
+    };
 
-  //   return () => {
-  //     if (canvasElement) {
-  //       canvasElement.removeEventListener("dragover", handleDragOver);
-  //       canvasElement.removeEventListener("drop", handleDrop);
-  //     }
-  //   };
-  // }, [canvasRef, syncShapeInStorage]);
+    if (canvasElement) {
+      canvasElement.addEventListener("dragover", handleDragOver);
+      canvasElement.addEventListener("drop", handleDrop);
+    }
 
-  // useEffect(() => {
-  //   const handlePaste = async (event: ClipboardEvent) => {
-  //     const items = event.clipboardData?.items;
+    return () => {
+      if (canvasElement) {
+        canvasElement.removeEventListener("dragover", handleDragOver);
+        canvasElement.removeEventListener("drop", handleDrop);
+      }
+    };
+  }, [canvasRef, syncShapeInStorage]);
 
-  //     if (items) {
-  //       for (const item of items) {
-  //         if (item.type.indexOf("image") !== -1) {
-  //           const file = item.getAsFile();
-  //           if (file) {
-  //             const reader = new FileReader();
-  //             reader.onload = (e) => {
-  //               const imgElement = new Image();
-  //               imgElement.src = e.target?.result as string;
+  useEffect(() => {
+    const handlePaste = async (event: ClipboardEvent) => {
+      const items = event.clipboardData?.items;
 
-  //               imgElement.onload = () => {
-  //                 const imgInstance = new fabric.Image(imgElement, {
-  //                   left: 50,
-  //                   top: 50,
-  //                 });
+      if (items) {
+        for (const item of items) {
+          // Check if the pasted item is an image
+          if (item.type.indexOf("image") !== -1) {
+            const file = item.getAsFile();
+            if (file) {
+              const reader = new FileReader();
+              reader.onload = (e) => {
+                const imgElement = new Image();
+                imgElement.src = e.target?.result as string;
 
-  //                 fabricRef.current?.add(imgInstance);
-  //                 handleImageUploads(event);
-  //               };
-  //             };
-  //             reader.readAsDataURL(file);
-  //           }
-  //         }
-  //       }
-  //     }
-  //   };
+                imgElement.onload = () => {
+                  const imgInstance = new fabric.Image(imgElement, {
+                    left: 50,
+                    top: 50,
+                  });
+                  fabricRef.current?.add(imgInstance);
+                  handleImageUploads(event);
+                };
+              };
+              reader.readAsDataURL(file);
+            }
+          } else if (item.type === "text/html") {
+            item.getAsString((htmlString) => {
+              const imgTag = /<img[^>]+src="([^">]+)"/.exec(htmlString);
+              if (imgTag && imgTag[1]) {
+                const imgElement = new Image();
+                imgElement.src = imgTag[1];
 
-  //   window.addEventListener("paste", handlePaste);
+                imgElement.onload = () => {
+                  const imgInstance = new fabric.Image(imgElement, {
+                    left: 50,
+                    top: 50,
+                  });
+                  fabricRef.current?.add(imgInstance);
+                  handleImageUploads({ target: { files: [imgElement.src] } });
+                };
+              }
+            });
+          }
+        }
+      }
+    };
 
-  //   return () => {
-  //     window.removeEventListener("paste", handlePaste);
-  //   };
-  // }, [syncShapeInStorage]);
+    window.addEventListener("paste", handlePaste);
+
+    return () => {
+      window.removeEventListener("paste", handlePaste);
+    };
+  }, [syncShapeInStorage]);
 
   useEffect(() => {
     const canvas = initializeFabric({ canvasRef, fabricRef });
@@ -285,6 +313,13 @@ export const Project = () => {
         handleCanvasObjectScaling({
           options,
           setElementAttributes: setElementAtrributes,
+        });
+      });
+
+      canvas.on("mouse:wheel", (options) => {
+        handleCanvasZoom({
+          canvas,
+          options,
         });
       });
 
