@@ -1,27 +1,29 @@
-import React, { useState } from "react";
-import {
-  Avatar,
-  IconButton,
-  Menu,
-  MenuItem,
-  Badge,
-  Box,
-  Typography,
-} from "@mui/material";
+import { useMutation, useQuery, useSubscription } from "@apollo/client";
 import {
   ArrowDropDown,
   Notifications as NotificationsIcon,
 } from "@mui/icons-material";
-import { FaUser, FaCog, FaSignOutAlt } from "react-icons/fa";
-import { useSelector } from "react-redux";
-import { RootState } from "../Redux/store";
-import { useMutation, useQuery, useSubscription } from "@apollo/client";
+import {
+  Avatar,
+  Badge,
+  Box,
+  IconButton,
+  Menu,
+  MenuItem,
+  Typography,
+} from "@mui/material";
+import React, { useState } from "react";
+import { FaSignOutAlt, FaUser } from "react-icons/fa";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { persistor, RootState } from "../Redux/store";
+import { UPDATE_INVITE } from "../utils/Inivitation/inivitaton";
 import {
   GET_NOTIFICATION,
   NOTIFICATION_SUBSCRIPTION,
 } from "../utils/Notify/Notify";
-import { UPDATE_INVITE } from "../utils/Inivitation/inivitaton";
-
+import Cookies from "universal-cookie";
+import { clearUser } from "../Redux/userSlice";
 const DEFAULT_IMAGE_URL =
   "https://cdn.dribbble.com/userupload/15166587/file/original-cf8f815408f5908c3c2fe4b24d35af18.png?resize=1024x768";
 
@@ -30,7 +32,7 @@ export const Header = () => {
   const [notificationAnchorEl, setNotificationAnchorEl] =
     useState<null | HTMLElement>(null);
   const [notifications, setNotifications] = useState<Notification[]>([]);
-
+  const navigate = useNavigate();
   useQuery(GET_NOTIFICATION, {
     onCompleted: (data) => {
       setNotifications(
@@ -77,6 +79,16 @@ export const Header = () => {
   };
 
   const notificationCount = notifications.length;
+  const cookie = new Cookies();
+  const dispatch = useDispatch();
+  const handlerLogout = () => {
+    cookie.remove("access_token");
+    dispatch(clearUser());
+    persistor.purge().then(() => {
+      console.log("User has been logged out and persisted storage cleared.");
+      navigate("/auth");
+    });
+  };
 
   const handlerAccpetInivite = async (idInivite: string) => {
     try {
@@ -206,7 +218,7 @@ export const Header = () => {
           }}
         >
           <MenuItem
-            onClick={handleClose}
+            onClick={() => navigate("/profile")}
             sx={{
               display: "flex",
               alignItems: "center",
@@ -222,26 +234,9 @@ export const Header = () => {
             <FaUser size={18} />
             <Typography variant="body2">Profile</Typography>
           </MenuItem>
+
           <MenuItem
-            onClick={handleClose}
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              gap: "12px",
-              padding: "12px 16px",
-              fontSize: "14px",
-              borderRadius: "4px",
-              transition: "background-color 0.3s",
-              "&:hover": {
-                backgroundColor: "#f0f0f0",
-              },
-            }}
-          >
-            <FaCog size={18} />
-            <Typography variant="body2">Settings</Typography>
-          </MenuItem>
-          <MenuItem
-            onClick={handleClose}
+            onClick={handlerLogout}
             sx={{
               display: "flex",
               alignItems: "center",
