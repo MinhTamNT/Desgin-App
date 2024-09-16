@@ -16,7 +16,7 @@ const Color = ({
   handleInputChange,
 }: Props) => (
   <div className="flex flex-col gap-2 border-b border-primary-grey-200 p-4">
-    <h3 className="text-xs font-semibold uppercase text-primary-grey-100">
+    <h3 className="text-xs font-semibold uppercase text-white">
       {placeholder}
     </h3>
     <div
@@ -31,7 +31,7 @@ const Color = ({
         className="w-6 h-6 rounded-full border-none outline-none cursor-pointer"
         style={{ appearance: "none" }}
       />
-      <Label className="flex-1 text-sm text-primary-grey-200">
+      <Label className="flex-1 text-sm text-white">
         {attribute}
       </Label>
       <Label className="flex h-6 w-8 text-white items-center justify-center bg-primary-grey-100 text-[10px] leading-3  rounded-sm">

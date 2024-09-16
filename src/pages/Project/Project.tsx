@@ -25,7 +25,11 @@ import { ActiveElement, Attributes } from "../../type/type";
 import { defaultNavElement } from "../../utils";
 import { handleDelete, handleKeyDown } from "../../utils/Key/key-event";
 import { uploadImageToCloudinary } from "../../helper/UpdateImage";
-
+import { useQuery } from "@apollo/client";
+import { GET_PROJECT } from "../../utils/Project/Project";
+import { Project as IProject } from "../../lib/interface";
+import { useDispatch } from "react-redux";
+import { fetchUserRoleSuccess } from "../../Redux/roleSlice";
 export const Project = () => {
   const undo = useUndo();
   const redo = useRedo();
@@ -51,6 +55,23 @@ export const Project = () => {
     fontWeight: "",
     stroke: "#aabbcc",
   });
+  const [userRole, setUserRole] = useState(null);
+  const { data, loading, error } = useQuery<{ getUserProjects: IProject[] }>(
+    GET_PROJECT
+  );
+  const disptach = useDispatch();
+  useEffect(() => {
+    if (data) {
+      data.getUserProjects.map((role: any) => {
+        setUserRole(role.access);
+        disptach(fetchUserRoleSuccess(role.access));
+      });
+    }
+  }, [data]);
+
+  console.log(userRole);
+
+  console.log("Data file project", data);
   const handleImageUploads = async (event: any) => {
     event.stopPropagation();
     console.log("Envent", event);
@@ -112,6 +133,95 @@ export const Project = () => {
     }
   }, []);
 
+  useEffect(() => {
+    const canvasElement = canvasRef.current;
+
+    const handleDragOver = (event: DragEvent) => {
+      event.preventDefault();
+    };
+
+    const handleDrop = async (event: DragEvent) => {
+      event.preventDefault();
+
+      if (event.dataTransfer?.files && event.dataTransfer.files[0]) {
+        const file = event.dataTransfer.files[0];
+
+        if (file.type.startsWith("image/")) {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            const imgElement = new Image();
+            imgElement.src = e.target?.result as string;
+
+            imgElement.onload = () => {
+              const imgInstance = new fabric.Image(imgElement, {
+                left: 50,
+                top: 50,
+              });
+
+              fabricRef.current?.add(imgInstance);
+              handleImageUploads({
+                target: { files: [file] },
+              });
+            };
+          };
+          reader.readAsDataURL(file);
+        }
+      }
+    };
+
+    if (canvasElement) {
+      canvasElement.addEventListener("dragover", handleDragOver);
+      canvasElement.addEventListener("drop", handleDrop);
+    }
+
+    return () => {
+      if (canvasElement) {
+        canvasElement.removeEventListener("dragover", handleDragOver);
+        canvasElement.removeEventListener("drop", handleDrop);
+      }
+    };
+  }, [canvasRef, syncShapeInStorage]);
+
+  useEffect(() => {
+    const handlePaste = async (event: ClipboardEvent) => {
+      const items = event.clipboardData?.items;
+
+      if (items) {
+        for (const item of items) {
+          if (item.type.indexOf("image") !== -1) {
+            const file = item.getAsFile();
+            if (file) {
+              const reader = new FileReader();
+              reader.onload = (e) => {
+                const imgElement = new Image();
+                imgElement.src = e.target?.result as string;
+
+                imgElement.onload = () => {
+                  const imgInstance = new fabric.Image(imgElement, {
+                    left: 50,
+                    top: 50,
+                  });
+
+                  fabricRef.current?.add(imgInstance);
+                  handleImageUploads({
+                    target: { files: [file] },
+                  });
+                };
+              };
+              reader.readAsDataURL(file);
+            }
+          }
+        }
+      }
+    };
+
+    window.addEventListener("paste", handlePaste);
+
+    return () => {
+      window.removeEventListener("paste", handlePaste);
+    };
+  }, [syncShapeInStorage]);
+
   const handleActiveElement = (element: ActiveElement) => {
     setActiveElement(element);
     selectedShapeRef.current = element?.value as string;
@@ -142,114 +252,15 @@ export const Project = () => {
   };
 
   useEffect(() => {
-    const canvasElement = canvasRef.current;
-
-    const handleDragOver = (event: DragEvent) => {
-      event.preventDefault();
-    };
-
-    const handleDrop = async (event: DragEvent) => {
-      event.preventDefault();
-
-      if (event.dataTransfer?.files && event.dataTransfer.files[0]) {
-        const file = event.dataTransfer.files[0];
-
-        if (file.type.startsWith("image/")) {
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            const imgElement = new Image();
-            imgElement.src = e.target?.result as string;
-
-            imgElement.onload = () => {
-              if (!fabricRef.current) return;
-
-              const imgInstance = new fabric.Image(imgElement, {
-                left: 50,
-                top: 50,
-              });
-
-              fabricRef.current.add(imgInstance);
-              handleImageUploads(event);
-            };
-          };
-          reader.readAsDataURL(file);
-        }
-      }
-    };
-
-    if (canvasElement) {
-      canvasElement.addEventListener("dragover", handleDragOver);
-      canvasElement.addEventListener("drop", handleDrop);
-    }
-
-    return () => {
-      if (canvasElement) {
-        canvasElement.removeEventListener("dragover", handleDragOver);
-        canvasElement.removeEventListener("drop", handleDrop);
-      }
-    };
-  }, [canvasRef, syncShapeInStorage]);
-
-  useEffect(() => {
-    const handlePaste = async (event: ClipboardEvent) => {
-      const items = event.clipboardData?.items;
-
-      if (items) {
-        for (const item of items) {
-          // Check if the pasted item is an image
-          if (item.type.indexOf("image") !== -1) {
-            const file = item.getAsFile();
-            if (file) {
-              const reader = new FileReader();
-              reader.onload = (e) => {
-                const imgElement = new Image();
-                imgElement.src = e.target?.result as string;
-
-                imgElement.onload = () => {
-                  const imgInstance = new fabric.Image(imgElement, {
-                    left: 50,
-                    top: 50,
-                  });
-                  fabricRef.current?.add(imgInstance);
-                  handleImageUploads(event);
-                };
-              };
-              reader.readAsDataURL(file);
-            }
-          } else if (item.type === "text/html") {
-            item.getAsString((htmlString) => {
-              const imgTag = /<img[^>]+src="([^">]+)"/.exec(htmlString);
-              if (imgTag && imgTag[1]) {
-                const imgElement = new Image();
-                imgElement.src = imgTag[1];
-
-                imgElement.onload = () => {
-                  const imgInstance = new fabric.Image(imgElement, {
-                    left: 50,
-                    top: 50,
-                  });
-                  fabricRef.current?.add(imgInstance);
-                  handleImageUploads({ target: { files: [imgElement.src] } });
-                };
-              }
-            });
-          }
-        }
-      }
-    };
-
-    window.addEventListener("paste", handlePaste);
-
-    return () => {
-      window.removeEventListener("paste", handlePaste);
-    };
-  }, [syncShapeInStorage]);
-
-  useEffect(() => {
     const canvas = initializeFabric({ canvasRef, fabricRef });
-
-    if (canvas) {
-      console.log("canvas init", canvas.on);
+    if (canvas && userRole === "ROLE_READ") {
+      canvas.selection = false;
+      canvas.forEachObject((obj) => {
+        obj.selectable = false;
+        obj.evented = false;
+      });
+      return;
+    } else if (canvas) {
       canvas.on("mouse:down", (options) => {
         handleCanvasMouseDown({
           options,
@@ -356,7 +367,7 @@ export const Project = () => {
     } else {
       console.log("Canvas not initialized");
     }
-  }, [canvasRef]);
+  }, [canvasRef, userRole]);
 
   useEffect(() => {
     if (canvasObjects) {
@@ -376,7 +387,7 @@ export const Project = () => {
       />
       <section className="flex h-full flex-row">
         <LeftSidebar allShape={Array.from(canvasObjects ?? "")} />
-        <Live canvasRef={canvasRef} />
+        <Live canvasRef={canvasRef} role={userRole} />
         <RightSidebar
           elementAttributes={elementAtrributes}
           setElementAttributes={setElementAtrributes}

@@ -1,9 +1,11 @@
+import { useSelector } from "react-redux";
 import Color from "../../components/Color/Color";
 import { Dimensions } from "../../components/Dimensions/Dimensions";
 import Text from "../../components/Text/Text";
 import { modifyShape } from "../../lib/shape";
 import { RightSidebarProps } from "../../type/type";
 import { fabric } from "fabric";
+import { RootState } from "../../Redux/store";
 export default function RightSidebar({
   activeObjectRef,
   elementAttributes,
@@ -12,17 +14,29 @@ export default function RightSidebar({
   setElementAttributes,
   syncShapeInStorage,
 }: RightSidebarProps) {
+  const role = useSelector((state: RootState) => state?.role?.role?.userRole);
   const handleInputChange = (property: string, value: string) => {
     if (!fabricRef.current) isEditingRef.current = true;
+
     setElementAttributes((prev) => ({ ...prev, [property]: value }));
 
-    modifyShape({
-      canvas: fabricRef.current as fabric.Canvas,
-      property,
-      value,
-      activeObjectRef,
-      syncShapeInStorage,
-    });
+    if (role === "ROLE_WRITE") {
+      modifyShape({
+        canvas: fabricRef.current as fabric.Canvas,
+        property,
+        value,
+        activeObjectRef,
+        syncShapeInStorage,
+      });
+    } else {
+      modifyShape({
+        canvas: fabricRef.current as fabric.Canvas,
+        property,
+        value,
+        activeObjectRef,
+        syncShapeInStorage: () => {},
+      });
+    }
   };
 
   return (

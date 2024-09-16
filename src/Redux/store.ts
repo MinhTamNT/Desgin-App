@@ -11,7 +11,7 @@ import {
 } from "redux-persist";
 import storage from "redux-persist/lib/storage";
 import userReducer from "./userSlice";
-
+import roleReducer from "./roleSlice";
 const persistConfig = {
   key: "root",
   version: 1,
@@ -20,6 +20,7 @@ const persistConfig = {
 
 const rootReducer = combineReducers({
   user: userReducer,
+  role: roleReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
@@ -27,6 +28,7 @@ const persistedReducer = persistReducer(persistConfig, rootReducer);
 const store: Store = configureStore({
   reducer: {
     user: persistedReducer,
+    role: persistedReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

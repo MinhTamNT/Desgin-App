@@ -18,9 +18,10 @@ import FlyingReaction from "../Reaction/FlyingReact";
 import ReactionSelector from "../Reaction/ReactionButton";
 interface Props {
   canvasRef: React.MutableRefObject<HTMLCanvasElement | null>;
+  role: any;
 }
 
-export const Live = ({ canvasRef }: Props) => {
+export const Live = ({ canvasRef, role }: Props) => {
   const others = useOthers();
   const [{ cursor }, updatePersence] = useMyPresence() as any;
   const [cursorState, setCursorState] = useState<CursorState>({
@@ -28,8 +29,9 @@ export const Live = ({ canvasRef }: Props) => {
   });
   const [reactions, setReactions] = useState<Reaction[]>([]);
 
-  const handlePointterMove = useCallback(
+  const handlePointerMove = useCallback(
     (event: React.PointerEvent) => {
+      if (role === "ROLE_READ") return; // Disable in read-only mode
       event.preventDefault();
       if (cursor === null || cursorState.mode !== CursorMode.ReactionSelector) {
         const x = event.clientX - event.currentTarget.getBoundingClientRect().x;
@@ -39,11 +41,12 @@ export const Live = ({ canvasRef }: Props) => {
         });
       }
     },
-    [cursor, cursorState.mode, updatePersence]
+    [cursor, cursorState.mode, updatePersence, role]
   );
 
-  const handlePointterLeave = useCallback(
+  const handlePointerLeave = useCallback(
     (event: React.PointerEvent) => {
+      if (role === "ROLE_READ") return; // Disable in read-only mode
       event.preventDefault();
       updatePersence({
         cursor: null,
@@ -51,11 +54,12 @@ export const Live = ({ canvasRef }: Props) => {
       });
       setCursorState({ mode: CursorMode.Hidden });
     },
-    [updatePersence]
+    [updatePersence, role]
   );
 
-  const handlePointterDown = useCallback(
+  const handlePointerDown = useCallback(
     (event: React.PointerEvent) => {
+      if (role === "ROLE_READ") return; // Disable in read-only mode
       const x = event.clientX - event.currentTarget.getBoundingClientRect().x;
       const y = event.clientY - event.currentTarget.getBoundingClientRect().y;
       updatePersence({
@@ -67,26 +71,35 @@ export const Live = ({ canvasRef }: Props) => {
           : state
       );
     },
-    [updatePersence]
+    [updatePersence, role]
   );
 
-  const handlePointerUp = useCallback((event: React.PointerEvent) => {
-    setCursorState((state) =>
-      state.mode === CursorMode.Reaction
-        ? { ...state, isPressed: false }
-        : state
-    );
-  }, []);
+  const handlePointerUp = useCallback(
+    (event: React.PointerEvent) => {
+      if (role === "ROLE_READ") return; // Disable in read-only mode
+      setCursorState((state) =>
+        state.mode === CursorMode.Reaction
+          ? { ...state, isPressed: false }
+          : state
+      );
+    },
+    [role]
+  );
 
-  const setReaction = useCallback((reaction: string) => {
-    setCursorState({
-      mode: CursorMode.Reaction,
-      reaction,
-      isPressed: false,
-    });
-  }, []);
+  const setReaction = useCallback(
+    (reaction: string) => {
+      if (role === "ROLE_READ") return; // Disable in read-only mode
+      setCursorState({
+        mode: CursorMode.Reaction,
+        reaction,
+        isPressed: false,
+      });
+    },
+    [role]
+  );
 
   useEffect(() => {
+    if (role === "ROLE_READ") return; // Skip adding keyboard events in read-only mode
     const keyUp = (e: KeyboardEvent) => {
       if (e.key === "/") {
         setCursorState({
@@ -116,7 +129,7 @@ export const Live = ({ canvasRef }: Props) => {
       window.removeEventListener("keyup", keyUp);
       window.removeEventListener("keydown", keyDown);
     };
-  }, [updatePersence]);
+  }, [updatePersence, role]);
 
   const broadcast = useBroadcastEvent();
   useInterval(() => {
@@ -156,11 +169,11 @@ export const Live = ({ canvasRef }: Props) => {
   return (
     <div
       id="canvas"
-      onPointerMove={handlePointterMove}
-      onPointerLeave={handlePointterLeave}
-      onPointerDown={handlePointterDown}
+      onPointerMove={handlePointerMove}
+      onPointerLeave={handlePointerLeave}
+      onPointerDown={handlePointerDown}
       onPointerUp={handlePointerUp}
-      className="relative over flex h-full w-full items-center justify-center"
+      className="relative flex h-full w-full items-center justify-center"
     >
       <canvas ref={canvasRef} className="w-full h-full" />
       {reactions.map((reaction) => (
@@ -180,9 +193,8 @@ export const Live = ({ canvasRef }: Props) => {
           updateMyPresence={updatePersence}
         />
       )}
-      {cursorState.mode === CursorMode.ReactionSelector && (
-        <ReactionSelector setReaction={setReaction} />
-      )}
+      {cursorState.mode === CursorMode.ReactionSelector &&
+        role !== "ROLE_READ" && <ReactionSelector setReaction={setReaction} />}
       <LiveCursor others={others} />
     </div>
   );

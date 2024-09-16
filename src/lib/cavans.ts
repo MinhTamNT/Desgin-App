@@ -196,7 +196,6 @@ export const handleCanvasMouseUp = ({
   }
 };
 
-// update shape in storage when object is modified
 export const handleCanvasObjectModified = ({
   options,
   syncShapeInStorage,
@@ -205,10 +204,16 @@ export const handleCanvasObjectModified = ({
   if (!target) return;
 
   if (target?.type == "activeSelection") {
-    target.toObject().forEach((object: fabric.Object) => {
-      syncShapeInStorage(object);
-    });
+    const objects = (target as fabric.ActiveSelection).getObjects();
+    // objects.forEach(function (obj: fabric.Object): void {
+    //   syncShapeInStorage(obj);
+    // });
+    for (const items of objects) {
+      console.log("items", items);
+      syncShapeInStorage(items);
+    }
   } else {
+    console.log("target", target);
     syncShapeInStorage(target);
   }
 };

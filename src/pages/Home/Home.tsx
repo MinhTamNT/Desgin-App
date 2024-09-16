@@ -7,16 +7,13 @@ import { GET_PROJECT, DELETED_PROJECT } from "../../utils/Project/Project";
 import { dummyImages } from "../../assets/randomImage";
 import { RiEdit2Line, RiDeleteBinLine } from "react-icons/ri";
 import { useNavigate } from "react-router-dom";
-
 export const Home: React.FC = () => {
   const user = useSelector(
     (state: RootState) => state?.user?.user?.currentUser
   );
-
   const { data, loading, error } = useQuery<{ getUserProjects: Project[] }>(
     GET_PROJECT
   );
-
   const [deleteProject] = useMutation(DELETED_PROJECT);
 
   const navigate = useNavigate();
