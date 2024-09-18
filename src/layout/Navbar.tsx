@@ -21,7 +21,7 @@ export const Navbar = () => {
       </div>
       <nav className="flex flex-col space-y-4">
         <div
-          onClick={() => navigateTo("/")}
+          onClick={() => navigateTo("/home")}
           className="flex items-center shadow-md space-x-4 p-4 rounded-lg cursor-pointer hover:bg-gray-400 transition-colors duration-300"
         >
           <FaHome size={24} className="text-gray-300" />

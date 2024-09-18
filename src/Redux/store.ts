@@ -17,7 +17,6 @@ const persistConfig = {
   version: 1,
   storage,
 };
-
 const rootReducer = combineReducers({
   user: userReducer,
   role: roleReducer,
