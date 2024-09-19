@@ -4,38 +4,24 @@ import { Project, User } from "../lib/interface";
 import ProjectList from "../components/ListProject/ListProject";
 import { useMutation, useQuery } from "@apollo/client";
 import { ADD_PROJECT, GET_PROJECT } from "../utils/Project/Project";
-import { INVITE_USER } from "../utils/Inivitation/inivitaton";
 import { useNavigate } from "react-router-dom";
-import { SEARCH_USER } from "../utils/User/User";
 
 export const Sidebar = () => {
   const [open, setOpen] = useState(false);
   const [projectName, setProjectName] = useState("");
   const [projectDescription, setProjectDescription] = useState("");
   const [step, setStep] = useState<"details" | "invite">("details");
-  const [selectedMembers, setSelectedMembers] = useState<User[]>([]);
+  const [selectedMembers, setSelectedMembers] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const { data: userData } = useQuery<{ searchUserByName: User[] }>(
-    SEARCH_USER,
-    {
-      variables: { searchText: searchQuery },
-      skip: !searchQuery, // Skip if no query
-    }
-  );
+  const navigate = useNavigate();
   const { data, refetch } = useQuery<{ getUserProjects: Project[] }>(
     GET_PROJECT
   );
+  const projects = data?.getUserProjects || [];
+
   const [createProject] = useMutation(ADD_PROJECT, {
     onCompleted: () => refetch(),
   });
-  const [inviteUser] = useMutation(INVITE_USER, {
-    onCompleted: () => {
-      handleClose();
-      refetch();
-    },
-  });
-  const navigate = useNavigate();
-  const projects = data?.getUserProjects || [];
 
   const handleClickOpen = () => {
     setOpen(true);
@@ -60,24 +46,12 @@ export const Sidebar = () => {
 
   const handleCreateProject = async () => {
     try {
-      const { data } = await createProject({
+      await createProject({
         variables: {
           name: projectName,
           description: projectDescription,
         },
       });
-      if (data) {
-        const projectId = data.addProject.idProject;
-        selectedMembers.forEach((user) => {
-          inviteUser({
-            variables: {
-              emailContent: `You've been invited to join the project ${projectName}`,
-              projectId,
-              userInvited: user.idUser,
-            },
-          });
-        });
-      }
       handleClose();
     } catch (error) {
       console.error(error);
@@ -85,15 +59,8 @@ export const Sidebar = () => {
   };
 
   const handleAddMember = (user: User) => {
-    // Kiểm tra xem thành viên đã được thêm chưa
-    if (!selectedMembers.find((member) => member.idUser === user.idUser)) {
-      setSelectedMembers((prev) => [...prev, user]);
-    }
-    // Không cần reset searchQuery ở đây để giữ danh sách kết quả tìm kiếm
-  };
-
-  const handleRemoveMember = (userId: string) => {
-    setSelectedMembers((prev) => prev.filter((m) => m.idUser !== userId));
+    setSelectedMembers((prev) => [...prev, user]);
+    setSearchQuery("");
   };
 
   const handleSelectProject = (projectId: string) => {
@@ -170,46 +137,12 @@ export const Sidebar = () => {
                       onChange={(e) => setSearchQuery(e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 mb-4"
                     />
-                    {userData?.searchUserByName.map((user) => (
-                      <div
-                        key={user.idUser}
-                        className="flex items-center justify-between p-2 border-b border-gray-200"
-                      >
-                        <span className="text-gray-800">{user.name}</span>
-                        <button
-                          onClick={() => handleAddMember(user)}
-                          className="bg-blue-500 text-white px-3 py-1 rounded-md"
-                        >
-                          Add
-                        </button>
-                      </div>
-                    ))}
 
-                    {/* Hiển thị danh sách thành viên đã chọn */}
-                    <h3 className="text-sm font-semibold text-gray-800 mt-4">
-                      Selected Members
-                    </h3>
-                    <ul className="mb-4">
-                      {selectedMembers.map((member) => (
-                        <li
-                          key={member.idUser}
-                          className="flex items-center justify-between p-2 border-b border-gray-200"
-                        >
-                          <span>{member.name}</span>
-                          <button
-                            onClick={() => handleRemoveMember(member.idUser)}
-                            className="text-red-500 hover:text-red-700"
-                          >
-                            Remove
-                          </button>
-                        </li>
-                      ))}
-                      {selectedMembers.length === 0 && (
-                        <p className="text-sm text-gray-600 mt-2">
-                          No members selected yet.
-                        </p>
-                      )}
-                    </ul>
+                    {selectedMembers.length === 0 && (
+                      <p className="text-sm text-gray-600 mt-2">
+                        No members selected yet.
+                      </p>
+                    )}
                   </div>
                 </div>
                 <div className="flex justify-end p-4 border-t border-gray-200">
