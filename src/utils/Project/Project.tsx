@@ -51,10 +51,26 @@ const GET_RECENET_PROJECT = gql`
   }
 `;
 
+const GET_MEMEBER_IN_PROJECT = gql`
+  query GetMememberInProject($projectId: String) {
+    getMememberInProject(projectId: $projectId) {
+      User {
+        name
+        profilePicture
+        idUser
+      }
+      access
+      is_host_user
+      project_idProject
+    }
+  }
+`;
+
 export {
   ADD_PROJECT,
   GET_PROJECT,
   DELETED_PROJECT,
   UPDATE_LASTETS_ACCESS,
   GET_RECENET_PROJECT,
+  GET_MEMEBER_IN_PROJECT,
 };

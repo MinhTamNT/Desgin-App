@@ -30,9 +30,7 @@ const DialogInvite: React.FC<DialogInviteProps> = ({
   const [searchResults, setSearchResults] = useState<User[]>([]);
   const [selectedMembers, setSelectedMembers] = useState<User[]>([]);
   const { idProject } = useParams();
-  const currentUser = useSelector(
-    (state: RootState) => state?.user?.user?.currentUser
-  );
+
   const [searchUsers] = useLazyQuery(SEARCH_USER, {
     onCompleted: (data: any) => {
       setSearchResults(data?.searchUserByName || []);

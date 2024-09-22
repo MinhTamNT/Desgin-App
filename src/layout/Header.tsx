@@ -12,7 +12,7 @@ import {
   ArrowDropDown,
   Notifications as NotificationsIcon,
 } from "@mui/icons-material";
-import { FaUser, FaCog, FaSignOutAlt } from "react-icons/fa";
+import { FaUser, FaSignOutAlt, FaSearch } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState, persistor } from "../Redux/store";
 import { useMutation, useQuery, useSubscription } from "@apollo/client";
@@ -24,6 +24,7 @@ import { UPDATE_INVITE } from "../utils/Inivitation/inivitaton";
 import { clearUser } from "../Redux/userSlice";
 import Cookies from "universal-cookie";
 import { useNavigate } from "react-router-dom";
+
 const DEFAULT_IMAGE_URL =
   "https://cdn.dribbble.com/userupload/15166587/file/original-cf8f815408f5908c3c2fe4b24d35af18.png?resize=1024x768";
 
@@ -36,6 +37,7 @@ export const Header = () => {
   const currentUser = useSelector(
     (state: RootState) => state?.user?.user?.currentUser
   );
+
   useQuery(GET_NOTIFICATION, {
     onCompleted: (data) => {
       setNotifications(
@@ -50,8 +52,6 @@ export const Header = () => {
     onSubscriptionData: ({ subscriptionData }) => {
       if (subscriptionData?.data) {
         const newNotification = subscriptionData.data.notificationCreated;
-
-        // Ensure `userRequets` and `idUser` are properly typed
         if (
           newNotification.userRequest.map(
             (user: { idUser: string }) => user.idUser === currentUser?.sub
@@ -89,11 +89,11 @@ export const Header = () => {
 
   const notificationCount = notifications.length;
 
-  const handlerAccpetInivite = async (idInivite: string) => {
+  const handleAcceptInvite = async (idInvite: string) => {
     try {
       await updateInvite({
         variables: {
-          invitationIdInvitation: idInivite,
+          invitationIdInvitation: idInvite,
           status: "ACCEPTED",
         },
       });
@@ -104,7 +104,7 @@ export const Header = () => {
 
   const cookie = new Cookies();
   const dispatch = useDispatch();
-  const handlerLogout = () => {
+  const handleLogout = () => {
     cookie.remove("access_token");
     dispatch(clearUser());
     persistor.purge().then(() => {
@@ -114,16 +114,21 @@ export const Header = () => {
 
   return (
     <header className="flex items-center justify-between p-4 shadow-md bg-white">
+      {/* Left - Search */}
       <div className="hidden lg:flex flex-1 rounded-lg">
         <Box className="relative w-full max-w-lg">
+          <FaSearch className="absolute top-3 left-3 text-gray-500" />
           <input
             type="text"
             placeholder="Search..."
-            className="w-full p-2 rounded-lg border border-gray-300 placeholder-gray-600 focus:outline-none focus:border-blue-500"
+            className="w-full pl-10 p-2 rounded-lg border border-gray-300 placeholder-gray-600 focus:outline-none focus:border-blue-500"
           />
         </Box>
       </div>
+
+      {/* Right - Icons */}
       <div className="flex items-center space-x-4">
+        {/* Notifications */}
         <IconButton
           onClick={handleNotificationClick}
           size="small"
@@ -139,7 +144,7 @@ export const Header = () => {
           onClose={handleClose}
           PaperProps={{
             sx: {
-              width: "550px",
+              width: "400px",
               maxHeight: "400px",
               overflowY: "auto",
             },
@@ -172,7 +177,7 @@ export const Header = () => {
                       <button
                         className="bg-green-300 p-1 rounded-md uppercase text-gray-800 hover:bg-green-400 transition"
                         onClick={() =>
-                          handlerAccpetInivite(
+                          handleAcceptInvite(
                             notification?.invitation_idInvitation
                           )
                         }
@@ -208,6 +213,8 @@ export const Header = () => {
             </MenuItem>
           )}
         </Menu>
+
+        {/* Profile and Settings */}
         <IconButton onClick={handleClick} size="small" color="inherit">
           <Avatar
             src={user?.picture}
@@ -245,7 +252,7 @@ export const Header = () => {
           </MenuItem>
 
           <MenuItem
-            onClick={handlerLogout}
+            onClick={handleLogout}
             sx={{
               display: "flex",
               alignItems: "center",
