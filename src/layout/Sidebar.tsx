@@ -58,11 +58,6 @@ export const Sidebar = () => {
     }
   };
 
-  const handleAddMember = (user: User) => {
-    setSelectedMembers((prev) => [...prev, user]);
-    setSearchQuery("");
-  };
-
   const handleSelectProject = (projectId: string) => {
     navigate(`/project/${projectId}`);
   };

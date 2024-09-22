@@ -33,6 +33,9 @@ export const Header = () => {
     useState<null | HTMLElement>(null);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const navigate = useNavigate();
+  const currentUser = useSelector(
+    (state: RootState) => state?.user?.user?.currentUser
+  );
   useQuery(GET_NOTIFICATION, {
     onCompleted: (data) => {
       setNotifications(
@@ -47,13 +50,19 @@ export const Header = () => {
     onSubscriptionData: ({ subscriptionData }) => {
       if (subscriptionData?.data) {
         const newNotification = subscriptionData.data.notificationCreated;
-        if (!newNotification.is_read) {
-          setNotifications((prevNotifications) => [
-            ...prevNotifications,
-            newNotification,
-          ]);
+
+        // Ensure `userRequets` and `idUser` are properly typed
+        if (
+          newNotification.userRequest.map(
+            (user: { idUser: string }) => user.idUser === currentUser?.sub
+          )
+        ) {
+          setNotifications((prev) => [...prev, newNotification]);
         }
       }
+    },
+    onError: (error) => {
+      console.error("Subscription error:", error);
     },
   });
 
@@ -99,7 +108,6 @@ export const Header = () => {
     cookie.remove("access_token");
     dispatch(clearUser());
     persistor.purge().then(() => {
-      console.log("User has been logged out and persisted storage cleared.");
       navigate("/auth");
     });
   };
@@ -219,7 +227,7 @@ export const Header = () => {
           }}
         >
           <MenuItem
-            onClick={handleClose}
+            onClick={() => navigate("/profile")}
             sx={{
               display: "flex",
               alignItems: "center",

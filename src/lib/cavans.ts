@@ -203,17 +203,23 @@ export const handleCanvasObjectModified = ({
   const target = options.target;
   if (!target) return;
 
-  if (target?.type == "activeSelection") {
+  if (target?.type === "activeSelection") {
     const objects = (target as fabric.ActiveSelection).getObjects();
-    // objects.forEach(function (obj: fabric.Object): void {
-    //   syncShapeInStorage(obj);
-    // });
-    for (const items of objects) {
-      console.log("items", items);
-      syncShapeInStorage(items);
-    }
+
+    objects.map((item) => {
+      item.aCoords = item.getCoords();
+
+      console.log("Item after move:", {
+        left: item.left,
+        top: item.top,
+        aCoords: item.aCoords,
+      });
+
+      // Sync the updated object
+      syncShapeInStorage(item); // Synchronize each item in the selection
+    });
   } else {
-    console.log("target", target);
+    target.setCoords();
     syncShapeInStorage(target);
   }
 };

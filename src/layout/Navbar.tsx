@@ -1,15 +1,13 @@
+import { useQuery } from "@apollo/client";
 import { FaHome, FaProjectDiagram } from "react-icons/fa";
-import { image } from "../assets/image/image";
 import { useNavigate } from "react-router-dom";
-
-const recentItems = [
-  { id: "1", name: "Project Alpha" },
-  { id: "2", name: "Project Beta" },
-  { id: "3", name: "Project Gamma" },
-];
+import { image } from "../assets/image/image";
+import { GET_RECENET_PROJECT } from "../utils/Project/Project";
 
 export const Navbar = () => {
   const navigate = useNavigate();
+  const { data, loading, error } = useQuery(GET_RECENET_PROJECT);
+
   const navigateTo = (path: string) => {
     navigate(path);
   };
@@ -21,7 +19,7 @@ export const Navbar = () => {
       </div>
       <nav className="flex flex-col space-y-4">
         <div
-          onClick={() => navigateTo("/home")}
+          onClick={() => navigateTo("/")}
           className="flex items-center shadow-md space-x-4 p-4 rounded-lg cursor-pointer hover:bg-gray-400 transition-colors duration-300"
         >
           <FaHome size={24} className="text-gray-300" />
@@ -38,19 +36,29 @@ export const Navbar = () => {
 
       {/* Recent Items Section */}
       <div className="mt-8">
-        <h3 className="text-gray-400 font-semibold mb-3">Recent Items</h3>
+        <h3 className="text-gray-400 font-semibold mb-3">Recent Projects</h3>
         <ul className="space-y-2">
-          {recentItems.map((item) => (
-            <li key={item.id}>
-              <div
-                onClick={() => navigateTo(`/project/${item.id}`)}
-                className="flex items-center shadow-md space-x-4 p-4 rounded-lg cursor-pointer hover:bg-gray-400 transition-colors duration-300"
-              >
-                <FaProjectDiagram size={24} className="text-gray-300" />
-                <span className="font-medium">{item.name}</span>
-              </div>
-            </li>
-          ))}
+          {loading ? (
+            <li className="text-gray-500">Loading...</li>
+          ) : error ? (
+            <li className="text-red-500">Error: {error.message}</li>
+          ) : (
+            data.getRecentProjectsWithAccess.map((item: any) => (
+              <li key={item.project_idProject}>
+                <div
+                  onClick={() =>
+                    navigateTo(`/project/${item.project_idProject}`)
+                  }
+                  className="flex items-center shadow-md space-x-4 p-4 rounded-lg cursor-pointer hover:bg-gray-400 transition-colors duration-300"
+                >
+                  <FaProjectDiagram size={24} className="text-gray-300" />
+                  <span className="font-medium">
+                    {item.projectName}
+                  </span>
+                </div>
+              </li>
+            ))
+          )}
         </ul>
       </div>
     </div>

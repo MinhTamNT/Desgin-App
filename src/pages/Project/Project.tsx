@@ -69,16 +69,11 @@ export const Project = () => {
     }
   }, [data]);
 
-  console.log(userRole);
-
-  console.log("Data file project", data);
   const handleImageUploads = async (event: any) => {
     event.stopPropagation();
-    console.log("Envent", event);
-    const files = event.target.files;
-    console.log("files", files);
+    const file = event.target.files ? event.target.files[0] : null;
     try {
-      const newImage = await uploadImageToCloudinary(files[0]);
+      const newImage = await uploadImageToCloudinary(file);
       if (newImage) {
         handleImageUpload({
           file: newImage?.url,
@@ -132,95 +127,6 @@ export const Project = () => {
       canvasObjects.delete(object);
     }
   }, []);
-
-  useEffect(() => {
-    const canvasElement = canvasRef.current;
-
-    const handleDragOver = (event: DragEvent) => {
-      event.preventDefault();
-    };
-
-    const handleDrop = async (event: DragEvent) => {
-      event.preventDefault();
-
-      if (event.dataTransfer?.files && event.dataTransfer.files[0]) {
-        const file = event.dataTransfer.files[0];
-
-        if (file.type.startsWith("image/")) {
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            const imgElement = new Image();
-            imgElement.src = e.target?.result as string;
-
-            imgElement.onload = () => {
-              const imgInstance = new fabric.Image(imgElement, {
-                left: 50,
-                top: 50,
-              });
-
-              fabricRef.current?.add(imgInstance);
-              handleImageUploads({
-                target: { files: [file] },
-              });
-            };
-          };
-          reader.readAsDataURL(file);
-        }
-      }
-    };
-
-    if (canvasElement) {
-      canvasElement.addEventListener("dragover", handleDragOver);
-      canvasElement.addEventListener("drop", handleDrop);
-    }
-
-    return () => {
-      if (canvasElement) {
-        canvasElement.removeEventListener("dragover", handleDragOver);
-        canvasElement.removeEventListener("drop", handleDrop);
-      }
-    };
-  }, [canvasRef, syncShapeInStorage]);
-
-  useEffect(() => {
-    const handlePaste = async (event: ClipboardEvent) => {
-      const items = event.clipboardData?.items;
-
-      if (items) {
-        for (const item of items) {
-          if (item.type.indexOf("image") !== -1) {
-            const file = item.getAsFile();
-            if (file) {
-              const reader = new FileReader();
-              reader.onload = (e) => {
-                const imgElement = new Image();
-                imgElement.src = e.target?.result as string;
-
-                imgElement.onload = () => {
-                  const imgInstance = new fabric.Image(imgElement, {
-                    left: 50,
-                    top: 50,
-                  });
-
-                  fabricRef.current?.add(imgInstance);
-                  handleImageUploads({
-                    target: { files: [file] },
-                  });
-                };
-              };
-              reader.readAsDataURL(file);
-            }
-          }
-        }
-      }
-    };
-
-    window.addEventListener("paste", handlePaste);
-
-    return () => {
-      window.removeEventListener("paste", handlePaste);
-    };
-  }, [syncShapeInStorage]);
 
   const handleActiveElement = (element: ActiveElement) => {
     setActiveElement(element);
@@ -374,9 +280,80 @@ export const Project = () => {
       renderCanvas({ fabricRef, activeObjectRef, canvasObjects });
     }
   }, [canvasObjects]);
-
-  console.log("canvasRef Change", canvasRef);
-
+  useEffect(() => {
+    const canvasElement = canvasRef.current;
+    const handleDragOver = (event: DragEvent) => {
+      event.preventDefault();
+    };
+    const handleDrop = async (event: DragEvent) => {
+      event.preventDefault();
+      if (event.dataTransfer?.files && event.dataTransfer.files[0]) {
+        const file = event.dataTransfer.files[0];
+        if (file.type.startsWith("image/")) {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            const imgElement = new Image();
+            imgElement.src = e.target?.result as string;
+            imgElement.onload = () => {
+              const imgInstance = new fabric.Image(imgElement, {
+                left: 50,
+                top: 50,
+              });
+              fabricRef.current?.add(imgInstance);
+              handleImageUploads({
+                target: { files: [file] },
+              });
+            };
+          };
+          reader.readAsDataURL(file);
+        }
+      }
+    };
+    if (canvasElement) {
+      canvasElement.addEventListener("dragover", handleDragOver);
+      canvasElement.addEventListener("drop", handleDrop);
+    }
+    return () => {
+      if (canvasElement) {
+        canvasElement.removeEventListener("dragover", handleDragOver);
+        canvasElement.removeEventListener("drop", handleDrop);
+      }
+    };
+  }, [canvasRef, syncShapeInStorage]);
+  useEffect(() => {
+    const handlePaste = async (event: ClipboardEvent) => {
+      const items = event.clipboardData?.items;
+      if (items) {
+        for (const item of items) {
+          if (item.type.indexOf("image") !== -1) {
+            const file = item.getAsFile();
+            if (file) {
+              const reader = new FileReader();
+              reader.onload = (e) => {
+                const imgElement = new Image();
+                imgElement.src = e.target?.result as string;
+                imgElement.onload = () => {
+                  const imgInstance = new fabric.Image(imgElement, {
+                    left: 50,
+                    top: 50,
+                  });
+                  fabricRef.current?.add(imgInstance);
+                  handleImageUploads({
+                    target: { files: [file] },
+                  });
+                };
+              };
+              reader.readAsDataURL(file);
+            }
+          }
+        }
+      }
+    };
+    window.addEventListener("paste", handlePaste);
+    return () => {
+      window.removeEventListener("paste", handlePaste);
+    };
+  }, [syncShapeInStorage]);
   return (
     <main className="h-screen overflow-hidden">
       <NavbarProject

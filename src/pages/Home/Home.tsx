@@ -3,10 +3,15 @@ import { useQuery, useMutation } from "@apollo/client";
 import { useSelector } from "react-redux";
 import { RootState } from "../../Redux/store";
 import { Project } from "../../lib/interface";
-import { GET_PROJECT, DELETED_PROJECT } from "../../utils/Project/Project";
+import {
+  GET_PROJECT,
+  DELETED_PROJECT,
+  UPDATE_LASTETS_ACCESS,
+} from "../../utils/Project/Project";
 import { dummyImages } from "../../assets/randomImage";
 import { RiEdit2Line, RiDeleteBinLine } from "react-icons/ri";
 import { useNavigate } from "react-router-dom";
+
 export const Home: React.FC = () => {
   const user = useSelector(
     (state: RootState) => state?.user?.user?.currentUser
@@ -15,6 +20,7 @@ export const Home: React.FC = () => {
     GET_PROJECT
   );
   const [deleteProject] = useMutation(DELETED_PROJECT);
+  const [updateLastAccess] = useMutation(UPDATE_LASTETS_ACCESS);
 
   const navigate = useNavigate();
 
@@ -27,6 +33,20 @@ export const Home: React.FC = () => {
         variables: { projectId: idProject },
         refetchQueries: [{ query: GET_PROJECT }],
       });
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const handleEdit = async (idProject: string) => {
+    try {
+      // Gọi mutation để cập nhật thông tin truy cập dự án
+      await updateLastAccess({
+        variables: { projectId: idProject },
+      });
+
+      // Chuyển hướng tới trang chỉnh sửa dự án
+      navigate(`/project/${idProject}`);
     } catch (error) {
       console.log(error);
     }
@@ -78,7 +98,7 @@ export const Home: React.FC = () => {
                 <h3 className="text-xl font-semibold mb-4">{project.name}</h3>
                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black bg-opacity-60 rounded-lg space-x-4">
                   <button
-                    onClick={() => navigate(`/project/${project.idProject}`)}
+                    onClick={() => handleEdit(project.idProject)} // Gọi handleEdit thay vì navigate trực tiếp
                     className="bg-teal-600 flex items-center text-white py-2 px-4 rounded-full shadow-lg hover:bg-teal-700 transition-colors duration-300"
                   >
                     Edit

@@ -6,6 +6,7 @@ import { Project } from "../pages/Project/Project";
 import { ProtectedRoute } from "./ProtectedRoute";
 import { Conversation } from "../pages/Conversation/Conversation";
 import { Message } from "../pages/Conversation/Message";
+import { Profile } from "../pages/Profile/Profile";
 
 export default createBrowserRouter([
   {
@@ -25,6 +26,10 @@ export default createBrowserRouter([
           {
             element: <Project />,
             path: `/project/:idProject`,
+          },
+          {
+            element: <Profile />,
+            path: `/profile`,
           },
           {
             element: <Conversation />,

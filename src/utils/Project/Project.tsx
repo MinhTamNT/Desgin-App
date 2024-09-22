@@ -29,4 +29,32 @@ const DELETED_PROJECT = gql`
   }
 `;
 
-export { ADD_PROJECT, GET_PROJECT, DELETED_PROJECT };
+const UPDATE_LASTETS_ACCESS = gql`
+  mutation Mutation($projectId: String!) {
+    updateProjectAcces(projectId: $projectId) {
+      accessCount
+      lastAccessed
+      project_idProject
+    }
+  }
+`;
+
+const GET_RECENET_PROJECT = gql`
+  query GetRecentProjectsWithAccess {
+    getRecentProjectsWithAccess {
+      accessCount
+      is_host_user
+      project_idProject
+      lastAccessed
+      projectName
+    }
+  }
+`;
+
+export {
+  ADD_PROJECT,
+  GET_PROJECT,
+  DELETED_PROJECT,
+  UPDATE_LASTETS_ACCESS,
+  GET_RECENET_PROJECT,
+};

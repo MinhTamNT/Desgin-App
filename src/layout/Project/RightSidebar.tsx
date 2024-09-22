@@ -1,3 +1,4 @@
+import React, { useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import Color from "../../components/Color/Color";
 import { Dimensions } from "../../components/Dimensions/Dimensions";
@@ -6,6 +7,8 @@ import { modifyShape } from "../../lib/shape";
 import { RightSidebarProps } from "../../type/type";
 import { fabric } from "fabric";
 import { RootState } from "../../Redux/store";
+import SearchModal from "../../components/SearchImage/SearchImage";
+
 export default function RightSidebar({
   activeObjectRef,
   elementAttributes,
@@ -15,6 +18,8 @@ export default function RightSidebar({
   syncShapeInStorage,
 }: RightSidebarProps) {
   const role = useSelector((state: RootState) => state?.role?.role?.userRole);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   const handleInputChange = (property: string, value: string) => {
     if (!fabricRef.current) isEditingRef.current = true;
 
@@ -47,6 +52,12 @@ export default function RightSidebar({
       <span className="text-xs text-white mt-3 px-5 py-2 border-b border-primary-grey-300">
         Make changes to canvas as you like
       </span>
+      <button
+        onClick={() => setIsModalOpen(true)}
+        className="bg-blue-500 text-white rounded p-2 mx-5 mt-4"
+      >
+        Search Images
+      </button>
       <Dimensions
         width={elementAttributes.width}
         height={elementAttributes.height}
@@ -66,6 +77,7 @@ export default function RightSidebar({
         attributeType="fill"
         handleInputChange={handleInputChange}
       />
+      <SearchModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
     </section>
   );
 }

@@ -4,134 +4,155 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  TextField,
   Button,
-  List,
-  ListItem,
-  ListItemAvatar,
-  ListItemText,
-  Avatar,
-  CircularProgress,
-  Checkbox,
-  ListItemSecondaryAction,
+  TextField,
 } from "@mui/material";
 import { SEARCH_USER } from "../../utils/User/User";
 import { User } from "../../lib/interface";
 import { useLazyQuery, useMutation } from "@apollo/client";
-import { useSelector } from "react-redux";
-import { RootState } from "../../Redux/store";
 import { INVITE_USER } from "../../utils/Inivitation/inivitaton";
 import { useParams } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { RootState } from "../../Redux/store";
 
-interface DialogSearchProps {
+interface DialogInviteProps {
   open: boolean;
   onClose: () => void;
-  onSelectUsers: (users: User[]) => void;
+  onInvite: () => void;
 }
 
-const DialogSearch: React.FC<DialogSearchProps> = ({
+const DialogInvite: React.FC<DialogInviteProps> = ({
   open,
   onClose,
-  onSelectUsers,
+  onInvite,
 }) => {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<User[]>([]);
+  const [selectedMembers, setSelectedMembers] = useState<User[]>([]);
   const { idProject } = useParams();
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedUsers, setSelectedUsers] = useState<User[]>([]);
-  const [InvitedUser] = useMutation(INVITE_USER);
-  const [searchUser, { loading, data }] = useLazyQuery<{
-    searchUserByName: User[];
-  }>(SEARCH_USER);
   const currentUser = useSelector(
     (state: RootState) => state?.user?.user?.currentUser
   );
+  const [searchUsers] = useLazyQuery(SEARCH_USER, {
+    onCompleted: (data: any) => {
+      setSearchResults(data?.searchUserByName || []);
+    },
+    onError: (error: any) => {
+      console.error(error);
+    },
+  });
 
+  const [inviteUser] = useMutation(INVITE_USER);
+
+  console.log(searchQuery);
   useEffect(() => {
-    if (searchTerm) {
-      searchUser({ variables: { searchText: searchTerm } });
+    if (searchQuery) {
+      searchUsers({ variables: { searchText: searchQuery } });
+    } else {
+      setSearchResults([]);
     }
-  }, [searchTerm, searchUser]);
+  }, [searchQuery, searchUsers]);
 
-  const handleSelectUser = (user: User) => {
-    setSelectedUsers((prevSelectedUsers) => {
-      if (prevSelectedUsers.find((u) => u.sub === user.sub)) {
-        return prevSelectedUsers.filter((u) => u.sub !== user.sub);
-      } else {
-        return [...prevSelectedUsers, user];
-      }
-    });
+  const handleAddMember = (user: User) => {
+    if (!selectedMembers.find((u) => u.idUser === user.idUser)) {
+      setSelectedMembers((prev) => [...prev, user]);
+    }
+    setSearchQuery("");
+  };
+
+  const handleRemoveMember = (userId: string) => {
+    setSelectedMembers((prev) => prev.filter((u) => u.idUser !== userId));
   };
 
   const handleInvite = async () => {
     try {
-      for (const user of selectedUsers) {
-        await InvitedUser({
-          variables: {
-            emailContent: `Invite ${user.name} to join the project`,
-            projectId: idProject,
-            userInvited: user?.idUser,
-          },
-        });
-      }
-      onClose();
-      setSearchTerm("");
+      await Promise.all(
+        selectedMembers.map((user) =>
+          inviteUser({
+            variables: {
+              emailContent: `You have been invited to join the project.`,
+              projectId: idProject,
+              userInvited: user.idUser,
+            },
+          })
+        )
+      );
+      onInvite(); // Call the onInvite prop to refresh or update the UI
+      onClose(); // Close the dialog
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
   };
 
   return (
-    <Dialog open={open} onClose={onClose}>
-      <DialogTitle className="text-xl font-bold p-4">Search User</DialogTitle>
-      <DialogContent className="p-4">
+    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+      <DialogTitle>Invite Members</DialogTitle>
+      <DialogContent>
         <TextField
-          autoFocus
-          margin="dense"
-          label="Search"
-          type="text"
+          label="Search for members"
+          value={searchQuery}
+          onChange={(e) => {
+            console.log(e.target.value); // Log giá trị nhập vào
+            setSearchQuery(e.target.value);
+          }}
           fullWidth
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="mb-4"
-          variant="outlined"
         />
-        {loading && <CircularProgress className="block mx-auto my-4" />}
-        <List>
-          {searchTerm.length > 0 && (
-            <>
-              {data?.searchUserByName
-                ?.filter((user) => user.idUser !== currentUser?.sub) // Filter out the current user
-                .map((user) => (
-                  <ListItem
-                    key={user.idUser}
-                    onClick={() => handleSelectUser(user)}
-                    selected={!!selectedUsers.find((u) => u.sub === user.sub)}
-                    className="mb-2 border border-gray-300 rounded-lg transition-colors hover:bg-gray-100"
-                  >
-                    <ListItemAvatar>
-                      <Avatar src={user.profilePicture} />
-                    </ListItemAvatar>
-                    <ListItemText primary={user.name} secondary={user.email} />
-                    <ListItemSecondaryAction>
-                      <Checkbox
-                        edge="end"
-                        checked={
-                          !!selectedUsers.find((u) => u.sub === user.sub)
-                        }
-                        tabIndex={-1}
-                        disableRipple
-                      />
-                    </ListItemSecondaryAction>
-                  </ListItem>
-                ))}
-            </>
+        <div className="mt-4">
+          <h3 className="text-lg font-semibold">Search Results</h3>
+          {searchResults.length === 0 && searchQuery ? (
+            <p className="text-sm text-gray-600 mt-2">
+              No results found for "{searchQuery}".
+            </p>
+          ) : (
+            searchResults.map((user) => (
+              <div
+                key={user.idUser}
+                onClick={() => handleAddMember(user)}
+                className="flex items-center mb-2 cursor-pointer hover:bg-gray-100 p-2 rounded-md"
+              >
+                <img
+                  src={user.profilePicture}
+                  alt={user.name}
+                  className="w-8 h-8 rounded-full mr-2"
+                />
+                <span>{user.name}</span>
+              </div>
+            ))
           )}
-        </List>
+          <h3 className="text-lg font-semibold mt-4">Selected Members</h3>
+          {selectedMembers.length === 0 ? (
+            <p className="text-sm text-gray-600 mt-2">
+              No members selected yet.
+            </p>
+          ) : (
+            selectedMembers.map((user) => (
+              <div
+                key={user.idUser}
+                className="flex items-center mb-2 p-2 rounded-md border border-gray-200"
+              >
+                <img
+                  src={user.profilePicture}
+                  alt={user.name}
+                  className="w-8 h-8 rounded-full mr-2"
+                />
+                <span className="flex-grow">{user.name}</span>
+                <Button
+                  onClick={() => handleRemoveMember(user.idUser)}
+                  color="secondary"
+                  size="small"
+                >
+                  Remove
+                </Button>
+              </div>
+            ))
+          )}
+        </div>
       </DialogContent>
-      <DialogActions className="p-4">
-        <Button onClick={onClose} color="primary" className="mr-2">
+      <DialogActions>
+        <Button onClick={onClose} color="primary">
           Cancel
         </Button>
-        <Button onClick={handleInvite} color="primary" variant="contained">
+        <Button onClick={handleInvite} color="primary">
           Invite
         </Button>
       </DialogActions>
@@ -139,4 +160,4 @@ const DialogSearch: React.FC<DialogSearchProps> = ({
   );
 };
 
-export default DialogSearch;
+export default DialogInvite;

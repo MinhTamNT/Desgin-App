@@ -19,7 +19,10 @@ const Login: React.FC = () => {
     try {
       const token = credentialResponse?.credential;
       if (token) {
-        await setCookie("access_token", token, { path: "/" });
+        await setCookie("access_token", token, {
+          path: "/",
+          expires: new Date(Date.now() + 60 * 60 * 24 * 1000),
+        });
         const newUser = jwtDecode<User>(token);
         dispatch(setUser(newUser));
         await addNewUser({
