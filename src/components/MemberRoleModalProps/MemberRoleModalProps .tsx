@@ -1,17 +1,19 @@
-import { gql, useLazyQuery, useQuery } from "@apollo/client";
+import { useLazyQuery, useMutation, useQuery } from "@apollo/client";
 import { Dialog, Transition } from "@headlessui/react";
 import { Fragment, useState } from "react";
-import { User } from "../../lib/interface";
 import { useParams } from "react-router-dom";
-import { SEARCH_USER } from "../../utils/User/User";
+import { User } from "../../lib/interface";
+import { INVITE_USER } from "../../utils/Inivitation/inivitaton";
 import { GET_MEMEBER_IN_PROJECT } from "../../utils/Project/Project";
+import { SEARCH_USER } from "../../utils/User/User";
+import { RootState } from "../../Redux/store";
+import { useSelector } from "react-redux";
 
 interface ManageMembersModalProps {
   open: boolean;
   onClose: () => void;
   selectedUser: User | null;
   setSelectedUser: (user: User | null) => void;
-  projectId: string; // Ensure projectId is provided
 }
 
 const ManageMembersModal = ({
@@ -19,13 +21,18 @@ const ManageMembersModal = ({
   onClose,
   selectedUser,
   setSelectedUser,
-  projectId,
 }: ManageMembersModalProps) => {
   const { idProject } = useParams();
-  const [role, setRole] = useState<string | null>(null);
   const [searchText, setSearchText] = useState<string>("");
   const [isInviteMode, setIsInviteMode] = useState<boolean>(false);
-
+  const [inviteUser] = useMutation(INVITE_USER);
+  const currentUserRole = useSelector(
+    (state: RootState) => state.role?.role?.userRole
+  );
+  const currentUser = useSelector(
+    (state: RootState) => state.user?.user?.currentUser
+  );
+  console.log(currentUserRole);
   const [
     searchUser,
     { data: searchData, loading: searchLoading, error: searchError },
@@ -39,14 +46,22 @@ const ManageMembersModal = ({
     variables: { projectId: idProject },
   });
 
-  const handleRoleChange = (newRole: string) => setRole(newRole);
-
-  const handleInviteUser = () => {
+  const handleInviteUser = async () => {
     if (selectedUser) {
-      console.log(`Inviting ${selectedUser.name} with role ${role}`);
-      setSelectedUser(null);
-      setRole(null);
-      onClose();
+      try {
+        await inviteUser({
+          variables: {
+            emailContent: "You are invited to the project",
+            projectId: idProject,
+            userInvited: selectedUser.idUser,
+          },
+        });
+        console.log(`Inviting ${selectedUser.name}`);
+        setSelectedUser(null);
+        onClose();
+      } catch (error) {
+        console.error("Error inviting user:", error);
+      }
     }
   };
 
@@ -56,9 +71,10 @@ const ManageMembersModal = ({
     if (value) searchUser({ variables: { searchText: value } });
   };
 
-  const handleSaveRole = () => {
-    console.log(`Setting role of ${selectedUser?.name} to ${role}`);
-    onClose();
+  const handleEditPermission = async (member: any, newRole: string) => {
+    console.log(`Updating role to ${newRole} for ${member.User[0].name}`);
+    // Add your permission update mutation logic here
+    // For example, you can trigger a mutation to update user roles
   };
 
   return (
@@ -108,28 +124,24 @@ const ManageMembersModal = ({
                       {searchLoading && <p>Loading...</p>}
                       {searchError && <p>Error fetching users.</p>}
                       <ul className="mt-2 max-h-48 overflow-auto">
-                        {searchData?.searchUserByName.map((user: User) => (
-                          <li
-                            key={user.idUser}
-                            onClick={() => setSelectedUser(user)}
-                            className={`p-2 cursor-pointer ${
-                              selectedUser?.idUser === user.idUser
-                                ? "bg-blue-100"
-                                : ""
-                            }`}
-                          >
-                            {user.name}
-                          </li>
-                        ))}
+                        {searchData?.searchUserByName
+                          .filter(
+                            (user: User) => user.idUser !== currentUser?.sub
+                          )
+                          .map((user: User) => (
+                            <li
+                              key={user.idUser}
+                              onClick={() => setSelectedUser(user)}
+                              className={`p-2 cursor-pointer ${
+                                selectedUser?.idUser === user.idUser
+                                  ? "bg-blue-100"
+                                  : ""
+                              }`}
+                            >
+                              {user.name}
+                            </li>
+                          ))}
                       </ul>
-                      <select
-                        value={role || ""}
-                        onChange={(e) => setRole(e.target.value)}
-                        className="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none sm:text-sm"
-                      >
-                        <option value="editor">Editor</option>
-                        <option value="viewer">Viewer</option>
-                      </select>
                     </div>
                   ) : (
                     <div>
@@ -140,24 +152,44 @@ const ManageMembersModal = ({
                       ) : (
                         <ul>
                           {membersData?.getMememberInProject.map(
-                            (member: any) => (
-                              <li
-                                key={member.User[0].idUser}
-                                className="flex items-center gap-2 p-2"
-                              >
-                                <img
-                                  src={member.User[0].profilePicture}
-                                  alt={member.User[0].name}
-                                  className="w-8 h-8 rounded-full"
-                                />
-                                <span>{member.User[0].name}</span>
-                                {member.access && (
-                                  <span className="text-green-500">
-                                    (Access Granted)
-                                  </span>
-                                )}
-                              </li>
-                            )
+                            (member: any) =>
+                              // Only display the member if the current user is not the member
+                              currentUser?.sub !== member.User[0].idUser && (
+                                <li
+                                  key={member.User[0].idUser}
+                                  className="flex items-center justify-between gap-2 p-2"
+                                >
+                                  <div className="flex items-center gap-2">
+                                    <img
+                                      src={member.User[0].profilePicture}
+                                      alt={member.User[0].name}
+                                      className="w-8 h-8 rounded-full"
+                                    />
+                                    <span>{member.User[0].name}</span>
+                                    {member.access && (
+                                      <span className="text-green-500">
+                                        (Access Granted)
+                                      </span>
+                                    )}
+                                  </div>
+
+                                  {currentUserRole?.is_host_user && (
+                                    <select
+                                      className="border border-gray-300 rounded-md px-2 py-1 text-sm"
+                                      onChange={(e) =>
+                                        handleEditPermission(
+                                          member,
+                                          e.target.value
+                                        )
+                                      }
+                                      defaultValue={member.access}
+                                    >
+                                      <option value="VIEWER">Viewer</option>
+                                      <option value="EDITOR">Editor</option>
+                                    </select>
+                                  )}
+                                </li>
+                              )
                           )}
                         </ul>
                       )}
@@ -178,7 +210,7 @@ const ManageMembersModal = ({
                     <button
                       type="button"
                       className="inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200"
-                      onClick={handleSaveRole}
+                      onClick={onClose}
                     >
                       Save Role
                     </button>

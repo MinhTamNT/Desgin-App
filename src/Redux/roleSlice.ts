@@ -2,7 +2,7 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 interface RoleState {
-  userRole: string | null;
+  userRole: Object | null;
   loading: boolean;
   error: string | null;
 }
@@ -21,7 +21,7 @@ const roleSlice = createSlice({
       state.loading = true;
       state.error = null;
     },
-    fetchUserRoleSuccess(state, action: PayloadAction<string | null>) {
+    fetchUserRoleSuccess(state, action: PayloadAction<Object | null>) {
       state.loading = false;
       state.userRole = action.payload;
     },

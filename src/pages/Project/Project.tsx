@@ -62,12 +62,17 @@ export const Project = () => {
   const disptach = useDispatch();
   useEffect(() => {
     if (data) {
-      data.getUserProjects.map((role: any) => {
-        setUserRole(role.access);
-        disptach(fetchUserRoleSuccess(role.access));
+      data.getUserProjects.forEach((role: any) => {
+        setUserRole(role.access); // Assuming you want to set the role to the last access found
+        disptach(
+          fetchUserRoleSuccess({
+            access: role.access,
+            is_host_user: role.is_host_user,
+          })
+        );
       });
     }
-  }, [data]);
+  }, [data, disptach]); // Ensure dispatch is in the dependency array
 
   const handleImageUploads = async (event: any) => {
     event.stopPropagation();
