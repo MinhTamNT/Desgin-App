@@ -162,6 +162,8 @@ export const Project = () => {
     }
   };
 
+  console.log(userRole);
+
   useEffect(() => {
     const canvas = initializeFabric({ canvasRef, fabricRef });
     if (canvas && userRole === "ROLE_READ") {

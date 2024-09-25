@@ -4,7 +4,10 @@ import { Fragment, useState } from "react";
 import { useParams } from "react-router-dom";
 import { User } from "../../lib/interface";
 import { INVITE_USER } from "../../utils/Inivitation/inivitaton";
-import { GET_MEMEBER_IN_PROJECT } from "../../utils/Project/Project";
+import {
+  GET_MEMEBER_IN_PROJECT,
+  UPDATE_ROLE,
+} from "../../utils/Project/Project";
 import { SEARCH_USER } from "../../utils/User/User";
 import { RootState } from "../../Redux/store";
 import { useSelector } from "react-redux";
@@ -15,7 +18,6 @@ interface ManageMembersModalProps {
   selectedUser: User | null;
   setSelectedUser: (user: User | null) => void;
 }
-
 const ManageMembersModal = ({
   open,
   onClose,
@@ -25,6 +27,10 @@ const ManageMembersModal = ({
   const { idProject } = useParams();
   const [searchText, setSearchText] = useState<string>("");
   const [isInviteMode, setIsInviteMode] = useState<boolean>(false);
+
+  // Use the UPDATE_ROLE mutation
+  const [updateRole] = useMutation(UPDATE_ROLE);
+
   const [inviteUser] = useMutation(INVITE_USER);
   const currentUserRole = useSelector(
     (state: RootState) => state.role?.role?.userRole
@@ -32,7 +38,7 @@ const ManageMembersModal = ({
   const currentUser = useSelector(
     (state: RootState) => state.user?.user?.currentUser
   );
-  console.log(currentUserRole);
+
   const [
     searchUser,
     { data: searchData, loading: searchLoading, error: searchError },
@@ -73,8 +79,18 @@ const ManageMembersModal = ({
 
   const handleEditPermission = async (member: any, newRole: string) => {
     console.log(`Updating role to ${newRole} for ${member.User[0].name}`);
-    // Add your permission update mutation logic here
-    // For example, you can trigger a mutation to update user roles
+    try {
+      await updateRole({
+        variables: {
+          userId: member.User[0].idUser,
+          role: newRole,
+          projectId: idProject,
+        },
+      });
+      console.log(`Role updated to ${newRole} for ${member.User[0].name}`);
+    } catch (error) {
+      console.error("Error updating role:", error);
+    }
   };
 
   return (
@@ -153,7 +169,6 @@ const ManageMembersModal = ({
                         <ul>
                           {membersData?.getMememberInProject.map(
                             (member: any) =>
-                              // Only display the member if the current user is not the member
                               currentUser?.sub !== member.User[0].idUser && (
                                 <li
                                   key={member.User[0].idUser}
@@ -173,7 +188,7 @@ const ManageMembersModal = ({
                                     )}
                                   </div>
 
-                                  {currentUserRole?.is_host_user && (
+                                  {currentUserRole?.is_host_user === true && (
                                     <select
                                       className="border border-gray-300 rounded-md px-2 py-1 text-sm"
                                       onChange={(e) =>
@@ -184,8 +199,15 @@ const ManageMembersModal = ({
                                       }
                                       defaultValue={member.access}
                                     >
-                                      <option value="VIEWER">Viewer</option>
-                                      <option value="EDITOR">Editor</option>
+                                      {member?.access === "ROLE_WRITE" ? (
+                                        <>
+                                          <option value="EDITOR">Editor</option>
+                                        </>
+                                      ) : (
+                                        <>
+                                          <option value="VIEWER">Viewer</option>
+                                        </>
+                                      )}
                                     </select>
                                   )}
                                 </li>

@@ -66,6 +66,17 @@ const GET_MEMEBER_IN_PROJECT = gql`
   }
 `;
 
+const UPDATE_ROLE = gql`
+  mutation Mutation($userId: String!, $role: String!, $projectId: String!) {
+    updateRoleProject(userId: $userId, role: $role, projectId: $projectId) {
+      access
+      is_host_user
+      lastAccessed
+      projectName
+    }
+  }
+`;
+
 export {
   ADD_PROJECT,
   GET_PROJECT,
@@ -73,4 +84,5 @@ export {
   UPDATE_LASTETS_ACCESS,
   GET_RECENET_PROJECT,
   GET_MEMEBER_IN_PROJECT,
+  UPDATE_ROLE,
 };
