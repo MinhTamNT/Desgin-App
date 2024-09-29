@@ -2,7 +2,6 @@ import { memo, useState } from "react";
 import { GoPlus } from "react-icons/go";
 import { ActiveUser } from "../../components/Avatar/AvavtarActive";
 import { Button } from "../../components/Button/Button";
-import DialogSearch from "../../components/Dialog/DialogSeach";
 import ManageMembersModal from "../../components/MemberRoleModalProps/MemberRoleModalProps ";
 import { NewThread } from "../../components/NewThread/NewThread";
 import ShapesMenu from "../../components/ShapesMenu/ShapesMenu";
@@ -17,7 +16,6 @@ const NavbarProject = ({
   imageInputRef,
 }: NavbarProps) => {
   console.log("activeElement", activeElement);
-  const [dialogOpen, setDialogOpen] = useState(false);
   const [modalOpen, setModalOpen] = useState(false); // For managing members modal
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
@@ -25,20 +23,6 @@ const NavbarProject = ({
     (activeElement && activeElement.value === value) ||
     (Array.isArray(value) &&
       value.some((val) => val?.value === activeElement?.value));
-
-  const handleOpenDialog = () => {
-    setDialogOpen(true);
-  };
-
-  const handleCloseDialog = () => {
-    setDialogOpen(false);
-  };
-
-  const handleSelectUsers = (users: User[]) => {
-    if (users.length > 0) {
-      setSelectedUser(users[0]);
-    }
-  };
 
   const handleOpenManageMembersModal = () => {
     setModalOpen(true); // Open the member management modal

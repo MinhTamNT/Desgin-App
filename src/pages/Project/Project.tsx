@@ -371,7 +371,7 @@ export const Project = () => {
       />
       <section className="flex h-full flex-row">
         <LeftSidebar allShape={Array.from(canvasObjects ?? "")} />
-        <Live canvasRef={canvasRef} role={userRole} />
+        <Live canvasRef={canvasRef} role={userRole} undo={undo} redo={redo} />
         <RightSidebar
           elementAttributes={elementAtrributes}
           setElementAttributes={setElementAtrributes}

@@ -16,12 +16,22 @@ import { CursorChat } from "../Cursor/CursorChat";
 import { LiveCursor } from "../Cursor/LiveCursor";
 import FlyingReaction from "../Reaction/FlyingReact";
 import ReactionSelector from "../Reaction/ReactionButton";
+import { Comments } from "../CommentOverPlay/Comments";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from "@radix-ui/react-context-menu";
+import { shortcuts } from "../../utils";
 interface Props {
   canvasRef: React.MutableRefObject<HTMLCanvasElement | null>;
   role: any;
+  undo: () => void;
+  redo: () => void;
 }
 
-export const Live = ({ canvasRef, role }: Props) => {
+export const Live = ({ canvasRef, role, undo, redo }: Props) => {
   const others = useOthers();
   const [{ cursor }, updatePersence] = useMyPresence() as any;
   const [cursorState, setCursorState] = useState<CursorState>({
@@ -88,7 +98,7 @@ export const Live = ({ canvasRef, role }: Props) => {
 
   const setReaction = useCallback(
     (reaction: string) => {
-      if (role === "ROLE_READ") return; // Disable in read-only mode
+      if (role === "ROLE_READ") return;
       setCursorState({
         mode: CursorMode.Reaction,
         reaction,
@@ -99,7 +109,7 @@ export const Live = ({ canvasRef, role }: Props) => {
   );
 
   useEffect(() => {
-    if (role === "ROLE_READ") return; // Skip adding keyboard events in read-only mode
+    if (role === "ROLE_READ") return;
     const keyUp = (e: KeyboardEvent) => {
       if (e.key === "/") {
         setCursorState({
@@ -166,36 +176,83 @@ export const Live = ({ canvasRef, role }: Props) => {
     ]);
   });
 
+  const handleContextMenuClick = useCallback((key: string) => {
+    console.log(key);
+    switch (key) {
+      case "Chat":
+        setCursorState({
+          mode: CursorMode.Chat,
+          previousMessage: null,
+          message: "",
+        });
+        break;
+      case "Undo":
+        undo();
+        break;
+      case "Redo":
+        redo();
+        break;
+      case "Reactions":
+        setCursorState({
+          mode: CursorMode.ReactionSelector,
+        });
+        break;
+      default:
+        break;
+    }
+  }, []);
+
   return (
-    <div
-      id="canvas"
-      onPointerMove={handlePointerMove}
-      onPointerLeave={handlePointerLeave}
-      onPointerDown={handlePointerDown}
-      onPointerUp={handlePointerUp}
-      className="relative flex h-full w-full items-center justify-center"
-    >
-      <canvas ref={canvasRef} className="w-full h-full" />
-      {reactions.map((reaction) => (
-        <FlyingReaction
-          key={reaction.timestamp.toString()}
-          x={reaction.point.x}
-          y={reaction.point.y}
-          timestamp={reaction.timestamp}
-          value={reaction.value}
-        />
-      ))}
-      {cursor && (
-        <CursorChat
-          cursor={cursor}
-          cursorState={cursorState}
-          setCursorState={setCursorState}
-          updateMyPresence={updatePersence}
-        />
-      )}
-      {cursorState.mode === CursorMode.ReactionSelector &&
-        role !== "ROLE_READ" && <ReactionSelector setReaction={setReaction} />}
-      <LiveCursor others={others} />
-    </div>
+    <ContextMenu>
+      <ContextMenuTrigger
+        id="canvas"
+        onPointerMove={handlePointerMove}
+        onPointerLeave={handlePointerLeave}
+        onPointerDown={handlePointerDown}
+        onPointerUp={handlePointerUp}
+        className="relative flex h-full w-full items-center justify-center"
+      >
+        <canvas ref={canvasRef} className="w-full h-full" />
+        {reactions.map((reaction) => (
+          <FlyingReaction
+            key={reaction.timestamp.toString()}
+            x={reaction.point.x}
+            y={reaction.point.y}
+            timestamp={reaction.timestamp}
+            value={reaction.value}
+          />
+        ))}
+        {cursor && (
+          <CursorChat
+            cursor={cursor}
+            cursorState={cursorState}
+            setCursorState={setCursorState}
+            updateMyPresence={updatePersence}
+          />
+        )}
+        {cursorState.mode === CursorMode.ReactionSelector &&
+          role !== "ROLE_READ" && (
+            <ReactionSelector setReaction={setReaction} />
+          )}
+        <LiveCursor others={others} />
+        <Comments />
+      </ContextMenuTrigger>
+      <ContextMenuContent className="right-menu-content bg-white border border-gray-200 shadow-lg rounded-lg p-2 w-64">
+        {shortcuts.map((shortcut) => (
+          <ContextMenuItem
+            key={shortcut.key}
+            className="right-menu-item flex items-center justify-between p-2 rounded-lg hover:bg-gray-100 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            onClick={() => handleContextMenuClick(shortcut.name)}
+          >
+            <span className="right-menu-name font-medium text-gray-800">
+              {shortcut.name}
+            </span>
+            <span className="right-menu-shortcut text-xs text-gray-500">
+              {shortcut.shortcut}
+            </span>
+          </ContextMenuItem>
+        ))}
+      </ContextMenuContent>
+    </ContextMenu>
   );
 };
