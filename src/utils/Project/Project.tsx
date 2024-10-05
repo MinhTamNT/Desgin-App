@@ -77,6 +77,20 @@ const UPDATE_ROLE = gql`
   }
 `;
 
+const REMOVED_MEMBER_PROJECT = gql`
+  mutation Mutation($projectId: String!, $userId: String!) {
+    removeUserFromProject(projectId: $projectId, userId: $userId) {
+      access
+      accessCount
+      is_host_user
+      lastAccessed
+      projectName
+      project_idProject
+      user_idUser
+    }
+  }
+`;
+
 export {
   ADD_PROJECT,
   GET_PROJECT,
@@ -85,4 +99,5 @@ export {
   GET_RECENET_PROJECT,
   GET_MEMEBER_IN_PROJECT,
   UPDATE_ROLE,
+  REMOVED_MEMBER_PROJECT,
 };

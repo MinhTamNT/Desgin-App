@@ -29,7 +29,7 @@ const Login: React.FC = () => {
           variables: {
             name: newUser?.name,
             roleId: 2,
-            profilePicture: newUser?.profilePicture ?? "",
+            profilePicture: newUser?.picture ?? "",
             idUser: newUser?.sub,
             email: newUser.email,
           },

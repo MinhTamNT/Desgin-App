@@ -52,6 +52,7 @@ export const Header = () => {
     onSubscriptionData: ({ subscriptionData }) => {
       if (subscriptionData?.data) {
         const newNotification = subscriptionData.data.notificationCreated;
+        console.log("New Notification:", newNotification);
         if (
           newNotification.userRequest.map(
             (user: { idUser: string }) => user.idUser === currentUser?.sub
@@ -171,24 +172,23 @@ export const Header = () => {
                   New
                 </Box>
                 <Typography variant="body2">{notification?.message}</Typography>
-                {!notification?.is_read &&
-                  notification?.type === "INIVITED" && (
-                    <Box className="ml-auto flex gap-2">
-                      <button
-                        className="bg-green-300 p-1 rounded-md uppercase text-gray-800 hover:bg-green-400 transition"
-                        onClick={() =>
-                          handleAcceptInvite(
-                            notification?.invitation_idInvitation
-                          )
-                        }
-                      >
-                        Accept
-                      </button>
-                      <button className="bg-red-300 p-1 rounded-md uppercase text-white hover:bg-red-400 transition">
-                        Reject
-                      </button>
-                    </Box>
-                  )}
+                {!notification?.is_read && notification?.type === "INVITED" && (
+                  <Box className="ml-auto flex gap-2">
+                    <button
+                      className="bg-green-300 p-1 rounded-md uppercase text-gray-800 hover:bg-green-400 transition"
+                      onClick={() =>
+                        handleAcceptInvite(
+                          notification?.invitation_idInvitation
+                        )
+                      }
+                    >
+                      Accept
+                    </button>
+                    <button className="bg-red-300 p-1 rounded-md uppercase text-white hover:bg-red-400 transition">
+                      Reject
+                    </button>
+                  </Box>
+                )}
               </MenuItem>
             ))
           ) : (
