@@ -1,16 +1,16 @@
 import { useLazyQuery, useMutation, useQuery } from "@apollo/client";
 import { Dialog, Transition } from "@headlessui/react";
 import { Fragment, useState } from "react";
+import { useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
 import { User } from "../../lib/interface";
+import { RootState } from "../../Redux/store";
 import { INVITE_USER } from "../../utils/Inivitation/inivitaton";
 import {
   GET_MEMEBER_IN_PROJECT,
   UPDATE_ROLE,
 } from "../../utils/Project/Project";
 import { SEARCH_USER } from "../../utils/User/User";
-import { RootState } from "../../Redux/store";
-import { useSelector } from "react-redux";
 
 interface ManageMembersModalProps {
   open: boolean;
@@ -28,7 +28,6 @@ const ManageMembersModal = ({
   const [searchText, setSearchText] = useState<string>("");
   const [isInviteMode, setIsInviteMode] = useState<boolean>(false);
 
-  // Use the UPDATE_ROLE mutation
   const [updateRole] = useMutation(UPDATE_ROLE);
 
   const [inviteUser] = useMutation(INVITE_USER);

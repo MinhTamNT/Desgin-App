@@ -11,7 +11,8 @@ import { Header } from "./Header";
 import { Navbar } from "./Navbar";
 import { Sidebar } from "./Sidebar";
 import Room from "../components/Room/Room";
-
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 const clientId = import.meta.env.VITE_CLIENT_ID;
 const publicKey = import.meta.env.VITE_LIVE_BLOCK;
 
@@ -32,6 +33,7 @@ export const AuthLayout: React.FC = () => {
           <Provider store={store}>
             <PersistGate loading={null} persistor={persistor}>
               <ApolloProvider client={client}>
+                <ToastContainer position="top-center" />
                 <main
                   className={`h-full ${
                     isProjectPage ? "bg-project-background" : ""

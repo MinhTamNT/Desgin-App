@@ -27,6 +27,10 @@ import { defaultNavElement } from "../../utils";
 import { handleDelete, handleKeyDown } from "../../utils/Key/key-event";
 import { RootState } from "../../Redux/store";
 import { useSelector } from "react-redux";
+import { NOTIFICATION_SUBSCRIPTION } from "../../utils/Notify/Notify";
+import { useSubscription } from "@apollo/client";
+import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
 export const Project = () => {
   const undo = useUndo();
   const redo = useRedo();
@@ -35,6 +39,7 @@ export const Project = () => {
   const isDrawing = useRef(false);
   const shapeRef = useRef<fabric.Object | null>(null);
   const selectedShapeRef = useRef<string | null>(null);
+  const [notifications, setNotifications] = useState<string[]>([]);
   const [activeElement, setActiveElement] = useState<ActiveElement>({
     name: "",
     value: "",
@@ -52,9 +57,40 @@ export const Project = () => {
     fontWeight: "",
     stroke: "#aabbcc",
   });
+  const user = useSelector(
+    (state: RootState) => state?.user?.user?.currentUser
+  );
+  console.log(user?.sub);
   const userRole = useSelector(
     (state: RootState) => state?.role?.role?.userRole
   );
+  const navigate = useNavigate();
+  useSubscription(NOTIFICATION_SUBSCRIPTION, {
+    onSubscriptionData: ({ subscriptionData }) => {
+      if (subscriptionData?.data) {
+        const newNotification = subscriptionData.data.notificationCreated;
+        console.log("New Notification:", newNotification);
+
+        const userIds = newNotification.userRequest.map(
+          (idUser: any) => idUser.idUser === user?.sub
+        );
+        const isCheck = userIds.includes(true);
+        console.log(isCheck);
+        if (isCheck === false) {
+          toast(newNotification.message);
+          console.log("New Notification:", newNotification);
+          setNotifications((prev) => [...prev, newNotification.message]);
+
+          setTimeout(() => {
+            navigate("/");
+          }, 3000);
+        }
+      }
+    },
+    onError: (error) => {
+      console.error("Subscription error:", error);
+    },
+  });
 
   const handleImageUploads = async (event: any) => {
     event.stopPropagation();
@@ -267,80 +303,7 @@ export const Project = () => {
       renderCanvas({ fabricRef, activeObjectRef, canvasObjects });
     }
   }, [canvasObjects]);
-  // useEffect(() => {
-  //   const canvasElement = canvasRef.current;
-  //   const handleDragOver = (event: DragEvent) => {
-  //     event.preventDefault();
-  //   };
-  //   const handleDrop = async (event: DragEvent) => {
-  //     event.preventDefault();
-  //     if (event.dataTransfer?.files && event.dataTransfer.files[0]) {
-  //       const file = event.dataTransfer.files[0];
-  //       if (file.type.startsWith("image/")) {
-  //         const reader = new FileReader();
-  //         reader.onload = (e) => {
-  //           const imgElement = new Image();
-  //           imgElement.src = e.target?.result as string;
-  //           imgElement.onload = () => {
-  //             const imgInstance = new fabric.Image(imgElement, {
-  //               left: 50,
-  //               top: 50,
-  //             });
-  //             fabricRef.current?.add(imgInstance);
-  //             handleImageUploads({
-  //               target: { files: [file] },
-  //             });
-  //           };
-  //         };
-  //         reader.readAsDataURL(file);
-  //       }
-  //     }
-  //   };
-  //   if (canvasElement) {
-  //     canvasElement.addEventListener("dragover", handleDragOver);
-  //     canvasElement.addEventListener("drop", handleDrop);
-  //   }
-  //   return () => {
-  //     if (canvasElement) {
-  //       canvasElement.removeEventListener("dragover", handleDragOver);
-  //       canvasElement.removeEventListener("drop", handleDrop);
-  //     }
-  //   };
-  // }, [canvasRef, syncShapeInStorage]);
-  // useEffect(() => {
-  //   const handlePaste = async (event: ClipboardEvent) => {
-  //     const items = event.clipboardData?.items;
-  //     if (items) {
-  //       for (const item of items) {
-  //         if (item.type.indexOf("image") !== -1) {
-  //           const file = item.getAsFile();
-  //           if (file) {
-  //             const reader = new FileReader();
-  //             reader.onload = (e) => {
-  //               const imgElement = new Image();
-  //               imgElement.src = e.target?.result as string;
-  //               imgElement.onload = () => {
-  //                 const imgInstance = new fabric.Image(imgElement, {
-  //                   left: 50,
-  //                   top: 50,
-  //                 });
-  //                 fabricRef.current?.add(imgInstance);
-  //                 handleImageUploads({
-  //                   target: { files: [file] },
-  //                 });
-  //               };
-  //             };
-  //             reader.readAsDataURL(file);
-  //           }
-  //         }
-  //       }
-  //     }
-  //   };
-  //   window.addEventListener("paste", handlePaste);
-  //   return () => {
-  //     window.removeEventListener("paste", handlePaste);
-  //   };
-  // }, [syncShapeInStorage]);
+
   return (
     <main className="h-screen overflow-hidden">
       <NavbarProject
