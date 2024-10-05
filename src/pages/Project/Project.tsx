@@ -3,6 +3,7 @@ import { useMutation, useRedo, useStorage, useUndo } from "@liveblocks/react";
 import { fabric } from "fabric";
 import { useEffect, useRef, useState } from "react";
 import { Live } from "../../components/Live/Live";
+import { uploadImageToCloudinary } from "../../helper/UpdateImage";
 import LeftSidebar from "../../layout/Project/LeftSidebar";
 import NavbarProject from "../../layout/Project/NavbarProject";
 import RightSidebar from "../../layout/Project/RightSidebar";
@@ -24,12 +25,8 @@ import { handleImageUpload } from "../../lib/shape";
 import { ActiveElement, Attributes } from "../../type/type";
 import { defaultNavElement } from "../../utils";
 import { handleDelete, handleKeyDown } from "../../utils/Key/key-event";
-import { uploadImageToCloudinary } from "../../helper/UpdateImage";
-import { useQuery } from "@apollo/client";
-import { GET_PROJECT } from "../../utils/Project/Project";
-import { Project as IProject } from "../../lib/interface";
-import { useDispatch } from "react-redux";
-import { fetchUserRoleSuccess } from "../../Redux/roleSlice";
+import { RootState } from "../../Redux/store";
+import { useSelector } from "react-redux";
 export const Project = () => {
   const undo = useUndo();
   const redo = useRedo();
@@ -55,24 +52,9 @@ export const Project = () => {
     fontWeight: "",
     stroke: "#aabbcc",
   });
-  const [userRole, setUserRole] = useState(null);
-  const { data, loading, error } = useQuery<{ getUserProjects: IProject[] }>(
-    GET_PROJECT
+  const userRole = useSelector(
+    (state: RootState) => state?.role?.role?.userRole
   );
-  const disptach = useDispatch();
-  useEffect(() => {
-    if (data) {
-      data.getUserProjects.forEach((role: any) => {
-        setUserRole(role.access); // Assuming you want to set the role to the last access found
-        disptach(
-          fetchUserRoleSuccess({
-            access: role.access,
-            is_host_user: role.is_host_user,
-          })
-        );
-      });
-    }
-  }, [data, disptach]); // Ensure dispatch is in the dependency array
 
   const handleImageUploads = async (event: any) => {
     event.stopPropagation();
@@ -162,11 +144,9 @@ export const Project = () => {
     }
   };
 
-  console.log(userRole);
-
   useEffect(() => {
     const canvas = initializeFabric({ canvasRef, fabricRef });
-    if (canvas && userRole === "ROLE_READ") {
+    if (canvas && userRole.access === "ROLE_READ") {
       canvas.selection = false;
       canvas.forEachObject((obj) => {
         obj.selectable = false;
@@ -287,80 +267,80 @@ export const Project = () => {
       renderCanvas({ fabricRef, activeObjectRef, canvasObjects });
     }
   }, [canvasObjects]);
-  useEffect(() => {
-    const canvasElement = canvasRef.current;
-    const handleDragOver = (event: DragEvent) => {
-      event.preventDefault();
-    };
-    const handleDrop = async (event: DragEvent) => {
-      event.preventDefault();
-      if (event.dataTransfer?.files && event.dataTransfer.files[0]) {
-        const file = event.dataTransfer.files[0];
-        if (file.type.startsWith("image/")) {
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            const imgElement = new Image();
-            imgElement.src = e.target?.result as string;
-            imgElement.onload = () => {
-              const imgInstance = new fabric.Image(imgElement, {
-                left: 50,
-                top: 50,
-              });
-              fabricRef.current?.add(imgInstance);
-              handleImageUploads({
-                target: { files: [file] },
-              });
-            };
-          };
-          reader.readAsDataURL(file);
-        }
-      }
-    };
-    if (canvasElement) {
-      canvasElement.addEventListener("dragover", handleDragOver);
-      canvasElement.addEventListener("drop", handleDrop);
-    }
-    return () => {
-      if (canvasElement) {
-        canvasElement.removeEventListener("dragover", handleDragOver);
-        canvasElement.removeEventListener("drop", handleDrop);
-      }
-    };
-  }, [canvasRef, syncShapeInStorage]);
-  useEffect(() => {
-    const handlePaste = async (event: ClipboardEvent) => {
-      const items = event.clipboardData?.items;
-      if (items) {
-        for (const item of items) {
-          if (item.type.indexOf("image") !== -1) {
-            const file = item.getAsFile();
-            if (file) {
-              const reader = new FileReader();
-              reader.onload = (e) => {
-                const imgElement = new Image();
-                imgElement.src = e.target?.result as string;
-                imgElement.onload = () => {
-                  const imgInstance = new fabric.Image(imgElement, {
-                    left: 50,
-                    top: 50,
-                  });
-                  fabricRef.current?.add(imgInstance);
-                  handleImageUploads({
-                    target: { files: [file] },
-                  });
-                };
-              };
-              reader.readAsDataURL(file);
-            }
-          }
-        }
-      }
-    };
-    window.addEventListener("paste", handlePaste);
-    return () => {
-      window.removeEventListener("paste", handlePaste);
-    };
-  }, [syncShapeInStorage]);
+  // useEffect(() => {
+  //   const canvasElement = canvasRef.current;
+  //   const handleDragOver = (event: DragEvent) => {
+  //     event.preventDefault();
+  //   };
+  //   const handleDrop = async (event: DragEvent) => {
+  //     event.preventDefault();
+  //     if (event.dataTransfer?.files && event.dataTransfer.files[0]) {
+  //       const file = event.dataTransfer.files[0];
+  //       if (file.type.startsWith("image/")) {
+  //         const reader = new FileReader();
+  //         reader.onload = (e) => {
+  //           const imgElement = new Image();
+  //           imgElement.src = e.target?.result as string;
+  //           imgElement.onload = () => {
+  //             const imgInstance = new fabric.Image(imgElement, {
+  //               left: 50,
+  //               top: 50,
+  //             });
+  //             fabricRef.current?.add(imgInstance);
+  //             handleImageUploads({
+  //               target: { files: [file] },
+  //             });
+  //           };
+  //         };
+  //         reader.readAsDataURL(file);
+  //       }
+  //     }
+  //   };
+  //   if (canvasElement) {
+  //     canvasElement.addEventListener("dragover", handleDragOver);
+  //     canvasElement.addEventListener("drop", handleDrop);
+  //   }
+  //   return () => {
+  //     if (canvasElement) {
+  //       canvasElement.removeEventListener("dragover", handleDragOver);
+  //       canvasElement.removeEventListener("drop", handleDrop);
+  //     }
+  //   };
+  // }, [canvasRef, syncShapeInStorage]);
+  // useEffect(() => {
+  //   const handlePaste = async (event: ClipboardEvent) => {
+  //     const items = event.clipboardData?.items;
+  //     if (items) {
+  //       for (const item of items) {
+  //         if (item.type.indexOf("image") !== -1) {
+  //           const file = item.getAsFile();
+  //           if (file) {
+  //             const reader = new FileReader();
+  //             reader.onload = (e) => {
+  //               const imgElement = new Image();
+  //               imgElement.src = e.target?.result as string;
+  //               imgElement.onload = () => {
+  //                 const imgInstance = new fabric.Image(imgElement, {
+  //                   left: 50,
+  //                   top: 50,
+  //                 });
+  //                 fabricRef.current?.add(imgInstance);
+  //                 handleImageUploads({
+  //                   target: { files: [file] },
+  //                 });
+  //               };
+  //             };
+  //             reader.readAsDataURL(file);
+  //           }
+  //         }
+  //       }
+  //     }
+  //   };
+  //   window.addEventListener("paste", handlePaste);
+  //   return () => {
+  //     window.removeEventListener("paste", handlePaste);
+  //   };
+  // }, [syncShapeInStorage]);
   return (
     <main className="h-screen overflow-hidden">
       <NavbarProject
@@ -371,7 +351,12 @@ export const Project = () => {
       />
       <section className="flex h-full flex-row">
         <LeftSidebar allShape={Array.from(canvasObjects ?? "")} />
-        <Live canvasRef={canvasRef} role={userRole} undo={undo} redo={redo} />
+        <Live
+          canvasRef={canvasRef}
+          role={userRole.access}
+          undo={undo}
+          redo={redo}
+        />
         <RightSidebar
           elementAttributes={elementAtrributes}
           setElementAttributes={setElementAtrributes}

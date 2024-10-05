@@ -144,7 +144,7 @@ export const Header = () => {
           onClose={handleClose}
           PaperProps={{
             sx: {
-              width: "400px",
+              width: "700px",
               maxHeight: "400px",
               overflowY: "auto",
             },

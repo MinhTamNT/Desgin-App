@@ -66,7 +66,11 @@ const NavbarProject = ({
               ) : items?.value === "comments" ? (
                 <NewThread>
                   <Button>
-                    <img src={items.icon} alt={items.name} />
+                    <img
+                      src={items.icon}
+                      alt={items.name}
+                      className={isActive(items.value) ? "invert" : ""}
+                    />
                   </Button>
                 </NewThread>
               ) : (

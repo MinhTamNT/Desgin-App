@@ -199,15 +199,8 @@ const ManageMembersModal = ({
                                       }
                                       defaultValue={member.access}
                                     >
-                                      {member?.access === "ROLE_WRITE" ? (
-                                        <>
-                                          <option value="EDITOR">Editor</option>
-                                        </>
-                                      ) : (
-                                        <>
-                                          <option value="VIEWER">Viewer</option>
-                                        </>
-                                      )}
+                                      <option value="EDITOR">Editor</option>
+                                      <option value="VIEWER">Viewer</option>
                                     </select>
                                   )}
                                 </li>

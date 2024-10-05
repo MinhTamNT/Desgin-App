@@ -1,16 +1,18 @@
 import React from "react";
-import { useQuery, useMutation } from "@apollo/client";
-import { useSelector } from "react-redux";
+import { useQuery, useMutation, useApolloClient } from "@apollo/client";
+import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../Redux/store";
 import { Project } from "../../lib/interface";
 import {
   GET_PROJECT,
   DELETED_PROJECT,
   UPDATE_LASTETS_ACCESS,
+  GET_MEMEBER_IN_PROJECT,
 } from "../../utils/Project/Project";
 import { dummyImages } from "../../assets/randomImage";
 import { RiEdit2Line, RiDeleteBinLine } from "react-icons/ri";
 import { useNavigate } from "react-router-dom";
+import { fetchUserRoleSuccess } from "../../Redux/roleSlice";
 
 export const Home: React.FC = () => {
   const user = useSelector(
@@ -21,7 +23,9 @@ export const Home: React.FC = () => {
   );
   const [deleteProject] = useMutation(DELETED_PROJECT);
   const [updateLastAccess] = useMutation(UPDATE_LASTETS_ACCESS);
-
+  const client = useApolloClient();
+  const dispatch = useDispatch();
+  console.log(user);
   const navigate = useNavigate();
 
   if (loading) return <p>Loading...</p>;
@@ -40,9 +44,34 @@ export const Home: React.FC = () => {
 
   const handleEdit = async (idProject: string) => {
     try {
+      // Update last access time
       await updateLastAccess({
         variables: { projectId: idProject },
       });
+
+      // Fetch members for the project using the project ID
+      const { data: membersProject } = await client.query({
+        query: GET_MEMEBER_IN_PROJECT,
+        variables: { projectId: idProject },
+      });
+
+      console.log(membersProject);
+      const members = membersProject?.getMememberInProject || [];
+      const currentUserRole = members.find(
+        (member: any) => member.User[0].idUser === user?.sub
+      );
+
+      console.log(currentUserRole);
+      if (currentUserRole) {
+        dispatch(
+          fetchUserRoleSuccess({
+            access: currentUserRole.access,
+            is_host_user: currentUserRole.is_host_user,
+          })
+        );
+      } else {
+        console.log("Current user is not part of this project.");
+      }
       navigate(`/project/${idProject}`);
     } catch (error) {
       console.log(error);

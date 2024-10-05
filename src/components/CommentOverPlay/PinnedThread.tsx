@@ -39,7 +39,6 @@ export const PinnedThread = ({ thread, onFocus, ...props }: Props) => {
         onClick={(e: any) => {
           onFocus(thread.id);
 
-          // check if click is on/in the composer
           if (
             e.target &&
             e.target.classList.contains("lb-icon") &&
