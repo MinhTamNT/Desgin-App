@@ -1,22 +1,30 @@
-import { gql, useQuery } from "@apollo/client";
+import { useQuery } from "@apollo/client";
 import Avatar from "@mui/material/Avatar";
-import Typography from "@mui/material/Typography";
 import { useSelector } from "react-redux";
 import { RootState } from "../../Redux/store";
-import { FaRegClock } from "react-icons/fa"; // Import an icon for recent activities
-import CircularProgress from "@mui/material/CircularProgress"; // Loader for loading states
+import {
+  FaRegClock,
+  FaRegBell,
+  FaRegUser,
+  FaRegEnvelope,
+} from "react-icons/fa";
+import CircularProgress from "@mui/material/CircularProgress";
 import { GET_ACTIVATE } from "../../utils/Activaty/Activaty";
 
+interface ActivityLog {
+  idactivityLogSchema: string;
+  action: string;
+  details: string;
+  createdAt: string;
+}
+
 export const Profile = () => {
-  // Access currentUser from Redux store
   const currentUser = useSelector(
     (state: RootState) => state?.user?.user?.currentUser
   );
 
-  // Query activity log data from GraphQL
   const { data, loading, error } = useQuery(GET_ACTIVATE);
 
-  // Handle loading state for user activity data
   if (!currentUser || loading) {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -25,98 +33,108 @@ export const Profile = () => {
     );
   }
 
-  // Handle error state
   if (error) {
     return (
       <div className="text-center text-red-500">Error loading activities</div>
     );
   }
 
-  // Destructure activity data from query response
   const activities = data?.getUserActivityLog || [];
 
   return (
-    <div className="max-w-4xl mx-auto my-[20px] p-8 bg-white shadow-lg rounded-lg border border-gray-200">
-      {/* User Profile Section */}
-      <div className="flex items-center gap-8 mb-8 flex-col md:flex-row">
-        <Avatar
-          src={currentUser.picture || "/default-profile.png"}
-          alt="Profile Picture"
-          sx={{ width: 120, height: 120 }}
-          className="rounded-full border-4 border-blue-500"
-        />
-        <div className="text-center md:text-left">
-          <Typography
-            variant="h4"
-            component="h1"
-            className="text-3xl font-extrabold text-gray-900"
-          >
-            {currentUser.name}
-          </Typography>
-          <Typography
-            variant="subtitle1"
-            color="textSecondary"
-            className="text-lg text-gray-700"
-          >
-            {currentUser.email}
-          </Typography>
-        </div>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 py-8 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-4xl mx-auto">
+        <div className="bg-white rounded-2xl shadow-xl overflow-hidden mb-8">
+          <div className="h-40 bg-gradient-to-r from-blue-600 to-indigo-600 relative">
+            <div className="absolute inset-0 bg-black/20"></div>
+          </div>
 
-      {/* Activity Status Section */}
-      <div className="mb-8">
-        <Typography
-          variant="h6"
-          component="h2"
-          className="text-2xl font-semibold text-gray-800 mb-2"
-        >
-          Activity Status
-        </Typography>
-        <Typography
-          className={`text-lg ${
-            currentUser.sub ? "text-green-600" : "text-red-600"
-          }`}
-        >
-          {currentUser.sub ? "Online" : "Offline"}
-        </Typography>
-      </div>
-
-      {/* Recent Activities Section */}
-      <div>
-        <Typography
-          variant="h6"
-          component="h2"
-          className="text-2xl font-semibold text-gray-800 mb-4"
-        >
-          Recent Activities
-        </Typography>
-        <ul className="space-y-4">
-          {activities.length > 0 ? (
-            activities.map((activity: any, index: any) => (
-              <li
-                key={activity.idactivityLogSchema}
-                className={`flex items-center gap-3 p-4 rounded-lg ${
-                  index % 2 === 0 ? "bg-gray-50" : "bg-gray-100"
-                }`}
-              >
-                <FaRegClock className="text-blue-500 w-5 h-5" />
-                <div className="flex flex-col">
-                  <span className="text-gray-700 text-lg font-medium">
-                    {activity.action}
-                  </span>
-                  <span className="text-gray-500 text-sm">
-                    {new Date(activity.createdAt).toLocaleString()}
-                  </span>
-                  <span className="text-gray-600 text-sm">
-                    {activity.details}
-                  </span>
+          <div className="relative px-6 sm:px-12 pb-8">
+            <div className="flex flex-col sm:flex-row items-center -mt-24 mb-8">
+              <Avatar
+                src={currentUser.picture || "/default-profile.png"}
+                alt="Profile Picture"
+                sx={{ width: 150, height: 150 }}
+                className="ring-4 ring-white shadow-xl rounded-full border-4 border-white"
+              />
+              <div className="mt-6 sm:mt-0 sm:ml-8 text-center sm:text-left">
+                <h1 className="text-3xl font-bold text-gray-900">
+                  {currentUser?.name || "Anonymous User"}
+                </h1>
+                <div className="flex items-center justify-center sm:justify-start mt-2 space-x-4">
+                  <div className="flex items-center text-gray-600">
+                    <FaRegEnvelope className="w-4 h-4 mr-2" />
+                    <span>{currentUser.email}</span>
+                  </div>
+                  <div className="flex items-center">
+                    <span
+                      className={`px-3 py-1 rounded-full text-sm font-medium
+                      ${
+                        currentUser.sub
+                          ? "bg-green-100 text-green-800"
+                          : "bg-red-100 text-red-800"
+                      }
+                      flex items-center`}
+                    >
+                      <span
+                        className={`w-2 h-2 rounded-full mr-2 
+                        ${currentUser.sub ? "bg-green-500" : "bg-red-500"}`}
+                      ></span>
+                      {currentUser.sub ? "Online" : "Offline"}
+                    </span>
+                  </div>
                 </div>
-              </li>
-            ))
-          ) : (
-            <li className="text-gray-500">No recent activities</li>
-          )}
-        </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Activities Section */}
+        <div className="bg-white rounded-2xl shadow-xl p-6 sm:p-8">
+          <div className="flex items-center mb-8">
+            <FaRegClock className="text-blue-600 w-6 h-6 mr-3" />
+            <h2 className="text-2xl font-bold text-gray-900">
+              Recent Activities
+            </h2>
+          </div>
+
+          <div className="space-y-4">
+            {activities.length > 0 ? (
+              activities.map((activity: ActivityLog) => (
+                <div
+                  key={activity.idactivityLogSchema}
+                  className="group bg-gray-50 hover:bg-blue-50 transition-all duration-300 
+                    rounded-xl p-5 border border-gray-100 hover:border-blue-100"
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex-1">
+                      <p className="text-gray-900 font-semibold group-hover:text-blue-600 transition-colors">
+                        {activity.action}
+                      </p>
+                      <p className="text-gray-600 text-sm mt-1">
+                        {activity.details}
+                      </p>
+                    </div>
+                    <time className="text-sm text-gray-500 mt-2 sm:mt-0 flex items-center">
+                      <FaRegBell className="w-4 h-4 mr-2 text-gray-400" />
+                      {new Date(activity.createdAt).toLocaleString()}
+                    </time>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-12 bg-gray-50 rounded-xl">
+                <FaRegUser className="w-12 h-12 mx-auto text-gray-400 mb-4" />
+                <p className="text-gray-600 font-medium">
+                  No recent activities
+                </p>
+                <p className="text-gray-500 text-sm mt-1">
+                  Your activities will appear here
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

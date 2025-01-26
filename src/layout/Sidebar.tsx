@@ -14,10 +14,18 @@ export const Sidebar = () => {
   const [selectedMembers, setSelectedMembers] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
-  const { data, refetch } = useQuery<{ getUserProjects: Project[] }>(
-    GET_PROJECT
-  );
-  const projects = data?.getUserProjects || [];
+  const { data, refetch } = useQuery<{
+    getUserProjects: {
+      projects: Project[];
+      pageInfo: {
+        IND: number;
+        TOTALROW: number;
+      };
+    };
+  }>(GET_PROJECT, {
+    variables: { pageIndex: 1, pageSize: 10 },
+  });
+  const projects = data?.getUserProjects?.projects || [];
 
   const [createProject] = useMutation(ADD_PROJECT, {
     onCompleted: () => refetch(),

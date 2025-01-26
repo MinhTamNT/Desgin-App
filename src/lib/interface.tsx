@@ -3,9 +3,10 @@ export interface User {
   sub: string;
   name: string;
   email: string;
-  profilePicture: string;
-  exp: Date;
-  iat: Date;
+  picture: string;
+  exp: string;
+  iat: string;
+  token : string
 }
 
 export interface Project {
@@ -15,13 +16,14 @@ export interface Project {
   createdAt: string;
   updatedAt: string;
   access: string;
-  is_host_user: Boolean;
+  is_host_user: boolean;
+  image?: string; 
 }
 
 export interface Notification {
   idNotification: string;
   message: string;
-  is_read: Boolean;
+  is_read: boolean;
   createdAt: Date;
   userTaker: [User];
 }

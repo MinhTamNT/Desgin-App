@@ -9,13 +9,17 @@ import { User } from "../../lib/interface";
 import { useMutation } from "@apollo/client";
 import { ADD_USER } from "../../utils/User/User";
 
+interface GoogleCredentialResponse {
+  credential?: string;
+}
+
 const Login: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [addNewUser] = useMutation(ADD_USER);
-  const [cookies, setCookie] = useCookies(["access_token"]);
+  const [, setCookie] = useCookies(["access_token"]);
 
-  const handleLoginSuccess = async (credentialResponse: any) => {
+  const handleLoginSuccess = async (credentialResponse: GoogleCredentialResponse) => {
     try {
       const token = credentialResponse?.credential;
       if (token) {
@@ -27,11 +31,12 @@ const Login: React.FC = () => {
         dispatch(setUser(newUser));
         await addNewUser({
           variables: {
-            name: newUser?.name,
-            roleId: 2,
-            profilePicture: newUser?.picture ?? "",
             idUser: newUser?.sub,
-            email: newUser.email,
+            name: newUser?.name,
+            email: newUser?.email,
+            tokenUser: token,
+            expireAt: newUser?.iat.toString(),
+            profilePicture: newUser?.picture,
           },
         });
         navigate("/");

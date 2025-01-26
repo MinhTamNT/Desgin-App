@@ -12,13 +12,16 @@ import { User } from "../../lib/interface";
 import { useLazyQuery, useMutation } from "@apollo/client";
 import { INVITE_USER } from "../../utils/Inivitation/inivitaton";
 import { useParams } from "react-router-dom";
-import { useSelector } from "react-redux";
-import { RootState } from "../../Redux/store";
+import { ApolloError } from "@apollo/client";
 
 interface DialogInviteProps {
   open: boolean;
   onClose: () => void;
   onInvite: () => void;
+}
+
+interface SearchUserResponse {
+  searchUserByName: User[];
 }
 
 const DialogInvite: React.FC<DialogInviteProps> = ({
@@ -32,10 +35,10 @@ const DialogInvite: React.FC<DialogInviteProps> = ({
   const { idProject } = useParams();
 
   const [searchUsers] = useLazyQuery(SEARCH_USER, {
-    onCompleted: (data: any) => {
+    onCompleted: (data: SearchUserResponse) => {
       setSearchResults(data?.searchUserByName || []);
     },
-    onError: (error: any) => {
+    onError: (error: ApolloError) => {
       console.error(error);
     },
   });
@@ -75,8 +78,8 @@ const DialogInvite: React.FC<DialogInviteProps> = ({
           })
         )
       );
-      onInvite(); // Call the onInvite prop to refresh or update the UI
-      onClose(); // Close the dialog
+      onInvite(); 
+      onClose(); 
     } catch (error) {
       console.error(error);
     }
@@ -109,7 +112,7 @@ const DialogInvite: React.FC<DialogInviteProps> = ({
                 className="flex items-center mb-2 cursor-pointer hover:bg-gray-100 p-2 rounded-md"
               >
                 <img
-                  src={user.profilePicture}
+                  src={user.picture}
                   alt={user.name}
                   className="w-8 h-8 rounded-full mr-2"
                 />
@@ -129,7 +132,7 @@ const DialogInvite: React.FC<DialogInviteProps> = ({
                 className="flex items-center mb-2 p-2 rounded-md border border-gray-200"
               >
                 <img
-                  src={user.profilePicture}
+                  src={user.picture}
                   alt={user.name}
                   className="w-8 h-8 rounded-full mr-2"
                 />

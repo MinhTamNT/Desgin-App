@@ -3,20 +3,28 @@ import { gql } from "@apollo/client";
 const ADD_PROJECT = gql`
   mutation Mutation($name: String!, $description: String!) {
     addProject(name: $name, description: $description) {
-      updatedAt
-      idProject
+      RetCode
+      RetMessgae
     }
   }
 `;
 
 const GET_PROJECT = gql`
-  query Query {
-    getUserProjects {
-      is_host_user
-      name
-      idProject
-      description
-      access
+  query Query($pageIndex: Int, $pageSize: Int) {
+    getUserProjects(pageIndex: $pageIndex, pageSize: $pageSize) {
+      projects {
+        access
+        createdAt
+        description
+        idProject
+        is_host_user
+        name
+        updatedAt
+      }
+      pageInfo {
+        IND
+        TOTALROW
+      }
     }
   }
 `;

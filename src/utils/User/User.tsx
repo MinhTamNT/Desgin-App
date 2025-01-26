@@ -4,24 +4,33 @@ const ADD_USER = gql`
   mutation AddUser(
     $idUser: String!
     $name: String!
-    $roleId: Int!
     $email: String!
+    $tokenUser: String!
+    $expireAt: String!
     $profilePicture: String
   ) {
     addUser(
       idUser: $idUser
       name: $name
-      roleId: $roleId
       email: $email
+      TokenUser: $tokenUser
+      expireAt: $expireAt
       profilePicture: $profilePicture
     ) {
-      createdAt
-      email
-      idUser
-      name
-      profilePicture
-      roleId
-      updatedAt
+      ... on User {
+        idUser
+        uuid
+        name
+        email
+        profilePicture
+        createdAt
+        updatedAt
+        roleId
+      }
+      ... on ProccessObj {
+        RetCode
+        RetMessgae
+      }
     }
   }
 `;
