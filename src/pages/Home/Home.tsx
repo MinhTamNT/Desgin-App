@@ -17,7 +17,7 @@ import { ErrorMessage } from "../../components/Error/ErrorMessage";
 import { HeroSection } from "./components/HeroSection";
 import { ProjectCard } from "./components/ProjectCard";
 import { LoadingSkeleton } from "../../components/Loading/LoadingSkeleton";
-
+import { image } from "../../assets/image/image";
 interface ProjectMember {
   User: [{ idUser: string }];
   access: string;
@@ -32,7 +32,7 @@ export const Home: React.FC = () => {
 
   const [pageIndex, setPageIndex] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(10);
-
+  const [search, setSearch] = useState<string>("");
   const {
     data: ProjectList,
     loading,
@@ -46,7 +46,7 @@ export const Home: React.FC = () => {
       };
     };
   }>(GET_PROJECT, {
-    variables: { pageIndex, pageSize },
+    variables: { pageIndex, pageSize, nameProject: search },
   });
   const [deleteProject] = useMutation(DELETED_PROJECT);
   const [updateLastAccess] = useMutation(UPDATE_LASTETS_ACCESS);
@@ -98,8 +98,8 @@ export const Home: React.FC = () => {
         if (currentUserRole) {
           dispatch(
             fetchUserRoleSuccess({
-              access: currentUserRole.access,
-              is_host_user: currentUserRole.is_host_user,
+              role: currentUserRole.access,
+              isHost: currentUserRole.is_host_user,
             })
           );
           navigate(`/project/${idProject}`);
@@ -111,6 +111,14 @@ export const Home: React.FC = () => {
       }
     },
     [updateLastAccess, client, user?.sub, dispatch, navigate]
+  );
+
+  const handleSearchChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setSearch(e.target.value);
+      setPageIndex(1);
+    },
+    []
   );
 
   if (loading) return <LoadingSkeleton />;
@@ -126,17 +134,42 @@ export const Home: React.FC = () => {
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
               Your Creative Projects
             </h2>
-            <p className="text-gray-600 text-lg md:text-xl max-w-2xl mx-auto">
+            <p className="text-gray-600 text-lg md:text-xl max-w-2xl mx-auto mb-8">
               Explore and manage your ongoing projects with ease
             </p>
+
+            <div className="max-w-md mx-auto">
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Search projects..."
+                  value={search}
+                  onChange={handleSearchChange}
+                  className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+                />
+                <svg
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400"
+                  fill="none"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+            </div>
           </div>
 
-          {projects.length === 0 ? (
+          {loading ? (
+            <LoadingSkeleton />
+          ) : projects.length === 0 ? (
             <div className="text-center py-12 bg-white rounded-xl shadow-sm">
               <img
-                src="/empty-projects.svg"
+                src={image.first}
                 alt="No projects"
-                className="w-48 h-48 mx-auto mb-6"
+                className="mx-auto mb-6"
               />
               <h3 className="text-xl font-semibold text-gray-800 mb-2">
                 No Projects Yet
@@ -152,7 +185,7 @@ export const Home: React.FC = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
               {projects.map((project) => (
                 <ProjectCard
-                  key={project.idProject}
+                  key={project.project_idProject}
                   project={project}
                   onEdit={handleEdit}
                   onDelete={handleDelete}

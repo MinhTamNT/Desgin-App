@@ -24,6 +24,14 @@ import { UPDATE_INVITE } from "../utils/Inivitation/inivitaton";
 import { clearUser } from "../Redux/userSlice";
 import Cookies from "universal-cookie";
 import { useNavigate } from "react-router-dom";
+interface Notification {
+  idNotification: string;
+  message: string;
+  is_read: boolean;
+  type: string;
+  invitation_idInvitation: string;
+  userRequest: Array<{ idUser: string }>;
+}
 
 const DEFAULT_IMAGE_URL =
   "https://cdn.dribbble.com/userupload/15166587/file/original-cf8f815408f5908c3c2fe4b24d35af18.png?resize=1024x768";
@@ -42,7 +50,7 @@ export const Header = () => {
     onCompleted: (data) => {
       setNotifications(
         data?.getNotificationsByUserId.filter(
-          (notification: any) => !notification.is_read
+          (notification: Notification) => !notification.is_read
         ) || []
       );
     },
@@ -115,7 +123,6 @@ export const Header = () => {
 
   return (
     <header className="flex items-center justify-between p-4 shadow-md bg-white">
-      {/* Left - Search */}
       <div className="hidden lg:flex flex-1 rounded-lg">
         <Box className="relative w-full max-w-lg">
           <FaSearch className="absolute top-3 left-3 text-gray-500" />
@@ -127,9 +134,7 @@ export const Header = () => {
         </Box>
       </div>
 
-      {/* Right - Icons */}
       <div className="flex items-center space-x-4">
-        {/* Notifications */}
         <IconButton
           onClick={handleNotificationClick}
           size="small"
@@ -152,7 +157,7 @@ export const Header = () => {
           }}
         >
           {notificationCount > 0 ? (
-            notifications.map((notification: any) => (
+            notifications.map((notification: Notification) => (
               <MenuItem
                 key={notification?.idNotification}
                 onClick={handleClose}

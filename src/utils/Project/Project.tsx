@@ -10,8 +10,16 @@ const ADD_PROJECT = gql`
 `;
 
 const GET_PROJECT = gql`
-  query Query($pageIndex: Int, $pageSize: Int) {
-    getUserProjects(pageIndex: $pageIndex, pageSize: $pageSize) {
+  query Query($pageIndex: Int, $pageSize: Int, $nameProject: String) {
+    getUserProjects(
+      pageIndex: $pageIndex
+      pageSize: $pageSize
+      nameProject: $nameProject
+    ) {
+      pageInfo {
+        IND
+        TOTALROW
+      }
       projects {
         access
         createdAt
@@ -20,10 +28,6 @@ const GET_PROJECT = gql`
         is_host_user
         name
         updatedAt
-      }
-      pageInfo {
-        IND
-        TOTALROW
       }
     }
   }
@@ -47,17 +51,7 @@ const UPDATE_LASTETS_ACCESS = gql`
   }
 `;
 
-const GET_RECENET_PROJECT = gql`
-  query GetRecentProjectsWithAccess {
-    getRecentProjectsWithAccess {
-      accessCount
-      is_host_user
-      project_idProject
-      lastAccessed
-      projectName
-    }
-  }
-`;
+
 
 const GET_MEMEBER_IN_PROJECT = gql`
   query GetMememberInProject($projectId: String) {
@@ -104,7 +98,6 @@ export {
   GET_PROJECT,
   DELETED_PROJECT,
   UPDATE_LASTETS_ACCESS,
-  GET_RECENET_PROJECT,
   GET_MEMEBER_IN_PROJECT,
   UPDATE_ROLE,
   REMOVED_MEMBER_PROJECT,

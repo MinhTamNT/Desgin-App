@@ -31,6 +31,11 @@ import { NOTIFICATION_SUBSCRIPTION } from "../../utils/Notify/Notify";
 import { useSubscription } from "@apollo/client";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
+
+interface UserRequest {
+  idUser: string;
+}
+
 export const Project = () => {
   const undo = useUndo();
   const redo = useRedo();
@@ -64,6 +69,7 @@ export const Project = () => {
   const userRole = useSelector(
     (state: RootState) => state?.role?.role?.userRole
   );
+  console.log(userRole);
   const navigate = useNavigate();
   useSubscription(NOTIFICATION_SUBSCRIPTION, {
     onSubscriptionData: ({ subscriptionData }) => {
@@ -72,7 +78,7 @@ export const Project = () => {
         console.log("New Notification:", newNotification);
 
         const userIds = newNotification.userRequest.map(
-          (idUser: any) => idUser.idUser === user?.sub
+          (idUser: UserRequest) => idUser.idUser === user?.sub
         );
         const isCheck = userIds.includes(true);
         console.log(isCheck);
@@ -92,7 +98,9 @@ export const Project = () => {
     },
   });
 
-  const handleImageUploads = async (event: any) => {
+  const handleImageUploads = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     event.stopPropagation();
     const file = event.target.files ? event.target.files[0] : null;
     try {

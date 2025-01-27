@@ -11,7 +11,7 @@ import { Header } from "./Header";
 import { Navbar } from "./Navbar";
 import { Sidebar } from "./Sidebar";
 import Room from "../components/Room/Room";
-import { ToastContainer, toast } from "react-toastify";
+import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 const clientId = import.meta.env.VITE_CLIENT_ID;
 const publicKey = import.meta.env.VITE_LIVE_BLOCK;
@@ -56,7 +56,6 @@ export const AuthLayout: React.FC = () => {
                   {isLoginPage && <Outlet />}
                   {isProjectPage && (
                     <div className="project-page-content">
-                      {/* Custom content or layout for /project page */}
                       <Outlet />
                     </div>
                   )}

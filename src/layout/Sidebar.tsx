@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { GoPlus } from "react-icons/go";
-import { Project, User } from "../lib/interface";
+import { Project } from "../lib/interface";
 import ProjectList from "../components/ListProject/ListProject";
 import { useMutation, useQuery } from "@apollo/client";
 import { ADD_PROJECT, GET_PROJECT } from "../utils/Project/Project";
@@ -23,7 +23,7 @@ export const Sidebar = () => {
       };
     };
   }>(GET_PROJECT, {
-    variables: { pageIndex: 1, pageSize: 10 },
+    variables: { pageIndex: 1, pageSize: 10, nameProject: "" },
   });
   const projects = data?.getUserProjects?.projects || [];
 

@@ -38,10 +38,10 @@ export const Live = ({ canvasRef, role, undo, redo }: Props) => {
     mode: CursorMode.Hidden,
   });
   const [reactions, setReactions] = useState<Reaction[]>([]);
-
+  console.log(role);
   const handlePointerMove = useCallback(
     (event: React.PointerEvent) => {
-      if (role === "ROLE_READ") return; // Disable in read-only mode
+      if (role === "ROLE_READ") return; 
       event.preventDefault();
       if (cursor === null || cursorState.mode !== CursorMode.ReactionSelector) {
         const x = event.clientX - event.currentTarget.getBoundingClientRect().x;
@@ -56,7 +56,7 @@ export const Live = ({ canvasRef, role, undo, redo }: Props) => {
 
   const handlePointerLeave = useCallback(
     (event: React.PointerEvent) => {
-      if (role === "ROLE_READ") return; // Disable in read-only mode
+      if (role === "ROLE_READ") return; 
       event.preventDefault();
       updatePersence({
         cursor: null,
