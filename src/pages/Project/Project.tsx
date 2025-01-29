@@ -102,13 +102,13 @@ export const Project = () => {
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
     event.stopPropagation();
-    const file = event.target.files ? event.target.files[0] : null;
+    const file = event.target.files ? event.target.files[0] : "";
     try {
-      const newImage = await uploadImageToCloudinary(file);
+      const newImage = await uploadImageToCloudinary(file as string);
       if (newImage) {
         handleImageUpload({
           file: newImage?.url,
-          canvas: fabricRef as any,
+          canvas: fabricRef.current as any,
           shapeRef,
           syncShapeInStorage,
         });
@@ -119,25 +119,31 @@ export const Project = () => {
   };
   const canvasObjects = useStorage((root) => root.canvasObjects) as LiveMap<
     string,
-    any
+    CanvasObject
   >;
 
-  const syncShapeInStorage = useMutation(({ storage }, object) => {
-    if (!object) return;
+  const syncShapeInStorage = useMutation(
+    ({ storage }, object: fabric.Object) => {
+      if (!object) return;
 
-    const { objectId } = object;
-    const shapeData = object.toJSON();
-    shapeData.objectId = objectId;
+      const { objectId } = object;
+      const shapeData = object.toJSON();
+      shapeData.objectId = objectId;
 
-    const canvasObjects = storage.get("canvasObjects") as LiveMap<string, any>;
-    if (canvasObjects) {
-      canvasObjects.set(objectId, shapeData);
-    } else {
-      console.error(
-        "canvasObjects is not a LiveMap or doesn't have a set method"
-      );
-    }
-  }, []);
+      const canvasObjects = storage.get("canvasObjects") as LiveMap<
+        string,
+        any
+      >;
+      if (canvasObjects) {
+        canvasObjects.set(objectId, shapeData);
+      } else {
+        console.error(
+          "canvasObjects is not a LiveMap or doesn't have a set method"
+        );
+      }
+    },
+    []
+  );
 
   const deleteAllShapes = useMutation(({ storage }) => {
     const canvasObjects = storage.get("canvasObjects") as LiveMap<string, any>;

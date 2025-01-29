@@ -28,6 +28,7 @@ declare global {
         // Example properties, for useSelf, useUser, useOthers, etc.
         name: string;
         avatar: string;
+        status: string;
       };
     };
 

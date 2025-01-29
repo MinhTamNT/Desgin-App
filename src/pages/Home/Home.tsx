@@ -1,5 +1,10 @@
 import React, { useMemo, useCallback, useState } from "react";
-import { useQuery, useMutation, useApolloClient } from "@apollo/client";
+import {
+  useQuery,
+  useMutation,
+  useApolloClient,
+  useSubscription,
+} from "@apollo/client";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../Redux/store";
 import { Project } from "../../lib/interface";
@@ -13,23 +18,33 @@ import { dummyImages } from "../../assets/randomImage";
 import { useNavigate } from "react-router-dom";
 import { fetchUserRoleSuccess } from "../../Redux/roleSlice";
 import { ErrorMessage } from "../../components/Error/ErrorMessage";
-
 import { HeroSection } from "./components/HeroSection";
 import { ProjectCard } from "./components/ProjectCard";
 import { LoadingSkeleton } from "../../components/Loading/LoadingSkeleton";
 import { image } from "../../assets/image/image";
+import { gql } from "@apollo/client";
+import { updateUserStatus } from "../../Redux/userStatusSlice";
+
 interface ProjectMember {
   User: [{ idUser: string }];
   access: string;
   is_host_user: boolean;
 }
 
+const USER_STATUS_SUBSCRIPTION = gql`
+  subscription OnUserStatusChanged {
+    userStatusChanged {
+      userId
+      status
+    }
+  }
+`;
+
 export const Home: React.FC = () => {
   const user = useSelector(
     (state: RootState) => state?.user?.user?.currentUser,
     (prev, next) => prev?.sub === next?.sub
   );
-
   const [pageIndex, setPageIndex] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(10);
   const [search, setSearch] = useState<string>("");
@@ -54,6 +69,16 @@ export const Home: React.FC = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
+  useSubscription(USER_STATUS_SUBSCRIPTION, {
+    onData: ({ data }) => {
+      if (data?.data?.userStatusChanged) {
+        const { userId, status } = data.data.userStatusChanged;
+        dispatch(updateUserStatus({ userId, status }));
+      }
+    },
+  });
+  const statuses = useSelector((state: RootState) => state.userStatus.statuses);
+  console.log(statuses);
   const projects = useMemo(
     () =>
       (ProjectList?.getUserProjects?.projects || []).map((project) => ({
@@ -62,7 +87,6 @@ export const Home: React.FC = () => {
       })),
     [ProjectList?.getUserProjects?.projects]
   );
-  console.log(projects);
 
   const handleDelete = useCallback(
     async (idProject: string) => {
@@ -185,7 +209,7 @@ export const Home: React.FC = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
               {projects.map((project) => (
                 <ProjectCard
-                  key={project.project_idProject}
+                  key={project.idProject}
                   project={project}
                   onEdit={handleEdit}
                   onDelete={handleDelete}

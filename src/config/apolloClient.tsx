@@ -12,7 +12,6 @@ import { GRAPHQL_SERVER, GRAPHQL_SERVER_WB } from "../utils/constants";
 import Cookies from "universal-cookie";
 
 const cookie = new Cookies();
-
 const authLink = new ApolloLink((operation, forward) => {
   const token = cookie.get("access_token");
   operation.setContext({
@@ -33,6 +32,11 @@ const wsLink =
     ? new GraphQLWsLink(
         createClient({
           url: GRAPHQL_SERVER_WB,
+          connectionParams: {
+            Authorization: cookie.get("access_token")
+              ? `Bearer ${cookie.get("access_token")}`
+              : "",
+          },
         })
       )
     : null;

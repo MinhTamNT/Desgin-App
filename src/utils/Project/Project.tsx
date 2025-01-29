@@ -92,7 +92,15 @@ const REMOVED_MEMBER_PROJECT = gql`
     }
   }
 `;
-
+const USER_STATUS_CHANGED = gql`
+  subscription OnUserStatusChanged {
+    userStatusChanged {
+      userId
+      isOnline
+      lastSeen
+    }
+  }
+`;
 export {
   ADD_PROJECT,
   GET_PROJECT,
@@ -101,4 +109,5 @@ export {
   GET_MEMEBER_IN_PROJECT,
   UPDATE_ROLE,
   REMOVED_MEMBER_PROJECT,
+  USER_STATUS_CHANGED,
 };

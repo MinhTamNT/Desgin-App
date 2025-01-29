@@ -8,9 +8,9 @@ interface UserState {
 }
 
 const initialState: UserState = {
-  currentUser: null, // Initialize currentUser as null
-  pending: false, // Initialize pending as false
-  error: false, // Initialize error as false
+  currentUser: null, 
+  pending: false, 
+  error: false, 
 };
 
 const userSlice = createSlice({

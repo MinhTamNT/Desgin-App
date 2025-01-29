@@ -6,7 +6,8 @@ export interface User {
   picture: string;
   exp: string;
   iat: string;
-  token : string
+  token: string;
+  Status: "online" | "offline" | "away";
 }
 
 export interface Project {
@@ -17,7 +18,7 @@ export interface Project {
   updatedAt: string;
   access: string;
   is_host_user: boolean;
-  image?: string; 
+  image?: string;
 }
 
 export interface Notification {

@@ -6,6 +6,8 @@ import {
 } from "react-icons/ri";
 import { Project } from "../../../lib/interface";
 import { formatDistanceToNow } from "date-fns";
+import { useSelector } from "react-redux";
+import { RootState } from "../../../Redux/store";
 
 interface ProjectCardProps {
   project: Project;
@@ -21,6 +23,10 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
   const lastUpdated = formatDistanceToNow(new Date(project.updatedAt), {
     addSuffix: true,
   });
+
+  const userStatus = useSelector((state: RootState) => 
+    state.userStatus.statuses[project.userId] || "offline"
+  );
 
   return (
     <div className="group bg-white rounded-xl shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300">
@@ -48,7 +54,12 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
             </h3>
             <div className="flex items-center text-gray-500 text-sm">
               <RiUserLine className="mr-1" />
-              <span>{project.is_host_user ? "Owner" : "Member"}</span>
+              <span className="flex items-center">
+                {project.is_host_user ? "Owner" : "Member"}
+                <span className={`ml-2 w-2 h-2 rounded-full ${
+                  userStatus === "online" ? "bg-green-500" : "bg-gray-400"
+                }`} />
+              </span>
             </div>
           </div>
           <span

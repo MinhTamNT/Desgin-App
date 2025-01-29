@@ -19,7 +19,18 @@ const Login: React.FC = () => {
   const [addNewUser] = useMutation(ADD_USER);
   const [, setCookie] = useCookies(["access_token"]);
 
-  const handleLoginSuccess = async (credentialResponse: GoogleCredentialResponse) => {
+  const getDeviceId = () => {
+    const platform = navigator.platform;
+    const browserName = navigator.appName;
+
+    return `${platform}-${browserName}-${Math.random()
+      .toString(36)
+      .substr(2, 9)}`;
+  };
+
+  const handleLoginSuccess = async (
+    credentialResponse: GoogleCredentialResponse
+  ) => {
     try {
       const token = credentialResponse?.credential;
       if (token) {
@@ -37,6 +48,7 @@ const Login: React.FC = () => {
             tokenUser: token,
             expireAt: newUser?.iat.toString(),
             profilePicture: newUser?.picture,
+            deviceId: getDeviceId(),
           },
         });
         navigate("/");
