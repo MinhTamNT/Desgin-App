@@ -3,11 +3,11 @@ export interface User {
   sub: string;
   name: string;
   email: string;
-  picture: string;
+  profilePicture: string;
   exp: string;
   iat: string;
   token: string;
-  Status: "online" | "offline" | "away";
+  status: "online" | "offline" | "away";
 }
 
 export interface Project {

@@ -34,7 +34,7 @@ interface Notification {
 }
 
 const DEFAULT_IMAGE_URL =
-  "https://cdn.dribbble.com/userupload/15166587/file/original-cf8f815408f5908c3c2fe4b24d35af18.png?resize=1024x768";
+  "https://cdn.dribbble.com/userupload/14352886/file/original-d5196ebfc7a26cce14d6929997887ba0.jpg?resize=2048x1536&vertical=center";
 
 export const Header = () => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -45,7 +45,10 @@ export const Header = () => {
   const currentUser = useSelector(
     (state: RootState) => state?.user?.user?.currentUser
   );
-
+  const userStatus = useSelector(
+    (state: RootState) => state.userStatus.statuses
+  );
+  console.log(userStatus);
   useQuery(GET_NOTIFICATION, {
     onCompleted: (data) => {
       setNotifications(
@@ -122,37 +125,59 @@ export const Header = () => {
   };
 
   return (
-    <header className="flex items-center justify-between p-4 shadow-md bg-white">
-      <div className="hidden lg:flex flex-1 rounded-lg">
-        <Box className="relative w-full max-w-lg">
-          <FaSearch className="absolute top-3 left-3 text-gray-500" />
+    <header className="flex items-center justify-between px-6 py-4 bg-white border-b border-gray-200">
+      {/* Search Bar */}
+      <div className="hidden lg:flex flex-1 max-w-2xl mr-8">
+        <Box className="relative w-full">
+          <FaSearch className="absolute top-1/2 left-4 -translate-y-1/2 text-gray-400" />
           <input
             type="text"
             placeholder="Search..."
-            className="w-full pl-10 p-2 rounded-lg border border-gray-300 placeholder-gray-600 focus:outline-none focus:border-blue-500"
+            className="w-full pl-12 pr-4 py-2.5 rounded-full bg-gray-50 border border-gray-200 
+                     placeholder-gray-500 text-sm transition-all duration-200
+                     focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-50"
           />
         </Box>
       </div>
 
-      <div className="flex items-center space-x-4">
+      <div className="flex items-center space-x-6">
         <IconButton
           onClick={handleNotificationClick}
-          size="small"
-          color="inherit"
+          className="relative hover:bg-gray-100 transition-colors duration-200"
+          size="large"
         >
-          <Badge badgeContent={notificationCount} color="error">
-            <NotificationsIcon />
+          <Badge
+            badgeContent={notificationCount}
+            color="error"
+            sx={{
+              "& .MuiBadge-badge": {
+                fontSize: "0.75rem",
+                height: "20px",
+                minWidth: "20px",
+                padding: "0 6px",
+              },
+            }}
+          >
+            <NotificationsIcon className="text-gray-700" />
           </Badge>
         </IconButton>
+
+        {/* Notification Menu */}
         <Menu
           anchorEl={notificationAnchorEl}
           open={openNotifications}
           onClose={handleClose}
           PaperProps={{
             sx: {
-              width: "700px",
-              maxHeight: "400px",
+              width: "400px",
+              maxHeight: "500px",
               overflowY: "auto",
+              mt: 1.5,
+              boxShadow:
+                "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)",
+              "& .MuiList-root": {
+                padding: "8px",
+              },
             },
           }}
         >
@@ -161,120 +186,175 @@ export const Header = () => {
               <MenuItem
                 key={notification?.idNotification}
                 onClick={handleClose}
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "12px",
-                  padding: "12px 16px",
-                  fontSize: "14px",
-                  transition: "background-color 0.3s",
-                  "&:hover": {
-                    backgroundColor: "#f0f0f0",
-                  },
-                }}
+              
+                className=""
               >
-                <Box className="bg-blue-200 rounded-full w-8 h-8 flex items-center justify-center text-blue-600">
-                  New
-                </Box>
-                <Typography variant="body2">{notification?.message}</Typography>
-                {!notification?.is_read && notification?.type === "INVITED" && (
-                  <Box className="ml-auto flex gap-2">
-                    <button
-                      className="bg-green-300 p-1 rounded-md uppercase text-gray-800 hover:bg-green-400 transition"
-                      onClick={() =>
-                        handleAcceptInvite(
-                          notification?.invitation_idInvitation
-                        )
-                      }
+                <div className="flex items-center gap-4 w-full p-2">
+                  <div className="bg-blue-100 rounded-full w-10 h-10 flex items-center justify-center flex-shrink-0">
+                    <span className="text-blue-600 text-sm font-medium">
+                      New
+                    </span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <Typography
+                      variant="body2"
+                      className="text-gray-900 line-clamp-2"
                     >
-                      Accept
-                    </button>
-                    <button className="bg-red-300 p-1 rounded-md uppercase text-white hover:bg-red-400 transition">
-                      Reject
-                    </button>
-                  </Box>
-                )}
+                      {notification?.message}
+                    </Typography>
+                    {!notification?.is_read &&
+                      notification?.type === "INVITED" && (
+                        <div className="flex gap-2 mt-2">
+                          <button
+                            onClick={() =>
+                              handleAcceptInvite(
+                                notification?.invitation_idInvitation
+                              )
+                            }
+                            className="px-3 py-1.5 text-xs font-medium rounded-md text-green-700 bg-green-100 
+                                   hover:bg-green-200 transition-colors duration-200"
+                          >
+                            Accept
+                          </button>
+                          <button
+                            className="px-3 py-1.5 text-xs font-medium rounded-md text-red-700 bg-red-100 
+                                   hover:bg-red-200 transition-colors duration-200"
+                          >
+                            Reject
+                          </button>
+                        </div>
+                      )}
+                  </div>
+                </div>
               </MenuItem>
             ))
           ) : (
-            <MenuItem
-              onClick={handleClose}
-              sx={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                gap: "12px",
-                padding: "12px 16px",
-                fontSize: "14px",
-                transition: "background-color 0.3s",
-              }}
-            >
-              <img
-                src={DEFAULT_IMAGE_URL}
-                alt="No new notifications"
-                className="w-16 h-16 object-cover"
-              />
-              <Typography variant="body2">No new notifications</Typography>
+            <MenuItem className="flex flex-col items-center py-10 hover:bg-transparent">
+              <div className="flex flex-col items-center justify-center">
+                <div className="relative">
+                  <img
+                    src={DEFAULT_IMAGE_URL}
+                    alt="No notifications"
+                    className=" object-contain mb-4 rounded-xl transform transition-transform hover:scale-105 duration-300"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-b from-transparent to-white/10 rounded-xl"></div>
+                </div>
+                <Typography
+                  className="text-gray-600 font-medium text-lg animate-fade-in"
+                  sx={{
+                    textShadow: "0 1px 2px rgba(0,0,0,0.05)",
+                    letterSpacing: "0.025em",
+                  }}
+                >
+                  No new notifications
+                </Typography>
+                <Typography className="text-gray-400 text-sm mt-1">
+                  We'll notify you when something arrives
+                </Typography>
+              </div>
             </MenuItem>
           )}
         </Menu>
 
-        {/* Profile and Settings */}
-        <IconButton onClick={handleClick} size="small" color="inherit">
-          <Avatar
-            src={user?.picture}
-            alt="Profile Picture"
-            sx={{ width: 40, height: 40 }}
-          />
-          <ArrowDropDown />
-        </IconButton>
-        <Menu
-          anchorEl={anchorEl}
-          open={open}
-          onClose={handleClose}
-          PaperProps={{
-            sx: {
-              width: "200px",
-            },
-          }}
-        >
-          <MenuItem
-            onClick={() => navigate("/profile")}
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              gap: "12px",
-              padding: "12px 16px",
-              fontSize: "14px",
-              transition: "background-color 0.3s",
-              "&:hover": {
-                backgroundColor: "#f0f0f0",
-              },
-            }}
+        {/* Profile Section */}
+        <div className="relative">
+          <IconButton
+            onClick={handleClick}
+            className="hover:bg-gray-100 transition-colors duration-200"
           >
-            <FaUser size={18} />
-            <Typography variant="body2">Profile</Typography>
-          </MenuItem>
+            <div className="relative">
+              <Avatar
+                src={user?.picture}
+                alt="Profile"
+                sx={{
+                  width: 40,
+                  height: 40,
+                  border: "2px solid white",
+                  boxShadow: "0 1px 2px 0 rgb(0 0 0 / 0.05)",
+                }}
+              />
+              <span
+                className={`absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2 border-white
+                          ${
+                            userStatus?.status === "online"
+                              ? "bg-green-500"
+                              : userStatus?.status === "away"
+                              ? "bg-yellow-500"
+                              : "bg-gray-400"
+                          }`}
+              />
+            </div>
+            <ArrowDropDown className="text-gray-600" />
+          </IconButton>
 
-          <MenuItem
-            onClick={handleLogout}
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              gap: "12px",
-              padding: "12px 16px",
-              fontSize: "14px",
-              borderRadius: "4px",
-              transition: "background-color 0.3s",
-              "&:hover": {
-                backgroundColor: "#f0f0f0",
+          {/* Profile Menu */}
+          <Menu
+            anchorEl={anchorEl}
+            open={open}
+            onClose={handleClose}
+            PaperProps={{
+              sx: {
+                width: "240px",
+                mt: 1.5,
+                boxShadow:
+                  "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)",
+                "& .MuiList-root": {
+                  padding: "8px",
+                },
               },
             }}
           >
-            <FaSignOutAlt size={18} />
-            <Typography variant="body2">Logout</Typography>
-          </MenuItem>
-        </Menu>
+            {/* Status Indicator */}
+            <MenuItem
+              className="rounded-lg mb-1"
+              sx={{ pointerEvents: "none" }}
+            >
+              <div className="flex items-center gap-2 py-1">
+                <span
+                  className={`w-2.5 h-2.5 rounded-full ${
+                    userStatus?.status === "online"
+                      ? "bg-green-500"
+                      : userStatus?.status === "away"
+                      ? "bg-yellow-500"
+                      : "bg-gray-400"
+                  }`}
+                />
+                <Typography
+                  variant="body2"
+                  className="capitalize text-gray-700"
+                >
+                  {userStatus?.status}
+                </Typography>
+              </div>
+            </MenuItem>
+
+            {/* Profile Link */}
+            <MenuItem
+              onClick={() => navigate("/profile")}
+              className="rounded-lg hover:bg-gray-50"
+            >
+              <div className="flex items-center gap-3 py-1">
+                <FaUser className="text-gray-600" size={16} />
+                <Typography variant="body2" className="text-gray-700">
+                  Profile
+                </Typography>
+              </div>
+            </MenuItem>
+
+            {/* Logout Button */}
+            <MenuItem
+              onClick={handleLogout}
+              className="rounded-lg hover:bg-gray-50"
+            >
+              <div className="flex items-center gap-3 py-1">
+                <FaSignOutAlt className="text-gray-600" size={16} />
+                <Typography variant="body2" className="text-gray-700">
+                  Logout
+                </Typography>
+              </div>
+            </MenuItem>
+          </Menu>
+        </div>
       </div>
     </header>
   );

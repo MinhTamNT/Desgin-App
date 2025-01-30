@@ -44,14 +44,11 @@ const DELETED_PROJECT = gql`
 const UPDATE_LASTETS_ACCESS = gql`
   mutation Mutation($projectId: String!) {
     updateProjectAcces(projectId: $projectId) {
-      accessCount
-      lastAccessed
-      project_idProject
+      RetCode
+      RetMessgae
     }
   }
 `;
-
-
 
 const GET_MEMEBER_IN_PROJECT = gql`
   query GetMememberInProject($projectId: String) {

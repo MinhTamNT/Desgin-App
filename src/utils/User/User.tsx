@@ -40,11 +40,16 @@ const ADD_USER = gql`
 const SEARCH_USER = gql`
   query SearchUserByName($searchText: String!) {
     searchUserByName(searchText: $searchText) {
-      idUser
-      updatedAt
-      profilePicture
-      name
-      createdAt
+      ... on User {
+        idUser
+        name
+        profilePicture,
+        status
+      }
+      ... on ProccessObj {
+        RetCode
+        RetMessgae
+      }
     }
   }
 `;

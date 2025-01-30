@@ -2,12 +2,13 @@ import { memo, useState } from "react";
 import { GoPlus } from "react-icons/go";
 import { ActiveUser } from "../../components/Avatar/AvavtarActive";
 import { Button } from "../../components/Button/Button";
-import ManageMembersModal from "../../components/MemberRoleModalProps/MemberRoleModalProps ";
+
 import { NewThread } from "../../components/NewThread/NewThread";
 import ShapesMenu from "../../components/ShapesMenu/ShapesMenu";
 import { User } from "../../lib/interface";
 import { ActiveElement, NavbarProps } from "../../type/type";
 import { navElements } from "../../utils";
+import ManageMembersModal from "../../components/MemberRoleModalProps/MemberRoleModalProps";
 
 const NavbarProject = ({
   activeElement,
@@ -29,7 +30,7 @@ const NavbarProject = ({
   };
 
   const handleCloseManageMembersModal = () => {
-    setModalOpen(false); // Close the modal
+    setModalOpen(false); 
   };
 
   return (
