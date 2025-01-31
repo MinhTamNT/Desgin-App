@@ -38,7 +38,6 @@ export const Live = ({ canvasRef, role, undo, redo }: Props) => {
     mode: CursorMode.Hidden,
   });
   const [reactions, setReactions] = useState<Reaction[]>([]);
-  console.log(role);
   const handlePointerMove = useCallback(
     (event: React.PointerEvent) => {
       if (role === "ROLE_READ") return; 

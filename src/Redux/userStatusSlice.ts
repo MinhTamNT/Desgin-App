@@ -3,7 +3,7 @@ import { User } from "../lib/interface";
 
 interface UserStatusState {
   statuses: {
-    [userId: string]: User["Status"];
+    [userId: string]: User["status"];
   };
 }
 
@@ -19,7 +19,7 @@ const userStatusSlice = createSlice({
   reducers: {
     updateUserStatus: (
       state,
-      action: PayloadAction<{ userId: string; status: User["Status"] }>
+      action: PayloadAction<{ userId: string; status: User["status"] }>
     ) => {
       const { status } = action.payload;
       state.statuses["status"] = status;

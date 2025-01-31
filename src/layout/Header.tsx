@@ -41,6 +41,8 @@ export const Header = () => {
   const [notificationAnchorEl, setNotificationAnchorEl] =
     useState<null | HTMLElement>(null);
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [pageIndex, setPageIndex] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(10);
   const navigate = useNavigate();
   const currentUser = useSelector(
     (state: RootState) => state?.user?.user?.currentUser
@@ -48,14 +50,20 @@ export const Header = () => {
   const userStatus = useSelector(
     (state: RootState) => state.userStatus.statuses
   );
-  console.log(userStatus);
+  const loadMoreNotifications = () => {
+    setPageIndex((prevPageIndex) => prevPageIndex + 1);
+  };
+
   useQuery(GET_NOTIFICATION, {
+    variables: { pageIndex, pageSize },
     onCompleted: (data) => {
-      setNotifications(
-        data?.getNotificationsByUserId.filter(
+      const notifications = data?.getNotificationsByUserId?.notifications || [];
+      setNotifications((prevNotifications) => [
+        ...prevNotifications,
+        ...notifications.filter(
           (notification: Notification) => !notification.is_read
-        ) || []
-      );
+        ),
+      ]);
     },
   });
 
@@ -182,52 +190,63 @@ export const Header = () => {
           }}
         >
           {notificationCount > 0 ? (
-            notifications.map((notification: Notification) => (
-              <MenuItem
-                key={notification?.idNotification}
-                onClick={handleClose}
-              
-                className=""
-              >
-                <div className="flex items-center gap-4 w-full p-2">
-                  <div className="bg-blue-100 rounded-full w-10 h-10 flex items-center justify-center flex-shrink-0">
-                    <span className="text-blue-600 text-sm font-medium">
-                      New
-                    </span>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <Typography
-                      variant="body2"
-                      className="text-gray-900 line-clamp-2"
-                    >
-                      {notification?.message}
-                    </Typography>
-                    {!notification?.is_read &&
-                      notification?.type === "INVITED" && (
-                        <div className="flex gap-2 mt-2">
-                          <button
-                            onClick={() =>
-                              handleAcceptInvite(
-                                notification?.invitation_idInvitation
-                              )
-                            }
-                            className="px-3 py-1.5 text-xs font-medium rounded-md text-green-700 bg-green-100 
+            notifications
+              .map((notification: Notification) => (
+                <MenuItem
+                  key={notification?.idNotification}
+                  onClick={handleClose}
+                  className=""
+                >
+                  <div className="flex items-center gap-4 w-full p-2">
+                    <div className="bg-blue-100 rounded-full w-10 h-10 flex items-center justify-center flex-shrink-0">
+                      <span className="text-blue-600 text-sm font-medium">
+                        New
+                      </span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <Typography
+                        variant="body2"
+                        className="text-gray-900 line-clamp-2"
+                      >
+                        {notification?.message}
+                      </Typography>
+                      {!notification?.is_read &&
+                        notification?.type === "INVITED" && (
+                          <div className="flex gap-2 mt-2">
+                            <button
+                              onClick={() =>
+                                handleAcceptInvite(
+                                  notification?.invitation_idInvitation
+                                )
+                              }
+                              className="px-3 py-1.5 text-xs font-medium rounded-md text-green-700 bg-green-100 
                                    hover:bg-green-200 transition-colors duration-200"
-                          >
-                            Accept
-                          </button>
-                          <button
-                            className="px-3 py-1.5 text-xs font-medium rounded-md text-red-700 bg-red-100 
+                            >
+                              Accept
+                            </button>
+                            <button
+                              className="px-3 py-1.5 text-xs font-medium rounded-md text-red-700 bg-red-100 
                                    hover:bg-red-200 transition-colors duration-200"
-                          >
-                            Reject
-                          </button>
-                        </div>
-                      )}
+                            >
+                              Reject
+                            </button>
+                          </div>
+                        )}
+                    </div>
                   </div>
-                </div>
-              </MenuItem>
-            ))
+                </MenuItem>
+              ))
+              .concat(
+                <MenuItem
+                  onClick={loadMoreNotifications}
+                  className="flex justify-center py-2 hover:bg-gray-50"
+                  key="load-more"
+                >
+                  <Typography variant="body2" className="text-blue-600">
+                    Load More
+                  </Typography>
+                </MenuItem>
+              )
           ) : (
             <MenuItem className="flex flex-col items-center py-10 hover:bg-transparent">
               <div className="flex flex-col items-center justify-center">

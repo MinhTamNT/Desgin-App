@@ -22,7 +22,6 @@ interface Member {
 interface ManageMembersModalProps {
   open: boolean;
   onClose: () => void;
-  selectedUser: User | null;
   setSelectedUser: (user: User | null) => void;
 }
 
@@ -61,66 +60,78 @@ const SearchUsersList = ({
 const MembersList = ({
   members,
   currentUserId,
-  isHost,
   onRoleChange,
   onRemove,
 }: {
   members: Member[];
   currentUserId: string;
-  isHost: boolean;
   onRoleChange: (member: Member, role: string) => void;
   onRemove: (id: string) => void;
 }) => (
   <ul className="space-y-2">
-    {members.map(
-      (member) =>
-        currentUserId !== member.User[0]?.idUser && (
-          <li
-            key={member.User[0]?.idUser}
-            className="flex items-center justify-between gap-2 p-2 border-b border-gray-300"
-          >
-            <div className="flex items-center gap-2">
-              <img
-                src={member.User[0]?.profilePicture}
-                alt={member.User[0]?.name}
-                className="w-8 h-8 rounded-full object-cover"
-              />
-              <span className="font-medium">{member.User[0]?.name}</span>
+    {members
+      .filter((member) => member.User[0]?.idUser !== currentUserId)
+      .map((member) => (
+        <li
+          key={member.User[0]?.idUser}
+          className="flex items-center justify-between gap-4 p-3 border-b border-gray-300 hover:bg-gray-50 transition-colors duration-200"
+        >
+          <div className="flex items-center gap-3">
+            <img
+              src={member.User[0]?.profilePicture}
+              alt={member.User[0]?.name}
+              className="w-10 h-10 rounded-full object-cover"
+            />
+            <div>
+              <span className="font-semibold text-gray-800">
+                {member.User[0]?.name}
+              </span>
               {member.access && (
-                <span className="text-green-500 text-sm">
+                <span className="text-green-500 text-sm ml-2">
                   ({member.access})
                 </span>
               )}
             </div>
+          </div>
 
-            <div className="flex items-center gap-2">
-              {isHost && (
-                <select
-                  className="border border-gray-300 rounded-md px-2 py-1 text-sm"
-                  onChange={(e) => onRoleChange(member, e.target.value)}
-                  value={member.access}
-                >
-                  <option value="EDITOR">Editor</option>
-                  <option value="VIEWER">Viewer</option>
-                </select>
-              )}
-              <button
-                className="text-red-500 hover:underline"
-                onClick={() => onRemove(member.User[0]?.idUser)}
+          <div className="flex items-center gap-3">
+            <select
+              className="border border-gray-300 rounded-md px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              onChange={(e) => onRoleChange(member, e.target.value)}
+              value={member.access === "ROLE_READ" ? "VIEWER" : "EDITOR"}
+            >
+              <option value="EDITOR">Editor</option>
+              <option value="VIEWER">Viewer</option>
+            </select>
+            <button
+              className="flex items-center text-red-500 hover:underline"
+              onClick={() => onRemove(member.User[0]?.idUser)}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5 mr-1"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
               >
-                Remove
-              </button>
-            </div>
-          </li>
-        )
-    )}
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+              Remove
+            </button>
+          </div>
+        </li>
+      ))}
   </ul>
 );
 
 const ManageMembersModal = ({
   open,
   onClose,
-  selectedUser,
   setSelectedUser,
 }: ManageMembersModalProps) => {
   const { idProject } = useParams();
@@ -148,20 +159,16 @@ const ManageMembersModal = ({
     }
   );
 
-  const currentUserRole = useSelector(
-    (state: RootState) => state.role?.role?.userRole
-  );
   const currentUser = useSelector(
     (state: RootState) => state.user?.user?.currentUser
   );
 
-  // Tạo debounced search function
   const debouncedSearch = useCallback(
     debounce((searchValue: string) => {
       if (searchValue.trim()) {
         searchUser({ variables: { searchText: searchValue } });
       }
-    }, 500), 
+    }, 500),
     [searchUser]
   );
 
@@ -194,13 +201,15 @@ const ManageMembersModal = ({
 
   const handleEditPermission = async (member: Member, newRole: string) => {
     try {
-      await updateRole({
+      console.log(member.User[0]?.idUser);
+      const res = await updateRole({
         variables: {
           userId: member.User[0]?.idUser,
           role: newRole,
           projectId: idProject,
         },
       });
+      console.log(res?.data?.updateRoleProject);
     } catch (error) {
       console.error("Error updating role:", error);
     }
@@ -208,12 +217,13 @@ const ManageMembersModal = ({
 
   const handleRemoveMember = async (memberId: string) => {
     try {
-      await removeMember({
+      const res = await removeMember({
         variables: {
           projectId: idProject,
           userId: memberId,
         },
       });
+      console.log(res?.data?.removeUserFromProject);
     } catch (error) {
       console.error("Error removing member:", error);
     }
@@ -222,7 +232,6 @@ const ManageMembersModal = ({
   return (
     <Transition appear show={open} as={Fragment}>
       <Dialog as="div" className="relative z-10" onClose={onClose}>
-
         <div className="fixed inset-0 overflow-y-auto">
           <div className="flex min-h-full items-center justify-center p-4">
             <Dialog.Panel className="w-full max-w-lg transform rounded-lg bg-white p-6 shadow-xl transition-all">
@@ -279,7 +288,6 @@ const ManageMembersModal = ({
                       <MembersList
                         members={membersData?.getMememberInProject || []}
                         currentUserId={currentUser?.sub}
-                        isHost={currentUserRole?.is_host_user}
                         onRoleChange={handleEditPermission}
                         onRemove={handleRemoveMember}
                       />

@@ -1,19 +1,19 @@
 import { gql } from "@apollo/client";
 
 export const GET_NOTIFICATION = gql`
-  query Query {
-    getNotificationsByUserId {
-      message
-      type
-      invitation_idInvitation
-      userRequest {
-        idUser
-        name
-        email
+  query GetNotificationsByUserId($pageIndex: Int, $pageSize: Int) {
+    getNotificationsByUserId(pageIndex: $pageIndex, pageSize: $pageSize) {
+      notifications {
+        idNotification
+        type
+        message
+        is_read
+        createdAt
+        invitation_idInvitation
       }
-      is_read
-      idNotification
-      createdAt
+      pageInfo {
+        TOTALROW
+      }
     }
   }
 `;

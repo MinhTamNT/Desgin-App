@@ -66,26 +66,19 @@ const GET_MEMEBER_IN_PROJECT = gql`
 `;
 
 const UPDATE_ROLE = gql`
-  mutation Mutation($userId: String!, $role: String!, $projectId: String!) {
-    updateRoleProject(userId: $userId, role: $role, projectId: $projectId) {
-      access
-      is_host_user
-      lastAccessed
-      projectName
+  mutation Mutation($projectId: String!, $userId: String!, $role: String!) {
+    updateRoleProject(projectId: $projectId, userId: $userId, role: $role) {
+      RetCode
+      RetMessgae
     }
   }
 `;
 
 const REMOVED_MEMBER_PROJECT = gql`
-  mutation Mutation($projectId: String!, $userId: String!) {
+  mutation RemoveUserFromProject($projectId: String!, $userId: String!) {
     removeUserFromProject(projectId: $projectId, userId: $userId) {
-      access
-      accessCount
-      is_host_user
-      lastAccessed
-      projectName
-      project_idProject
-      user_idUser
+      RetCode
+      RetMessgae
     }
   }
 `;

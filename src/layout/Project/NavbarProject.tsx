@@ -17,7 +17,7 @@ const NavbarProject = ({
   imageInputRef,
 }: NavbarProps) => {
   console.log("activeElement", activeElement);
-  const [modalOpen, setModalOpen] = useState(false); // For managing members modal
+  const [modalOpen, setModalOpen] = useState(false); 
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
   const isActive = (value: string | Array<ActiveElement>) =>
@@ -26,7 +26,7 @@ const NavbarProject = ({
       value.some((val) => val?.value === activeElement?.value));
 
   const handleOpenManageMembersModal = () => {
-    setModalOpen(true); // Open the member management modal
+    setModalOpen(true); 
   };
 
   const handleCloseManageMembersModal = () => {
@@ -37,7 +37,7 @@ const NavbarProject = ({
     <>
       <nav className="flex select-none flex-wrap items-center justify-between gap-4 bg-[#2c2c2c] shadow-md px-5 py-3 text-black">
         <button
-          onClick={handleOpenManageMembersModal} // Open manage members modal
+          onClick={handleOpenManageMembersModal} 
           className="bg-blue-500 uppercase p-2 flex items-center hover:bg-blue-700 text-white font-bold lg:py-2 lg:px-4 rounded shadow-md transition duration-300 ease-in-out transform hover:-translate-y-1 hover:scale-110"
         >
           <GoPlus size={24} />
