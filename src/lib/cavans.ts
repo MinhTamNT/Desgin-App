@@ -207,7 +207,13 @@ export const handleCanvasObjectModified = ({
     const objects = (target as fabric.ActiveSelection).getObjects();
 
     objects.map((item) => {
-      item.aCoords = item.getCoords();
+      const coords = item.getCoords();
+      item.aCoords = {
+        tl: coords[0],
+        tr: coords[1],
+        br: coords[2],
+        bl: coords[3],
+      };
 
       console.log("Item after move:", {
         left: item.left,
