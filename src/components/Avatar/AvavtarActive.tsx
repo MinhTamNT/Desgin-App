@@ -26,7 +26,7 @@ export const ActiveUser = () => {
         {currentUser && (
           <Avatar name={currentUser?.name} src={currentUser?.picture} />
         )}
-        {users.slice(0, 3).map((user) => {
+        {users.slice(0, 3).map((user: User<{}, { id: string; info: { name: string; avatar: string; status: string } }>) => {
           return (
             <Avatar
               key={user.connectionId}

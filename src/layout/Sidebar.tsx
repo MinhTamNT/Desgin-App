@@ -1,17 +1,23 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { GoPlus } from "react-icons/go";
-import { Project } from "../lib/interface";
+import { Project, User } from "../lib/interface";
 import ProjectList from "../components/ListProject/ListProject";
-import { useMutation, useQuery } from "@apollo/client";
+import { useLazyQuery, useMutation, useQuery } from "@apollo/client";
 import { ADD_PROJECT, GET_PROJECT } from "../utils/Project/Project";
 import { useNavigate } from "react-router-dom";
-
+import { SEARCH_USER } from "../utils/User/User";
+import debounce from "lodash/debounce";
+import { RootState } from "../Redux/store";
+import { useSelector } from "react-redux";
 export const Sidebar = () => {
+  const currentUser = useSelector(
+    (state: RootState) => state?.user?.user?.currentUser
+  );
   const [open, setOpen] = useState(false);
   const [projectName, setProjectName] = useState("");
   const [projectDescription, setProjectDescription] = useState("");
   const [step, setStep] = useState<"details" | "invite">("details");
-  const [selectedMembers, setSelectedMembers] = useState<any[]>([]);
+  const [selectedMembers, setSelectedMembers] = useState<User[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
   const { data, refetch } = useQuery<{
@@ -26,7 +32,15 @@ export const Sidebar = () => {
     variables: { pageIndex: 1, pageSize: 10, nameProject: "" },
   });
   const projects = data?.getUserProjects?.projects || [];
-
+  const [searchUser, { data: searchData }] = useLazyQuery(SEARCH_USER);
+  const debouncedSearch = useCallback(
+    debounce((searchValue: string) => {
+      if (searchValue.trim()) {
+        searchUser({ variables: { searchText: searchValue } });
+      }
+    }, 500),
+    [searchUser]
+  );
   const [createProject] = useMutation(ADD_PROJECT, {
     onCompleted: () => refetch(),
   });
@@ -34,7 +48,11 @@ export const Sidebar = () => {
   const handleClickOpen = () => {
     setOpen(true);
   };
-
+  const handleSearchUser = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearchQuery(value);
+    debouncedSearch(value);
+  };
   const handleClose = () => {
     setOpen(false);
     setStep("details");
@@ -58,6 +76,7 @@ export const Sidebar = () => {
         variables: {
           name: projectName,
           description: projectDescription,
+          listInvite: selectedMembers.map((user) => user.idUser).join(","),
         },
       });
       handleClose();
@@ -68,6 +87,21 @@ export const Sidebar = () => {
 
   const handleSelectProject = (projectId: string) => {
     navigate(`/project/${projectId}`);
+  };
+
+  const handleSelectUser = (user: User) => {
+    console.log(user);
+    setSelectedMembers((prev: User[]) => {
+      const isSelected = prev.some((item) => item.idUser === user.idUser);
+      let updatedMembers;
+      if (isSelected) {
+        updatedMembers = prev.filter((item) => item.idUser !== user.idUser);
+      } else {
+        updatedMembers = [...prev, user];
+      }
+      console.log(updatedMembers);
+      return updatedMembers;
+    });
   };
 
   return (
@@ -137,7 +171,7 @@ export const Sidebar = () => {
                       type="text"
                       placeholder="Search for members"
                       value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onChange={handleSearchUser}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 mb-4"
                     />
 
@@ -146,6 +180,37 @@ export const Sidebar = () => {
                         No members selected yet.
                       </p>
                     )}
+                    {searchData?.searchUserByName?.map((user: User) => {
+                      let isSelected = false;
+                      if (user?.idUser !== currentUser?.sub) {
+                        isSelected = selectedMembers.some(
+                          (item) => item.idUser === user.idUser
+                        );
+                      }
+
+                      return (
+                        <div
+                          key={user.idUser}
+                          className={`flex items-center space-x-2 cursor-pointer ${
+                            isSelected ? "bg-blue-100 rounded-md" : ""
+                          }`}
+                          onClick={() => handleSelectUser(user)}
+                        >
+                          {user?.idUser === currentUser?.sub ? (
+                            <p>Not Found User</p>
+                          ) : (
+                            <>
+                              <img
+                                src={user.profilePicture}
+                                alt={user.name}
+                                className="h-10 rounded-full"
+                              />
+                              <span className="text-gray-800">{user.name}</span>
+                            </>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
                 <div className="flex justify-end p-4 border-t border-gray-200">

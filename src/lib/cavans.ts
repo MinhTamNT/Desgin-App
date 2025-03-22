@@ -203,11 +203,19 @@ export const handleCanvasObjectModified = ({
   const target = options.target;
   if (!target) return;
 
-  if (target?.type === "activeSelection") {
+  if (target.type === "activeSelection") {
     const objects = (target as fabric.ActiveSelection).getObjects();
 
-    objects.map((item) => {
-      item.aCoords = item.getCoords();
+    // Update coordinates for each object in the selection
+    objects.forEach((item) => {
+      item.setCoords(); // Update the object's coordinates
+      const coords = item.getCoords();
+      item.aCoords = {
+        tl: coords[0],
+        tr: coords[1],
+        br: coords[2],
+        bl: coords[3],
+      };
 
       console.log("Item after move:", {
         left: item.left,
@@ -216,15 +224,26 @@ export const handleCanvasObjectModified = ({
       });
 
       // Sync the updated object
-      syncShapeInStorage(item); // Synchronize each item in the selection
+      syncShapeInStorage(item);
     });
+
+    // Update the selection itself
+    target.setCoords();
   } else {
     target.setCoords();
+    console.log("Target after move:", {
+      left: target.left,
+      top: target.top,
+    });
+
     syncShapeInStorage(target);
+  }
+
+  if (options.target) {
+    options.target.canvas?.renderAll();
   }
 };
 
-// update shape in storage when path is created when in freeform mode
 export const handlePathCreated = ({
   options,
   syncShapeInStorage,
@@ -233,16 +252,13 @@ export const handlePathCreated = ({
   const path = options.path;
   if (!path) return;
 
-  // set unique id to path object
   path.set({
     objectId: uuid4(),
   });
 
-  // sync shape in storage
   syncShapeInStorage(path);
 };
 
-// check how object is moving on canvas and restrict it to canvas boundaries
 export const handleCanvasObjectMoving = ({
   options,
 }: {
@@ -410,21 +426,20 @@ export const handleCanvasZoom = ({
   options: fabric.IEvent & { e: WheelEvent };
   canvas: fabric.Canvas;
 }) => {
-  const delta = options.e?.deltaY;
-  let zoom = canvas.getZoom();
+  const { e } = options;
+  if (!e) return;
 
-  // allow zooming to min 20% and max 100%
+  const delta = e.deltaY;
+  const zoomStep = 0.001;
   const minZoom = 0.2;
   const maxZoom = 1;
-  const zoomStep = 0.001;
 
-  // calculate zoom based on mouse scroll wheel with min and max zoom
-  zoom = Math.min(Math.max(minZoom, zoom + delta * zoomStep), maxZoom);
+  const newZoom = Math.min(
+    Math.max(canvas.getZoom() + delta * zoomStep, minZoom),
+    maxZoom
+  );
 
-  // set zoom to canvas
-  // zoomToPoint: http://fabricjs.com/docs/fabric.Canvas.html#zoomToPoint
-  canvas.zoomToPoint({ x: options.e.offsetX, y: options.e.offsetY }, zoom);
+  canvas.zoomToPoint({ x: e.offsetX, y: e.offsetY }, newZoom);
 
-  options.e.preventDefault();
-  options.e.stopPropagation();
+  e.preventDefault();
 };

@@ -24,6 +24,7 @@ import { LoadingSkeleton } from "../../components/Loading/LoadingSkeleton";
 import { image } from "../../assets/image/image";
 import { gql } from "@apollo/client";
 import { updateUserStatus } from "../../Redux/userStatusSlice";
+import { toast } from "react-toastify";
 
 interface ProjectMember {
   User: [{ idUser: string }];
@@ -46,8 +47,10 @@ export const Home: React.FC = () => {
     (prev, next) => prev?.sub === next?.sub
   );
   const [pageIndex, setPageIndex] = useState<number>(1);
-  const [pageSize, setPageSize] = useState<number>(10);
+  const [pageSize, setPageSize] = useState<number>(6);
   const [search, setSearch] = useState<string>("");
+  const [currentPage, setCurrentPage] = useState(1);
+
   const {
     data: ProjectList,
     loading,
@@ -68,7 +71,10 @@ export const Home: React.FC = () => {
   const client = useApolloClient();
   const dispatch = useDispatch();
   const navigate = useNavigate();
-
+  const [totalRow, setTotalRow] = useState<number>(
+    ProjectList?.getUserProjects?.pageInfo.TOTALROW || 0
+  );
+  const startIndex = (currentPage - 1) * pageSize;
   useSubscription(USER_STATUS_SUBSCRIPTION, {
     onData: ({ data }) => {
       if (data?.data?.userStatusChanged) {
@@ -91,10 +97,18 @@ export const Home: React.FC = () => {
   const handleDelete = useCallback(
     async (idProject: string) => {
       try {
-        await deleteProject({
+        const res = await deleteProject({
           variables: { projectId: idProject },
           refetchQueries: [{ query: GET_PROJECT }],
         });
+        if (res.data.deletedProjectId.RetCode > 0) {
+          toast.success(res.data.deletedProjectId.RetMessgae);
+          await client.refetchQueries({
+            include: [GET_PROJECT],
+          });
+        } else {
+          toast.error(res.data.deletedProjectId.RetMessgae);
+        }
       } catch (error) {
         console.error("Failed to delete project:", error);
       }
@@ -147,6 +161,20 @@ export const Home: React.FC = () => {
 
   if (loading) return <LoadingSkeleton />;
   if (error) return <ErrorMessage message={error.message} />;
+
+  const handleNextPage = () => {
+    alert("Next Page");
+    setCurrentPage((prevPage) => {
+      const totalPages = Math.ceil(totalRow / pageSize);
+      return Math.min(prevPage + 1, totalPages);
+    });
+  };
+
+  const handlePreviousPage = () => {
+    setCurrentPage((prevPage) => Math.max(prevPage - 1, 1));
+  };
+
+  const paginatedProjects = projects.slice(startIndex, startIndex + pageSize);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
@@ -207,7 +235,7 @@ export const Home: React.FC = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-              {projects.map((project) => (
+              {paginatedProjects.map((project) => (
                 <ProjectCard
                   key={project.idProject}
                   project={project}
@@ -215,6 +243,23 @@ export const Home: React.FC = () => {
                   onDelete={handleDelete}
                 />
               ))}
+            </div>
+          )}
+
+          {totalRow > 20 && (
+            <div className="flex justify-between mt-4">
+              <button
+                onClick={handlePreviousPage}
+                className="px-4 py-2 bg-gray-300 rounded-md"
+              >
+                Previous
+              </button>
+              <button
+                onClick={handleNextPage}
+                className="px-4 py-2 bg-gray-300 rounded-md"
+              >
+                Next
+              </button>
             </div>
           )}
         </div>
