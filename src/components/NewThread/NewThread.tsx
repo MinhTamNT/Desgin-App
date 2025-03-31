@@ -1,5 +1,3 @@
-"use client";
-
 import {
   FormEvent,
   ReactNode,
@@ -10,11 +8,14 @@ import {
 } from "react";
 import { Slot } from "@radix-ui/react-slot";
 import * as Portal from "@radix-ui/react-portal";
-import { useCreateThread } from "@liveblocks/react";
-import { useMaxZIndex } from "../../hook/useMaxZIndex";
-import { ComposerSubmitComment } from "@liveblocks/react-ui";
+import { ComposerSubmitComment } from "@liveblocks/react-comments/primitives";
+
 import PinnedComposer from "../CommentOverPlay/PinnedComposer";
 import NewThreadCursor from "../CommentOverPlay/NewThreadCursor";
+import { useMaxZIndex } from "../../hook/useMaxZIndex";
+import { useCreateThread } from "@liveblocks/react";
+import { useSelector } from "react-redux";
+import { RootState } from "../../Redux/store";
 
 type ComposerCoords = null | { x: number; y: number };
 
@@ -23,7 +24,9 @@ type Props = {
 };
 
 export const NewThread = ({ children }: Props) => {
-  // set state to track if we're placing a new comment or not
+  const currentUser = useSelector(
+    (state: RootState) => state?.user?.user?.currentUser
+  );
   const [creatingCommentState, setCreatingCommentState] = useState<
     "placing" | "placed" | "complete"
   >("complete");
@@ -33,12 +36,30 @@ export const NewThread = ({ children }: Props) => {
   const maxZIndex = useMaxZIndex();
 
   const [composerCoords, setComposerCoords] = useState<ComposerCoords>(null);
-
+  const [isDragging, setIsDragging] = useState<boolean>(false);
   const lastPointerEvent = useRef<PointerEvent>();
 
   const [allowUseComposer, setAllowUseComposer] = useState(false);
   const allowComposerRef = useRef(allowUseComposer);
   allowComposerRef.current = allowUseComposer;
+
+  useEffect(() => {
+    // Nếu bình luận đã được xác nhận, không làm gì cả
+    if (isDragging === false && composerCoords) {
+      return;
+    }
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (isDragging) {
+        setComposerCoords({ x: e.clientX, y: e.clientY });
+      }
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+    };
+  }, [isDragging]);
 
   useEffect(() => {
     if (creatingCommentState === "complete") {
@@ -65,7 +86,6 @@ export const NewThread = ({ children }: Props) => {
         }
       }
 
-      // First click sets composer down
       setCreatingCommentState("placed");
       setComposerCoords({
         x: e.clientX,
@@ -82,6 +102,7 @@ export const NewThread = ({ children }: Props) => {
 
   useEffect(() => {
     const handlePointerMove = (e: PointerEvent) => {
+      // Prevents issue with composedPath getting removed
       (e as any)._savedComposedPath = e.composedPath();
       lastPointerEvent.current = e;
     };
@@ -140,9 +161,13 @@ export const NewThread = ({ children }: Props) => {
       event.preventDefault();
       event.stopPropagation();
 
-      const overlayPanel = document.querySelector("#canvas");
+      if (!composerCoords || !lastPointerEvent.current) {
+        return;
+      }
 
-      if (!composerCoords || !lastPointerEvent.current || !overlayPanel) {
+      const overlayPanel = document.querySelector("#canvas");
+      if (!overlayPanel) {
+        console.error("Canvas element not found.");
         return;
       }
 
@@ -150,7 +175,7 @@ export const NewThread = ({ children }: Props) => {
       const x = composerCoords.x - left;
       const y = composerCoords.y - top;
 
-      createThread({
+      const payload = {
         body,
         metadata: {
           x,
@@ -158,7 +183,11 @@ export const NewThread = ({ children }: Props) => {
           resolved: false,
           zIndex: maxZIndex + 1,
         },
-      });
+      };
+
+      console.log("Payload being sent:", JSON.stringify(payload, null, 2));
+
+      createThread(payload);
 
       setComposerCoords(null);
       setCreatingCommentState("complete");
@@ -166,6 +195,29 @@ export const NewThread = ({ children }: Props) => {
     },
     [createThread, composerCoords, maxZIndex]
   );
+
+  // const handleClick = (e: MouseEvent) => {
+  //   if (!isDragging) {
+  //     // Bắt đầu di chuyển
+  //     setIsDragging(true);
+  //     setComposerCoords({ x: e.clientX, y: e.clientY });
+  //   } else {
+  //     setIsDragging(false);
+  //     createThread({
+  //       x: composerCoords?.x || 0,
+  //       y: composerCoords?.y || 0,
+  //       zIndex: maxZIndex + 1,
+  //     });
+  //     setComposerCoords(null);
+  //   }
+  // };
+
+  // useEffect(() => {
+  //   window.addEventListener("click", handleClick);
+  //   return () => {
+  //     window.removeEventListener("click", handleClick);
+  //   };
+  // }, [isDragging, composerCoords]);
 
   return (
     <>

@@ -16,7 +16,6 @@ import { CursorChat } from "../Cursor/CursorChat";
 import { LiveCursor } from "../Cursor/LiveCursor";
 import FlyingReaction from "../Reaction/FlyingReact";
 import ReactionSelector from "../Reaction/ReactionButton";
-import { Comments } from "../CommentOverPlay/Comments";
 import {
   ContextMenu,
   ContextMenuContent,
@@ -24,6 +23,12 @@ import {
   ContextMenuTrigger,
 } from "@radix-ui/react-context-menu";
 import { shortcuts } from "../../utils";
+import { Comments } from "../CommentOverPlay/Comments";
+import { useMutation } from "@apollo/client";
+import { ADD_COMMENT } from "../../utils/Comment/Comment";
+import { useSelector } from "react-redux";
+import { RootState } from "../../Redux/store";
+
 interface Props {
   canvasRef: React.MutableRefObject<HTMLCanvasElement | null>;
   role: any;
@@ -34,13 +39,63 @@ interface Props {
 export const Live = ({ canvasRef, role, undo, redo }: Props) => {
   const others = useOthers();
   const [{ cursor }, updatePersence] = useMyPresence() as any;
+  const [isCommenting, setIsCommenting] = useState(false);
+  const [commentPosition, setCommentPosition] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
+  const [newComment, setNewComment] = useState("");
   const [cursorState, setCursorState] = useState<CursorState>({
     mode: CursorMode.Hidden,
   });
+  const [addComment] = useMutation(ADD_COMMENT);
   const [reactions, setReactions] = useState<Reaction[]>([]);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+
+  const currentUser = useSelector(
+    (state: RootState) => state.user.user.currentUser
+  );
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "c" || e.key === "C") {
+        setIsCommenting(true);
+        setCommentPosition({
+          x: window.innerWidth / 2,
+          y: window.innerHeight / 2,
+        }); // Hiển thị ở giữa màn hình
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
+
+  const handleKeyDownInInput = async (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && newComment.trim() !== "") {
+      console.log("New comment:", newComment, "at position:", commentPosition);
+      const x = commentPosition?.x;
+      const y = commentPosition?.y;
+      await addComment({
+        variables: {
+          content: newComment,
+          x: x,
+          y: y,
+          userId: currentUser?.sub,
+        },
+      });
+
+      setIsCommenting(false);
+      setNewComment("");
+      setCommentPosition(null);
+    }
+  };
+
   const handlePointerMove = useCallback(
     (event: React.PointerEvent) => {
-      if (role === "ROLE_READ") return; 
+      if (role === "ROLE_READ") return;
       event.preventDefault();
       if (cursor === null || cursorState.mode !== CursorMode.ReactionSelector) {
         const x = event.clientX - event.currentTarget.getBoundingClientRect().x;
@@ -55,7 +110,7 @@ export const Live = ({ canvasRef, role, undo, redo }: Props) => {
 
   const handlePointerLeave = useCallback(
     (event: React.PointerEvent) => {
-      if (role === "ROLE_READ") return; 
+      if (role === "ROLE_READ") return;
       event.preventDefault();
       updatePersence({
         cursor: null,
@@ -68,7 +123,7 @@ export const Live = ({ canvasRef, role, undo, redo }: Props) => {
 
   const handlePointerDown = useCallback(
     (event: React.PointerEvent) => {
-      if (role === "ROLE_READ") return; 
+      if (role === "ROLE_READ") return;
       const x = event.clientX - event.currentTarget.getBoundingClientRect().x;
       const y = event.clientY - event.currentTarget.getBoundingClientRect().y;
       updatePersence({
@@ -85,7 +140,7 @@ export const Live = ({ canvasRef, role, undo, redo }: Props) => {
 
   const handlePointerUp = useCallback(
     (event: React.PointerEvent) => {
-      if (role === "ROLE_READ") return; 
+      if (role === "ROLE_READ") return;
       setCursorState((state) =>
         state.mode === CursorMode.Reaction
           ? { ...state, isPressed: false }
@@ -201,6 +256,10 @@ export const Live = ({ canvasRef, role, undo, redo }: Props) => {
     }
   }, []);
 
+  const handleEmojiClick = (emojiObject: any) => {
+    setNewComment((prev) => prev + emojiObject.emoji); // Thêm emoji vào nội dung comment
+  };
+
   return (
     <ContextMenu>
       <ContextMenuTrigger
@@ -209,7 +268,7 @@ export const Live = ({ canvasRef, role, undo, redo }: Props) => {
         onPointerLeave={handlePointerLeave}
         onPointerDown={handlePointerDown}
         onPointerUp={handlePointerUp}
-        className="relative flex h-full w-full items-center justify-center"
+        className="relative flex h-full w-full  items-center "
       >
         <canvas ref={canvasRef} className="w-full h-full" />
         {reactions.map((reaction) => (
@@ -234,7 +293,35 @@ export const Live = ({ canvasRef, role, undo, redo }: Props) => {
             <ReactionSelector setReaction={setReaction} />
           )}
         <LiveCursor others={others} />
-        <Comments />
+        {/* <Comments canvasRef={canvasRef} projectId={idProject} />
+        {isCommenting && commentPosition && (
+          <div
+            className="absolute bg-white border border-gray-300 shadow-md rounded-lg p-2"
+            style={{
+              left: commentPosition.x,
+              top: commentPosition.y,
+              transform: "translate(-50%, -50%)",
+              zIndex: 10,
+            }}
+          >
+            <div className="flex flex-col space-y-2">
+              <input
+                type="text"
+                className="w-full border border-gray-300 rounded-lg p-2 outline-none"
+                placeholder="Enter your comment..."
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                onKeyDown={handleKeyDownInInput}
+              />
+              <button
+                className="bg-blue-500 text-white rounded-lg px-4 py-2 hover:bg-blue-600"
+                onClick={() => setShowEmojiPicker((prev) => !prev)}
+              >
+                😊 Add Emoji
+              </button>
+            </div>
+          </div>
+        )} */}
       </ContextMenuTrigger>
       <ContextMenuContent className="right-menu-content bg-white border border-gray-200 shadow-lg rounded-lg p-2 w-64">
         {shortcuts.map((shortcut) => (

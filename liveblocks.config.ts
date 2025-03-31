@@ -1,6 +1,13 @@
 // Define Liveblocks types for your application
 // https://liveblocks.io/docs/api-reference/liveblocks-react#Typing-your-data
-import { LiveMap } from "@liveblocks/client";
+import { LiveMap, createClient } from "@liveblocks/client";
+import { createRoomContext } from "@liveblocks/react";
+
+const publicKey = import.meta.env.VITE_LIVE_BLOCK;
+const client = createClient({
+  throttle: 16,
+  publicApiKey: publicKey,
+});
 
 export type ThreadMetadata = {
   resolved: boolean;
@@ -43,4 +50,27 @@ declare global {
   }
 }
 
-export {}; // Xuất ThreadMetadata
+const {
+  suspense: {
+    // LiveblocksProvider, // Removed as it does not exist
+    useBroadcastEvent,
+    useCreateThread,
+    useEditThreadMetadata,
+    useEventListener,
+    useMyPresence,
+    useOthers,
+    useRoomInfo,
+    useThreads,
+  },
+} = createRoomContext(client); // Ensure you use the correct provider elsewhere in your app
+
+export {
+  useBroadcastEvent,
+  useCreateThread,
+  useEditThreadMetadata,
+  useEventListener,
+  useMyPresence,
+  useOthers,
+  useRoomInfo,
+  useThreads,
+}; // Export ThreadMetadata

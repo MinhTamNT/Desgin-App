@@ -2,7 +2,6 @@ import { memo, useState } from "react";
 import { GoPlus } from "react-icons/go";
 import { ActiveUser } from "../../components/Avatar/AvavtarActive";
 import { Button } from "../../components/Button/Button";
-
 import { NewThread } from "../../components/NewThread/NewThread";
 import ShapesMenu from "../../components/ShapesMenu/ShapesMenu";
 import { User } from "../../lib/interface";
@@ -16,7 +15,6 @@ const NavbarProject = ({
   handleImageUpload,
   imageInputRef,
 }: NavbarProps) => {
-  console.log("activeElement", activeElement);
   const [modalOpen, setModalOpen] = useState(false); 
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
 

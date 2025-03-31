@@ -23,6 +23,7 @@ interface ManageMembersModalProps {
   open: boolean;
   onClose: () => void;
   setSelectedUser: (user: User | null) => void;
+  selectedUser: User | null;
 }
 
 const SearchUsersList = ({
@@ -65,8 +66,8 @@ const MembersList = ({
 }: {
   members: Member[];
   currentUserId: string;
-  onRoleChange : (member: Member, role: string) => void;
-  onRemove : (id: string) => void;
+  onRoleChange: (member: Member, role: string) => void;
+  onRemove: (id: string) => void;
 }) => (
   <ul className="space-y-2">
     {members

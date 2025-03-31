@@ -37,3 +37,19 @@ export interface Message {
   };
   text: string;
 }
+
+
+export interface CanvasObject {
+
+  width: number;
+
+  height: number;
+
+  top: number;
+
+  left: number;
+
+  fill: string;
+
+  [key: string]: any; // Add index signature to satisfy
+}
