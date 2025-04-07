@@ -5,10 +5,20 @@ type SearchImageModalProps = {
   onClose: () => void;
 };
 
+interface ResultImage {
+  distance: number;
+  image_path: string;
+}
+
+interface ApiResponse {
+  message: string;
+  results: ResultImage[];
+}
+
 const SearchImageModal = ({ onClose }: SearchImageModalProps) => {
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [isScanning, setIsScanning] = useState(false);
-  const [resultImage, setResultImage] = useState<[]>([]);
+  const [resultImage, setResultImage] = useState<ApiResponse[]>([]);
   const [pageIndex, setPageIndex] = useState<number | 0>(1);
   const [pageSize, setPageSize] = useState<number | 0>(10);
   const [totalPage, setTotalPage] = useState<number | 0>(0);
@@ -143,6 +153,13 @@ const SearchImageModal = ({ onClose }: SearchImageModalProps) => {
               </div>
             ))}
           </div>
+        )}
+        {resultImage.length < 0 && (
+          <>
+            <p className="text-center text-gray-500 mt-4">
+              không tìm thấy ảnh tương tự
+            </p>
+          </>
         )}
       </div>
     </div>,
