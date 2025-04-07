@@ -24,7 +24,7 @@ export const PinnedThread = ({ thread, onFocus, ...props }: Props) => {
         picture: currentUser.picture,
       });
     }
-  }, [currentUser, updateMyPresence]);
+  }, [currentUser]);
 
   const startMinimized = useMemo(
     () => Number(new Date()) - Number(new Date(thread.createdAt)) > 100,

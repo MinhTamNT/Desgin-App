@@ -293,35 +293,7 @@ export const Live = ({ canvasRef, role, undo, redo }: Props) => {
             <ReactionSelector setReaction={setReaction} />
           )}
         <LiveCursor others={others} />
-        {/* <Comments canvasRef={canvasRef} projectId={idProject} />
-        {isCommenting && commentPosition && (
-          <div
-            className="absolute bg-white border border-gray-300 shadow-md rounded-lg p-2"
-            style={{
-              left: commentPosition.x,
-              top: commentPosition.y,
-              transform: "translate(-50%, -50%)",
-              zIndex: 10,
-            }}
-          >
-            <div className="flex flex-col space-y-2">
-              <input
-                type="text"
-                className="w-full border border-gray-300 rounded-lg p-2 outline-none"
-                placeholder="Enter your comment..."
-                value={newComment}
-                onChange={(e) => setNewComment(e.target.value)}
-                onKeyDown={handleKeyDownInInput}
-              />
-              <button
-                className="bg-blue-500 text-white rounded-lg px-4 py-2 hover:bg-blue-600"
-                onClick={() => setShowEmojiPicker((prev) => !prev)}
-              >
-                😊 Add Emoji
-              </button>
-            </div>
-          </div>
-        )} */}
+        <Comments />
       </ContextMenuTrigger>
       <ContextMenuContent className="right-menu-content bg-white border border-gray-200 shadow-lg rounded-lg p-2 w-64">
         {shortcuts.map((shortcut) => (

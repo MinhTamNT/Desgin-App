@@ -2,7 +2,29 @@
 @tailwind components;
 @tailwind utilities;
 
+@keyframes scan-glow {
+  0% {
+    transform: translateX(-100%);
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(100%);
+    opacity: 0.5;
+  }
+}
 
+.animate-scan-glow {
+  animation: scan-glow 2s infinite linear;
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 255, 0.2) 0%,
+    rgba(0, 0, 255, 0.5) 50%,
+    rgba(0, 0, 255, 0.2) 100%
+  );
+}
 
 html ::-webkit-scrollbar {
   border-radius: 0px;

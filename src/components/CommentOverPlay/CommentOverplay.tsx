@@ -5,13 +5,15 @@ import { useCallback, useRef } from "react";
 import { ThreadMetadata } from "../../../liveblocks.config";
 import { useMaxZIndex } from "../../hook/useMaxZIndex";
 import { PinnedThread } from "./PinnedThread";
+import { useSelector } from "react-redux";
+import { RootState } from "../../Redux/store";
 
 type OverPlayProp = {
   thread: ThreadData<ThreadMetadata>;
   maxZIndex: number;
 };
 
-export const CommentsOverlay = () => {
+const CommentsOverlay = () => {
   const { threads } = useThreads();
 
   // get the max z-index of a thread
@@ -34,8 +36,8 @@ export const CommentsOverlay = () => {
 
 const OverlayThread = ({ thread, maxZIndex }: OverPlayProp) => {
   const editThreadMetadata = useEditThreadMetadata();
-
-  const { isLoading } = useUser(thread.comments[0].userId);
+  const user = useSelector((state: RootState) => state.user.user.currentUser);
+  const { isLoading } = useUser(user.sub);
 
   const threadRef = useRef<HTMLDivElement>(null);
 
@@ -69,3 +71,4 @@ const OverlayThread = ({ thread, maxZIndex }: OverPlayProp) => {
     </div>
   );
 };
+export default CommentsOverlay;

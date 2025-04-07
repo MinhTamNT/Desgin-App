@@ -22,7 +22,6 @@ const Login: React.FC = () => {
   const getDeviceId = () => {
     const platform = navigator.platform;
     const browserName = navigator.appName;
-
     return `${platform}-${browserName}-${Math.random()
       .toString(36)
       .substr(2, 9)}`;
@@ -40,6 +39,8 @@ const Login: React.FC = () => {
         });
         const newUser = jwtDecode<User>(token);
         dispatch(setUser(newUser));
+
+        // Add user to the backend
         await addNewUser({
           variables: {
             idUser: newUser?.sub,
@@ -51,11 +52,12 @@ const Login: React.FC = () => {
             deviceId: getDeviceId(),
           },
         });
+
         navigate("/");
       }
     } catch (error) {
       console.error("Failed to handle login:", error);
-      dispatch(setError());
+      dispatch(setError()); // Handle error by dispatching an error state
     }
   };
 

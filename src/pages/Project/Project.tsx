@@ -1,6 +1,20 @@
 import { LiveMap } from "@liveblocks/client";
-import { useMutation, useRedo, useStorage, useUndo } from "@liveblocks/react";
+import {
+  useMutation,
+  useOther,
+  useRedo,
+  useStorage,
+  useUndo,
+} from "@liveblocks/react";
 import { fabric } from "fabric";
+
+declare module "fabric" {
+  namespace fabric {
+    interface Image {
+      hasUploaded?: boolean;
+    }
+  }
+}
 import { useEffect, useRef, useState } from "react";
 import { Live } from "../../components/Live/Live";
 import { uploadImageToCloudinary } from "../../helper/UpdateImage";
@@ -32,6 +46,8 @@ import { useSubscription } from "@apollo/client";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import { CanvasObject } from "../../lib/interface";
+import { useOthers } from "@liveblocks/react/suspense";
+import { createRoomContext, useRoom } from "@liveblocks/react";
 interface UserRequest {
   idUser: string;
 }
@@ -68,6 +84,8 @@ export const Project = () => {
   const userRole = useSelector(
     (state: RootState) => state?.role?.role?.userRole
   );
+  const other = useOthers();
+  const room = useRoom();
   const navigate = useNavigate();
   useSubscription(NOTIFICATION_SUBSCRIPTION, {
     onSubscriptionData: ({ subscriptionData }) => {
@@ -119,6 +137,7 @@ export const Project = () => {
     string,
     CanvasObject
   >;
+  console.log(other);
 
   const syncShapeInStorage = useMutation(
     ({ storage }, object: fabric.Object) => {
@@ -193,6 +212,7 @@ export const Project = () => {
 
   useEffect(() => {
     const canvas = initializeFabric({ canvasRef, fabricRef });
+
     if (!canvas) {
       console.error("Canvas not initialized");
       return;
@@ -317,17 +337,15 @@ export const Project = () => {
                       top: 100,
                       selectable: true,
                       hasUploaded: false,
-                      id: `img_${Date.now()}`,
                     });
 
                     canvas.add(img);
                     canvas.setActiveObject(img);
                     canvas.renderAll();
 
-                   
                     img.on("mousedown", async () => {
                       if (!img.hasUploaded) {
-                        img.hasUploaded = true; 
+                        img.hasUploaded = true;
 
                         try {
                           const newImage = await uploadImageToCloudinary(file);

@@ -15,6 +15,9 @@ export type ThreadMetadata = {
   time?: number;
   x: number;
   y: number;
+  userId: string;
+  userName: string;
+  userAvatar: string;
 };
 declare global {
   export interface Liveblocks {
@@ -61,8 +64,9 @@ const {
     useOthers,
     useRoomInfo,
     useThreads,
+    useUser,
   },
-} = createRoomContext(client); // Ensure you use the correct provider elsewhere in your app
+} = createRoomContext(client); 
 
 export {
   useBroadcastEvent,
@@ -73,4 +77,5 @@ export {
   useOthers,
   useRoomInfo,
   useThreads,
+  useUser,
 }; // Export ThreadMetadata

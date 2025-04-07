@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import { useState } from "react";
 import { useSelector } from "react-redux";
 import Color from "../../components/Color/Color";
 import { Dimensions } from "../../components/Dimensions/Dimensions";
@@ -7,7 +7,8 @@ import { modifyShape } from "../../lib/shape";
 import { RightSidebarProps } from "../../type/type";
 import { fabric } from "fabric";
 import { RootState } from "../../Redux/store";
-import SearchModal from "../../components/SearchImage/SearchImage";
+import ImageUploader from "../../components/Modal/ImageUpload";
+import SearchImageModal from "../../components/SearchImage/SearchImage";
 
 export default function RightSidebar({
   activeObjectRef,
@@ -19,7 +20,7 @@ export default function RightSidebar({
 }: RightSidebarProps) {
   const role = useSelector((state: RootState) => state?.role?.role?.userRole);
   const [isModalOpen, setIsModalOpen] = useState(false);
-
+  const handleCloseModal = () => setIsModalOpen(false);
   const handleInputChange = (property: string, value: string) => {
     if (!fabricRef.current) isEditingRef.current = true;
 
@@ -77,7 +78,7 @@ export default function RightSidebar({
         attributeType="fill"
         handleInputChange={handleInputChange}
       />
-      <SearchModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+      {isModalOpen && <SearchImageModal onClose={handleCloseModal} />}
     </section>
   );
 }
