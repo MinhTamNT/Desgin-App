@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { createPortal } from "react-dom";
-
+import { API, endPoints } from "../../config/APIConfig";
 type SearchImageModalProps = {
   onClose: () => void;
 };
@@ -8,7 +8,10 @@ type SearchImageModalProps = {
 const SearchImageModal = ({ onClose }: SearchImageModalProps) => {
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [isScanning, setIsScanning] = useState(false);
-  const [resultImage, setResultImage] = useState<string | null>(null);
+  const [resultImage, setResultImage] = useState<[]>([]);
+  const [pageIndex, setPageIndex] = useState<number | 0>(1);
+  const [pageSize, setPageSize] = useState<number | 0>(10);
+  const [totalPage, setTotalPage] = useState<number | 0>(0);
 
   const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
@@ -34,10 +37,22 @@ const SearchImageModal = ({ onClose }: SearchImageModalProps) => {
 
     setIsScanning(true);
 
-    // Simulate API call
     try {
-      await new Promise((resolve) => setTimeout(resolve, 3000)); // Simulate 3 seconds delay
-      setResultImage(imageSrc); // Simulate returning the same image as the result
+      const respone = await fetch(imageSrc);
+      const blob = await respone.blob();
+      const formData = new FormData();
+      formData.append("file", blob);
+      formData.append("page", pageIndex.toString());
+      formData.append("per_page", pageSize.toString());
+      const res = await API.post(endPoints.SearchImage, formData, {
+        headers: {
+          mudiaType: "multipart/form-data",
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      const data = res.data;
+      // console.log("Response data:", data);
+      setResultImage(data.results);
     } catch (error) {
       console.error("Error scanning image:", error);
     } finally {
@@ -47,12 +62,12 @@ const SearchImageModal = ({ onClose }: SearchImageModalProps) => {
 
   const handleDelete = () => {
     setImageSrc(null);
-    setResultImage(null);
+    setResultImage([]);
   };
 
   return createPortal(
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-      <div className="bg-white rounded-lg shadow-lg p-6 w-96 relative">
+      <div className="bg-white rounded-lg shadow-lg p-6 w-128 relative">
         <button
           onClick={onClose}
           className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
@@ -116,15 +131,17 @@ const SearchImageModal = ({ onClose }: SearchImageModalProps) => {
           </div>
         )}
 
-        {/* Result Image */}
-        {resultImage && (
-          <div className="mt-4">
-            <h3 className="text-md font-semibold mb-2">Result:</h3>
-            <img
-              src={resultImage}
-              alt="Result"
-              className="w-full h-48 object-cover rounded-lg shadow-md"
-            />
+        {resultImage !== null && (
+          <div className="grid grid-cols-3 gap-4 mt-4">
+            {resultImage?.map((item: any, index: number) => (
+              <div key={index} className="rounded-lg overflow-hidden shadow-md">
+                <img
+                  src={`data:image/jpeg;base64,${item?.image_path}`}
+                  alt={`Result ${index + 1}`}
+                  className="w-full h-32 object-cover"
+                />
+              </div>
+            ))}
           </div>
         )}
       </div>
