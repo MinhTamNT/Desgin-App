@@ -51,5 +51,5 @@ export interface CanvasObject {
 
   fill: string;
 
-  [key: string]: any; // Add index signature to satisfy
+  [key: string]: any; 
 }

@@ -1,11 +1,5 @@
 import { LiveMap } from "@liveblocks/client";
-import {
-  useMutation,
-  useOther,
-  useRedo,
-  useStorage,
-  useUndo,
-} from "@liveblocks/react";
+import { useMutation, useRedo, useStorage, useUndo } from "@liveblocks/react";
 import { fabric } from "fabric";
 
 declare module "fabric" {
@@ -43,11 +37,12 @@ import { RootState } from "../../Redux/store";
 import { useSelector } from "react-redux";
 import { NOTIFICATION_SUBSCRIPTION } from "../../utils/Notify/Notify";
 import { useSubscription } from "@apollo/client";
-import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import { CanvasObject } from "../../lib/interface";
 import { useOthers } from "@liveblocks/react/suspense";
-import { createRoomContext, useRoom } from "@liveblocks/react";
+import { useRoom } from "@liveblocks/react";
+import "../../index.css";
 interface UserRequest {
   idUser: string;
 }
@@ -120,7 +115,23 @@ export const Project = () => {
     event.stopPropagation();
     const file = event.target.files ? event.target.files[0] : "";
     try {
-      const newImage = await uploadImageToCloudinary(file as string);
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        if (event.target?.result) {
+          const newImage = await uploadImageToCloudinary(
+            event.target.result as string
+          );
+          if (newImage) {
+            handleImageUpload({
+              file: newImage?.url,
+              canvas: fabricRef.current as any,
+              shapeRef,
+              syncShapeInStorage,
+            });
+          }
+        }
+      };
+      reader.readAsDataURL(file);
       if (newImage) {
         handleImageUpload({
           file: newImage?.url,
@@ -325,56 +336,58 @@ export const Project = () => {
       for (const item of items) {
         if (item.type.startsWith("image")) {
           const file = item.getAsFile();
-          if (file) {
-            const reader = new FileReader();
-            reader.onload = (event) => {
-              if (event.target?.result) {
-                fabric.Image.fromURL(event.target.result as string, (img) => {
-                  if (img) {
-                    img.scaleToWidth(200);
-                    img.set({
-                      left: 100,
-                      top: 100,
-                      selectable: true,
-                      hasUploaded: false,
-                    });
+          if (!file) continue;
 
-                    canvas.add(img);
-                    canvas.setActiveObject(img);
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            if (!event.target?.result) return;
+
+            fabric.Image.fromURL(event.target.result as string, async (img) => {
+              if (!img) return;
+
+              img.scaleToWidth(200);
+              img.set({
+                left: 100,
+                top: 100,
+                selectable: true,
+                hasUploaded: false,
+              });
+
+              canvas.add(img);
+              canvas.setActiveObject(img);
+              canvas.renderAll();
+
+              const loadingOverlay = document.createElement("div");
+              loadingOverlay.className =
+                "absolute inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50";
+              loadingOverlay.innerHTML = `
+                <div class="spinner-border animate-spin inline-block w-8 h-8 border-4 rounded-full text-white"></div>
+              `;
+              document.body.appendChild(loadingOverlay);
+
+              try {
+                const newImage = await uploadImageToCloudinary(file);
+                if (newImage) {
+                  handleImageUpload({
+                    file: newImage.secure_url,
+                    canvas: fabricRef.current as any,
+                    shapeRef,
+                    syncShapeInStorage,
+                  });
+
+                  img.setSrc(newImage.secure_url, () => {
+                    img.hasUploaded = true;
                     canvas.renderAll();
-
-                    img.on("mousedown", async () => {
-                      if (!img.hasUploaded) {
-                        img.hasUploaded = true;
-
-                        try {
-                          const newImage = await uploadImageToCloudinary(file);
-                          if (newImage) {
-                            handleImageUpload({
-                              file: newImage.secure_url,
-                              canvas: fabricRef.current as any,
-                              shapeRef,
-                              syncShapeInStorage,
-                            });
-
-                            img.setSrc(newImage.secure_url, () => {
-                              canvas.renderAll();
-                            });
-                          }
-                        } catch (error) {
-                          console.error(
-                            "Error uploading the image to Cloudinary:",
-                            error
-                          );
-                        }
-                      }
-                    });
-                  }
-                });
+                  });
+                }
+              } catch (error) {
+                console.error("Error uploading image:", error);
+              } finally {
+                document.body.removeChild(loadingOverlay);
               }
-            };
-            reader.readAsDataURL(file);
-          }
+            });
+          };
+          reader.readAsDataURL(file);
         }
       }
     };
@@ -414,6 +427,77 @@ export const Project = () => {
       renderCanvas({ fabricRef, activeObjectRef, canvasObjects });
     }
   }, [canvasObjects]);
+
+  useEffect(() => {
+    const handleAddImageToCanvas = async (event: CustomEvent) => {
+      const { imagePath } = event.detail;
+
+      fabric.Image.fromURL(imagePath, async (img) => {
+        if (img) {
+          img.scaleToWidth(200);
+          img.set({
+            left: 300,
+            top: 300,
+            selectable: true,
+          });
+
+          // Add the image to the canvas
+          const canvas = fabricRef.current;
+          if (canvas) {
+            canvas.add(img);
+            canvas.setActiveObject(img);
+            canvas.renderAll();
+          }
+
+          // Add loading overlay
+          const loadingOverlay = document.createElement("div");
+          loadingOverlay.className =
+            "absolute inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50";
+          loadingOverlay.innerHTML = `
+            <div class="spinner-border animate-spin inline-block w-8 h-8 border-4 rounded-full text-white"></div>
+          `;
+          document.body.appendChild(loadingOverlay);
+
+          try {
+            const response = await fetch(imagePath);
+            const blob = await response.blob();
+            const base64Data = await new Promise<string>((resolve) => {
+              const reader = new FileReader();
+              reader.onloadend = () => resolve(reader.result as string);
+              reader.readAsDataURL(blob);
+            });
+
+            const cloudinaryData = await uploadImageToCloudinary(base64Data);
+            console.log(cloudinaryData?.secure_url);
+            if (cloudinaryData?.secure_url) {
+              img.setSrc(cloudinaryData.secure_url, () => {
+                canvas?.renderAll();
+              });
+              handleImageUpload({
+                file: cloudinaryData.secure_url,
+                canvas: fabricRef.current as any,
+                shapeRef,
+                syncShapeInStorage,
+              });
+            }
+          } catch (error) {
+            console.error("Error uploading image to Cloudinary:", error);
+          } finally {
+            if (loadingOverlay) {
+              document.body.removeChild(loadingOverlay);
+            }
+          }
+        }
+      });
+    };
+
+    const eventListener = handleAddImageToCanvas as unknown as EventListener;
+    window.addEventListener("addImageToCanvas", eventListener);
+
+    return () => {
+      window.removeEventListener("addImageToCanvas", eventListener);
+    };
+  }, [fabricRef]);
 
   return (
     <main className="h-screen overflow-hidden">
