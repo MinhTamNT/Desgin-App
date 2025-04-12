@@ -86,32 +86,32 @@ const SearchImageModal = ({ onClose }: SearchImageModalProps) => {
       setMessage("Please provide an image or select tags to search.");
       return;
     }
-  
+
     setIsScanning(true);
     setMessage(null);
-  
+
     try {
       const formData = new FormData();
-  
+
       if (imageSrc) {
         const response = await fetch(imageSrc);
         const blob = await response.blob();
         formData.append("file", blob);
       }
-  
+
       if (selectedTags.length > 0) {
-        const tagValues = selectedTags.map((tag) => tag.label); 
-        formData.set("tags", JSON.stringify(tagValues)); 
+        const tagValues = selectedTags.map((tag) => tag.label);
+        formData.set("tags", JSON.stringify(tagValues));
       }
-  
+
       const res = await API.post(endPoints.SearchImage, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
       });
-  
+
       const data = res.data;
-  
+
       if (data.results.length === 0) {
         setMessage("No similar images found.");
       } else {
@@ -133,12 +133,14 @@ const SearchImageModal = ({ onClose }: SearchImageModalProps) => {
   };
 
   const handleImageDoubleClick = (imagePath: string) => {
-    const event = new CustomEvent("addImageToCanvas", { detail: { imagePath } });
+    const event = new CustomEvent("addImageToCanvas", {
+      detail: { imagePath },
+    });
     window.dispatchEvent(event);
   };
 
   return createPortal(
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex  justify-center items-center z-50">
       <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-4xl relative">
         <button
           onClick={onClose}
@@ -225,21 +227,35 @@ const SearchImageModal = ({ onClose }: SearchImageModalProps) => {
         {message && <p className="text-center text-gray-500 mt-6">{message}</p>}
 
         {resultImage.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
-            {resultImage.map((item: ResultImage, index: number) => (
-              <div
-                key={index}
-                className="rounded-lg overflow-hidden shadow-lg transform transition-transform hover:scale-105 hover:shadow-xl bg-white"
-                onDoubleClick={() => handleImageDoubleClick(item.image_path)}
-              >
-                <img
-                  src={item.image_path}
-                  alt={`Result ${index + 1}`}
-                  
-                  className="w-full h-40 object-cover"
-                />
+          <div className="overflow-x-auto">
+            <div
+              className="flex flex-nowrap gap-4 mt-6"
+              style={{ height: "auto" }}
+            >
+              <div className="flex flex-col gap-4">
+                {[...Array(3)].map((_, rowIndex) => (
+                  <div key={rowIndex} className="flex flex-nowrap gap-4">
+                    {resultImage
+                      .slice(rowIndex * 10, rowIndex * 10 + 10)
+                      .map((item: ResultImage, index: number) => (
+                        <div
+                          key={`${rowIndex}-${index}`}
+                          className="min-w-[200px] rounded-lg overflow-hidden shadow-lg transform transition-transform hover:scale-105 hover:shadow-xl bg-white"
+                          onDoubleClick={() =>
+                            handleImageDoubleClick(item.image_path)
+                          }
+                        >
+                          <img
+                            src={item.image_path}
+                            alt={`Result ${index + 1}`}
+                            className="w-full h-40 object-cover"
+                          />
+                        </div>
+                      ))}
+                  </div>
+                ))}
               </div>
-            ))}
+            </div>
           </div>
         )}
       </div>
