@@ -231,10 +231,7 @@ export const handleCanvasObjectModified = ({
     target.setCoords();
   } else {
     target.setCoords();
-    console.log("Target after move:", {
-      left: target.left,
-      top: target.top,
-    });
+    
 
     syncShapeInStorage(target);
   }
@@ -269,10 +266,7 @@ export const handleCanvasObjectMoving = ({
 
   // Update the object's coordinates
   target.setCoords();
-  console.log("Target during move:", {
-    left: target.left,
-    top: target.top,
-  });
+ 
 
   // Render the canvas for smooth movement
   target.canvas?.renderAll();

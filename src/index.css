@@ -25,6 +25,16 @@
   animation: spin 0.8s linear infinite;
 }
 
+.mini-map-container {
+  width: 200px;
+  height: 150px;
+  background: white;
+  border: 1px solid #ccc;
+  z-index: 9999;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
 @keyframes spin {
   to {
     transform: rotate(360deg);

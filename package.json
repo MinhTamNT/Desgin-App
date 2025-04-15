@@ -56,6 +56,7 @@
     "react-router-dom": "^6.26.0",
     "react-select": "^5.10.1",
     "react-toastify": "^10.0.5",
+    "reactflow": "^11.11.4",
     "redux-persist": "^6.0.0",
     "styled-components": "^6.1.12",
     "tailwind-merge": "^2.5.2",

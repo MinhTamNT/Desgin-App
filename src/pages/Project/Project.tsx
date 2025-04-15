@@ -1,7 +1,8 @@
 import { LiveMap } from "@liveblocks/client";
 import { useMutation, useRedo, useStorage, useUndo } from "@liveblocks/react";
 import { fabric } from "fabric";
-
+import MiniMap from "../../components/MiniMap/MiniMap";
+import "reactflow/dist/style.css";
 declare module "fabric" {
   namespace fabric {
     interface Image {
@@ -499,6 +500,8 @@ export const Project = () => {
     };
   }, [fabricRef]);
 
+  
+
   return (
     <main className="h-screen overflow-hidden">
       <NavbarProject
@@ -515,6 +518,7 @@ export const Project = () => {
           undo={undo}
           redo={redo}
         />
+        <MiniMap canvasRef={fabricRef} />
         <RightSidebar
           elementAttributes={elementAtrributes}
           setElementAttributes={setElementAtrributes}
