@@ -264,38 +264,19 @@ export const handleCanvasObjectMoving = ({
 }: {
   options: fabric.IEvent;
 }) => {
-  // get target object which is moving
-  const target = options.target as fabric.Object;
+  const target = options.target;
+  if (!target) return;
 
-  // target.canvas is the canvas on which the object is moving
-  const canvas = target.canvas as fabric.Canvas;
-
-  // set coordinates of target object
+  // Update the object's coordinates
   target.setCoords();
+  console.log("Target during move:", {
+    left: target.left,
+    top: target.top,
+  });
 
-  // restrict object to canvas boundaries (horizontal)
-  if (target && target.left) {
-    target.left = Math.max(
-      0,
-      Math.min(
-        target.left,
-        (canvas.width || 0) - (target.getScaledWidth() || target.width || 0)
-      )
-    );
-  }
-
-  // restrict object to canvas boundaries (vertical)
-  if (target && target.top) {
-    target.top = Math.max(
-      0,
-      Math.min(
-        target.top,
-        (canvas.height || 0) - (target.getScaledHeight() || target.height || 0)
-      )
-    );
-  }
+  // Render the canvas for smooth movement
+  target.canvas?.renderAll();
 };
-
 // set element attributes when element is selected
 export const handleCanvasSelectionCreated = ({
   options,
