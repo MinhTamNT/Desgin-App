@@ -28,7 +28,6 @@ import { useMutation } from "@apollo/client";
 import { ADD_COMMENT } from "../../utils/Comment/Comment";
 import { useSelector } from "react-redux";
 import { RootState } from "../../Redux/store";
-import ReactFlow, { MiniMap, Controls, Background } from "reactflow";
 import "reactflow/dist/style.css";
 interface Props {
   canvasRef: React.MutableRefObject<HTMLCanvasElement | null>;
@@ -51,8 +50,9 @@ export const Live = ({ canvasRef, role, undo, redo }: Props) => {
   });
   const [addComment] = useMutation(ADD_COMMENT);
   const [reactions, setReactions] = useState<Reaction[]>([]);
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-
+  const [showCreatePageModal, setShowCreatePageModal] = useState(false);
+  const [pageName, setPageName] = useState("");
+  const [pageContent, setPageContent] = useState("");
   const currentUser = useSelector(
     (state: RootState) => state.user.user.currentUser
   );
@@ -278,9 +278,9 @@ export const Live = ({ canvasRef, role, undo, redo }: Props) => {
               linear-gradient(to right, rgba(224, 224, 224, 0.8) 1px, transparent 1px),
               linear-gradient(to bottom, rgba(224, 224, 224, 0.8) 1px, transparent 1px)
             `,
-            backgroundSize: "5px 5px", // Kích thước ô lưới nhỏ hơn (giảm từ 20px xuống 10px)
-            backgroundColor: "#f9f9f9", // Màu nền sáng hơn
-            boxShadow: "inset 0 0 10px rgba(0, 0, 0, 0.1)", // Hiệu ứng bóng nhẹ
+            backgroundSize: "5px 5px",
+            backgroundColor: "#f9f9f9",
+            boxShadow: "inset 0 0 10px rgba(0, 0, 0, 0.1)",
           }}
         >
           <canvas ref={canvasRef} className="w-full h-full" />

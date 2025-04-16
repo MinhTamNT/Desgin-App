@@ -1,65 +1,78 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import { fabric } from "fabric";
 
 interface MiniMapProps {
-  canvasRef: React.MutableRefObject<fabric.Canvas | null>;
+  mainFabricCanvas: fabric.Canvas | null;
 }
 
-const MiniMap: React.FC<MiniMapProps> = ({ canvasRef }) => {
-  const miniMapRef = useRef<HTMLCanvasElement | null>(null);
+const MiniMap: React.FC<MiniMapProps> = ({ mainFabricCanvas }) => {
+  const miniCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [isUpdating, setIsUpdating] = useState(false); // Prevent multiple update triggers
+  const [lastUpdateTime, setLastUpdateTime] = useState(0); // Throttle with timestamp
+
+  const updateMiniMap = useCallback(() => {
+    if (!mainFabricCanvas) return;
+
+    const miniCanvas = miniCanvasRef.current;
+    if (!miniCanvas) return;
+
+    const ctx = miniCanvas.getContext("2d");
+    if (!ctx) return;
+
+    const scale = 0.2; // giảm quy mô mini-map để vẽ nhanh hơn
+    miniCanvas.width = mainFabricCanvas.getWidth() * scale;
+    miniCanvas.height = mainFabricCanvas.getHeight() * scale;
+
+    // Draw mini-map using the main canvas snapshot
+    const dataURL = mainFabricCanvas.toDataURL({ format: "png" });
+    const img = new Image();
+    img.onload = () => {
+      ctx.clearRect(0, 0, miniCanvas.width, miniCanvas.height);
+      ctx.drawImage(img, 0, 0, miniCanvas.width, miniCanvas.height);
+      setIsUpdating(false); // Reset the flag after update
+    };
+    img.src = dataURL;
+  }, [mainFabricCanvas]);
+
+  const handleCanvasChange = useCallback(() => {
+    const now = Date.now();
+    // Throttle the updates to avoid excessive redraws
+    if (now - lastUpdateTime > 150) {
+      // 150ms throttle (increase for more delay)
+      setLastUpdateTime(now);
+      if (!isUpdating) {
+        setIsUpdating(true); // Set flag to prevent overlapping updates
+        requestAnimationFrame(updateMiniMap); // Use requestAnimationFrame for smoother redraws
+      }
+    }
+  }, [isUpdating, lastUpdateTime, updateMiniMap]);
 
   useEffect(() => {
-    const updateMiniMap = () => {
-      const mainCanvas = canvasRef.current;
-      const miniMapCanvas = miniMapRef.current;
+    if (!mainFabricCanvas) return;
 
-      if (mainCanvas && miniMapCanvas) {
-        const context = miniMapCanvas.getContext("2d");
-        if (!context) return;
-
-        console.log("Updating MiniMap...");
-
-        // Clear MiniMap
-        context.clearRect(0, 0, miniMapCanvas.width, miniMapCanvas.height);
-
-        // Scale down the main canvas content
-        const scale = 0.2; // Adjust scale as needed
-        miniMapCanvas.width = mainCanvas.width * scale;
-        miniMapCanvas.height = mainCanvas.height * scale;
-
-        console.log("MiniMap size:", miniMapCanvas.width, miniMapCanvas.height);
-
-        // Draw main canvas content onto MiniMap
-        const dataURL = mainCanvas.toDataURL();
-        console.log("Canvas Data URL:", dataURL);
-
-        const img = new Image();
-        img.onload = () => {
-          context.drawImage(img, 0, 0, miniMapCanvas.width, miniMapCanvas.height);
-          console.log("MiniMap updated");
-        };
-        img.src = dataURL;
-      }
-    };
-
-    const mainCanvas = canvasRef.current;
-    if (mainCanvas) {
-      mainCanvas.on("object:modified", updateMiniMap);
-      mainCanvas.on("mouse:down", updateMiniMap);
-      updateMiniMap(); // Gọi ngay khi component được render
-    }
+    // Attach event listeners for object modifications and additions
+    mainFabricCanvas.on("object:modified", handleCanvasChange);
+    mainFabricCanvas.on("object:added", handleCanvasChange);
 
     return () => {
-      if (mainCanvas) {
-        mainCanvas.off("object:modified", updateMiniMap);
-        mainCanvas.off("mouse:down", updateMiniMap);
-      }
+      mainFabricCanvas.off("object:modified", handleCanvasChange);
+      mainFabricCanvas.off("object:added", handleCanvasChange);
     };
-  }, [canvasRef]);
+  }, [handleCanvasChange, mainFabricCanvas]);
 
   return (
-    <div className="mini-map-container" style={{ position: "absolute", bottom: 10, right: 10 }}>
-      <canvas ref={miniMapRef} style={{ border: "1px solid #ccc" }} />
+    <div
+      style={{
+        position: "absolute",
+        bottom: 10,
+        right: 10,
+        background: "#fff",
+        padding: 4,
+        border: "1px solid #ccc",
+        zIndex: 10,
+      }}
+    >
+      <canvas ref={miniCanvasRef} />
     </div>
   );
 };

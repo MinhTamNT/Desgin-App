@@ -500,8 +500,6 @@ export const Project = () => {
     };
   }, [fabricRef]);
 
-  
-
   return (
     <main className="h-screen overflow-hidden">
       <NavbarProject
@@ -518,7 +516,7 @@ export const Project = () => {
           undo={undo}
           redo={redo}
         />
-        <MiniMap canvasRef={fabricRef} />
+        <MiniMap mainFabricCanvas={fabricRef.current} />
         <RightSidebar
           elementAttributes={elementAtrributes}
           setElementAttributes={setElementAtrributes}
