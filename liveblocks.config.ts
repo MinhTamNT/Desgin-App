@@ -4,9 +4,47 @@ import { LiveMap, createClient } from "@liveblocks/client";
 import { createRoomContext } from "@liveblocks/react";
 
 const publicKey = import.meta.env.VITE_LIVE_BLOCK;
+
+// Nâng cấp client của Liveblocks với xác thực
 const client = createClient({
   throttle: 16,
   publicApiKey: publicKey,
+  authEndpoint: async (roomId) => {
+    console.log(`Authenticating for room: ${roomId}`);    
+    
+    let userJson = localStorage.getItem('currentUser');
+    let user;
+    
+    try {
+      user = userJson ? JSON.parse(userJson) : null;
+    } catch (e) {
+      console.error('Failed to parse user from localStorage:', e);
+      user = null;
+    }
+    
+    if (!user) {
+      console.warn(`No user found in localStorage for room ${roomId}, using default user data`);
+      user = {
+        sub: `anonymous-${Date.now()}`,
+        name: 'Người dùng',
+        picture: 'https://liveblocks.io/avatar-placeholder.png',
+      };
+      
+      localStorage.setItem('currentUser', JSON.stringify(user));
+    }
+    
+    return {
+      token: JSON.stringify({
+        userId: user.sub,
+        roomId: roomId, 
+        userInfo: {
+          name: user.name,
+          avatar: user.picture,
+          status: 'online',
+        },
+      }),
+    };
+  },
 });
 
 export type ThreadMetadata = {
@@ -21,41 +59,35 @@ export type ThreadMetadata = {
 };
 declare global {
   export interface Liveblocks {
-    // Each user's Presence, for useMyPresence, useOthers, etc.
     Presence: {
-      // Example, real-time cursor coordinates
-      // cursor: { x: number; y: number };
+      // User info in presence
+      name?: string;
+      picture?: string;
+      id?: string;
     };
 
     Storage: {
       canvasObjects: LiveMap<string, any>;
     };
 
-    // Custom user info set when authenticating with a secret key
     UserMeta: {
       id: string;
       info: {
-        // Example properties, for useSelf, useUser, useOthers, etc.
         name: string;
         avatar: string;
         status: string;
       };
     };
 
-    // Custom events, for useBroadcastEvent, useEventListener
     RoomEvent: {};
-
-    // Custom metadata set on threads, for useThreads, useCreateThread, etc.
     ThreadMetadata: ThreadMetadata;
-
-    // Custom room info set with resolveRoomsInfo, for useRoomInfo
     RoomInfo: {};
   }
 }
 
 const {
   suspense: {
-    // LiveblocksProvider, // Removed as it does not exist
+    RoomProvider,
     useBroadcastEvent,
     useCreateThread,
     useEditThreadMetadata,
@@ -65,10 +97,12 @@ const {
     useRoomInfo,
     useThreads,
     useUser,
+    useSelf,
   },
 } = createRoomContext(client); 
 
 export {
+  RoomProvider,
   useBroadcastEvent,
   useCreateThread,
   useEditThreadMetadata,
@@ -78,4 +112,17 @@ export {
   useRoomInfo,
   useThreads,
   useUser,
+  useSelf,
 }; // Export ThreadMetadata
+
+// Hàm tiện ích để lưu người dùng hiện tại vào localStorage
+export const saveUserToLocalStorage = (user: any) => {
+  if (user) {
+    try {
+      localStorage.setItem('currentUser', JSON.stringify(user));
+      console.log('User saved to localStorage:', user.name);
+    } catch (e) {
+      console.error('Failed to save user to localStorage:', e);
+    }
+  }
+};

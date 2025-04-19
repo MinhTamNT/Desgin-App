@@ -68,7 +68,7 @@ const NavbarProject = ({
                     <img
                       src={items.icon}
                       alt={items.name}
-                      className={isActive(items.value) ? "invert" : ""}
+                      className={`w-6 h-6 object-contain invert filter brightness-0 ${isActive(items.value) ? "" : ""}`}
                     />
                   </Button>
                 </NewThread>
@@ -77,7 +77,7 @@ const NavbarProject = ({
                   <img
                     src={items.icon}
                     alt={items.name}
-                    className={isActive(items.value) ? "invert" : ""}
+                    className={`w-6 h-6 object-contain invert filter brightness-0 ${isActive(items.value) ? "" : ""}`}
                   />
                 </Button>
               )}

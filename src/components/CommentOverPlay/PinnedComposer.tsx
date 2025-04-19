@@ -16,23 +16,36 @@ const PinnedComposer = ({ onComposerSubmit, ...props }: Props) => {
   const updateMyPresence = useUpdateMyPresence();
 
   useEffect(() => {
-    if (currentUser) {
-      updateMyPresence({
-        name: currentUser.name,
-        picture: currentUser.picture,
-      });
+    if (currentUser && updateMyPresence) {
+      try {
+        updateMyPresence({
+          name: currentUser.name,
+          picture: currentUser.picture,
+        });
+        console.log('Updated presence with user data:', currentUser.name);
+      } catch (error) {
+        console.error('Failed to update presence:', error);
+      }
     }
   }, [currentUser, updateMyPresence]);
 
+  if (!currentUser) {
+    console.error('Current user is undefined or null');
+    return null;
+  }
+
   return (
-    <div className="absolute flex gap-4" {...props}>
+    <div className="absolute flex gap-4 z-50" {...props}>
       <div className="select-none relative w-9 h-9 shadow rounded-tl-md rounded-tr-full rounded-br-full rounded-bl-full bg-white flex justify-center items-center">
-        <img
-          src={currentUser.picture}
-          width={28}
-          height={28}
-          className="rounded-full"
-        />
+        {currentUser.picture && (
+          <img
+            src={currentUser.picture}
+            width={28}
+            height={28}
+            className="rounded-full"
+            alt={currentUser.name || 'User'}
+          />
+        )}
       </div>
       <div className="shadow bg-white rounded-lg flex flex-col text-sm min-w-96 overflow-hidden p-2">
         <Composer

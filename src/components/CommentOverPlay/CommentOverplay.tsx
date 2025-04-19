@@ -1,7 +1,7 @@
 import { ThreadData } from "@liveblocks/client";
 import { useUser } from "@liveblocks/react";
 import { useEditThreadMetadata, useThreads } from "@liveblocks/react/suspense";
-import { useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { ThreadMetadata } from "../../../liveblocks.config";
 import { useMaxZIndex } from "../../hook/useMaxZIndex";
 import { PinnedThread } from "./PinnedThread";
@@ -15,8 +15,11 @@ type OverPlayProp = {
 
 const CommentsOverlay = () => {
   const { threads } = useThreads();
-
-  // get the max z-index of a thread
+  const currentUser = useSelector((state: RootState) => state?.user?.user?.currentUser);
+  
+  // Log số lượng thread và thông tin người dùng hiện tại
+  console.log(`Rendering ${threads.length} threads. Current user: ${currentUser?.name || 'Unknown'}`);
+  
   const maxZIndex = useMaxZIndex();
 
   return (
@@ -37,9 +40,27 @@ const CommentsOverlay = () => {
 const OverlayThread = ({ thread, maxZIndex }: OverPlayProp) => {
   const editThreadMetadata = useEditThreadMetadata();
   const user = useSelector((state: RootState) => state.user.user.currentUser);
-  const { isLoading } = useUser(user.sub);
+  const { isLoading } = useUser(user?.sub);
 
   const threadRef = useRef<HTMLDivElement>(null);
+  
+  useEffect(() => {
+    if (thread && user && !isLoading) {
+      if (!thread.metadata.userName || !thread.metadata.userAvatar) {
+        console.log(`Cập nhật thông tin người dùng cho thread ${thread.id}`);
+        
+        editThreadMetadata({
+          threadId: thread.id,
+          metadata: {
+            ...thread.metadata,
+            userId: thread.metadata.userId || user.sub,
+            userName: thread.metadata.userName || user.name,
+            userAvatar: thread.metadata.userAvatar || user.picture
+          },
+        });
+      }
+    }
+  }, [thread, user, isLoading, editThreadMetadata]);
 
   const handleIncreaseZIndex = useCallback(() => {
     if (maxZIndex === thread.metadata.zIndex) {
@@ -58,14 +79,34 @@ const OverlayThread = ({ thread, maxZIndex }: OverPlayProp) => {
     return null;
   }
 
+  const x = thread.metadata.x;
+  const y = thread.metadata.y;
+  
+          const userName = thread.metadata.userName || 'Người dùng';
+  const userAvatar = thread.metadata.userAvatar || '';
+  
+  console.log(`Rendering thread ${thread.id} by ${userName} at position x=${x}, y=${y}`);
+  
+  // Thêm class tùy chỉnh với avatar của người dùng nếu có
+  const customClassWithUserAvatar = userAvatar ? 
+    `thread-${thread.id}-user-${userName.replace(/\s+/g, '-').toLowerCase()}` : '';
+  
   return (
     <div
       ref={threadRef}
       id={`thread-${thread.id}`}
-      className="absolute left-0 top-0 flex gap-5"
+      className={`flex gap-5 ${customClassWithUserAvatar}`}
       style={{
-        transform: `translate(${thread.metadata.x}px, ${thread.metadata.y}px)`,
-      }}
+        position: 'fixed',
+        left: `${x}px`,
+        top: `${y}px`,
+        zIndex: thread.metadata.zIndex || 1000,
+        transform: 'translate(-50%, -50%)',
+        margin: 0,
+        padding: 0,
+        // Thêm biến tùy chỉnh data-user-avatar với URL avatar
+        '--user-avatar': `url(${userAvatar})`
+      } as React.CSSProperties}
     >
       <PinnedThread thread={thread} onFocus={handleIncreaseZIndex} />
     </div>

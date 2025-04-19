@@ -34,7 +34,7 @@ const ShapesMenu = ({
         <img
           src={isDropdownElem ? activeElement.icon : item.icon}
           alt={item.name}
-          className={isDropdownElem ? "invert" : ""}
+          className={`w-6 h-6 object-contain invert filter brightness-0 ${isDropdownElem ? "" : ""}`}
         />
       </Button>
       <Menu

@@ -13,7 +13,6 @@ declare module "fabric" {
 import { useEffect, useRef, useState } from "react";
 import { Live } from "../../components/Live/Live";
 import { uploadImageToCloudinary } from "../../helper/UpdateImage";
-import LeftSidebar from "../../layout/Project/LeftSidebar";
 import NavbarProject from "../../layout/Project/NavbarProject";
 import RightSidebar from "../../layout/Project/RightSidebar";
 import {
@@ -44,6 +43,7 @@ import { CanvasObject } from "../../lib/interface";
 import { useOthers } from "@liveblocks/react/suspense";
 import { useRoom } from "@liveblocks/react";
 import "../../index.css";
+import LeftSidebar from "../../layout/Project/LeftSidebar";
 interface UserRequest {
   idUser: string;
 }
@@ -509,7 +509,7 @@ export const Project = () => {
         imageInputRef={imageInputRef}
       />
       <section className="flex h-full flex-row">
-        <LeftSidebar allShape={Array.from(canvasObjects ?? "")} />
+        <LeftSidebar allShape={Array.from(canvasObjects ?? [])}  />
         <Live
           canvasRef={canvasRef}
           role={userRole.access}
