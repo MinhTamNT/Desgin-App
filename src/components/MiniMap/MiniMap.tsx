@@ -115,17 +115,23 @@ const MiniMap: React.FC<MiniMapProps> = ({ mainFabricCanvas }) => {
               ctx.translate(-miniX, -miniY);
             }
             
-            // Draw different shapes according to their type
-            if (obj.type === "circle") {
+            // Process different shape types
+            const offsetX = originX === 'center' ? -miniWidth/2 : 0;
+            const offsetY = originY === 'center' ? -miniHeight/2 : 0;
+            
+            // Check shape type
+            const objType = obj.type?.toLowerCase() || '';
+            
+            // Enable drawing mode for all objects
+            ctx.beginPath();
+            
+            if (objType === "circle") {
               const radius = ((obj as any).radius || 5) * scaleX;
-              ctx.beginPath();
               ctx.arc(miniX, miniY, radius, 0, Math.PI * 2);
               ctx.fill();
               if (obj.stroke) ctx.stroke();
-            } else if (obj.type === "rect") {
-              const offsetX = originX === 'center' ? -miniWidth/2 : 0;
-              const offsetY = originY === 'center' ? -miniHeight/2 : 0;
-              
+            } 
+            else if (objType === "rect") {
               ctx.fillRect(
                 miniX + offsetX, 
                 miniY + offsetY, 
@@ -141,27 +147,77 @@ const MiniMap: React.FC<MiniMapProps> = ({ mainFabricCanvas }) => {
                   miniHeight
                 );
               }
-            } else if (obj.type === "triangle") {
-              const offsetX = originX === 'center' ? -miniWidth/2 : 0;
-              const offsetY = originY === 'center' ? -miniHeight/2 : 0;
-              
-              ctx.beginPath();
+            } 
+            else if (objType === "triangle") {
               ctx.moveTo(miniX + offsetX, miniY + miniHeight + offsetY);
               ctx.lineTo(miniX + miniWidth + offsetX, miniY + miniHeight + offsetY);
               ctx.lineTo(miniX + (miniWidth/2) + offsetX, miniY + offsetY);
               ctx.closePath();
               ctx.fill();
               if (obj.stroke) ctx.stroke();
-            } else if (obj.type === "path") {
-              // For path, just show a marker dot
-              ctx.beginPath();
+            } 
+            else if (objType === "line") {
+              // Special handling for line objects
+              try {
+                const x1 = ((obj as any).x1 || 0) * scaleX;
+                const y1 = ((obj as any).y1 || 0) * scaleY;
+                const x2 = ((obj as any).x2 || width) * scaleX;
+                const y2 = ((obj as any).y2 || height) * scaleY;
+                
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                ctx.lineWidth = Math.max(1, (obj.strokeWidth || 1) * scaleX);
+                ctx.stroke();
+              } catch (err) {
+                // Fallback if line properties aren't accessible
+                ctx.moveTo(miniX, miniY);
+                ctx.lineTo(miniX + miniWidth, miniY + miniHeight);
+                ctx.stroke();
+              }
+            }
+            else if (objType === "path") {
+              // For path, draw a visible marker
               ctx.arc(miniX, miniY, 3, 0, Math.PI * 2);
               ctx.fill();
-            } else {
-              // For other types (including images), draw a simplified rectangle
-              const offsetX = originX === 'center' ? -miniWidth/2 : 0;
-              const offsetY = originY === 'center' ? -miniHeight/2 : 0;
               
+              // Try to draw an approximation of the path if possible
+              if ((obj as any).path) {
+                try {
+                  const path = (obj as any).path;
+                  
+                  // Draw a simplified version of the path
+                  if (Array.isArray(path) && path.length > 0) {
+                    ctx.beginPath();
+                    
+                    // Start at the first point
+                    const firstPoint = path[0];
+                    if (Array.isArray(firstPoint) && firstPoint.length >= 2) {
+                      ctx.moveTo(
+                        (firstPoint[1] * scaleX) + miniX, 
+                        (firstPoint[2] * scaleY) + miniY
+                      );
+                      
+                      // Draw lines to subsequent points
+                      for (let i = 1; i < path.length; i++) {
+                        const point = path[i];
+                        if (Array.isArray(point) && point.length >= 2) {
+                          ctx.lineTo(
+                            (point[1] * scaleX) + miniX, 
+                            (point[2] * scaleY) + miniY
+                          );
+                        }
+                      }
+                      
+                      ctx.stroke();
+                    }
+                  }
+                } catch (err) {
+                  // Fallback already drawn above
+                }
+              }
+            }
+            else {
+              // Fallback for other types (including images)
               ctx.fillRect(
                 miniX + offsetX, 
                 miniY + offsetY, 

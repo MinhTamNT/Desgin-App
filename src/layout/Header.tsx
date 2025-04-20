@@ -151,22 +151,25 @@ export const Header = () => {
       <div className="flex items-center space-x-6">
         <IconButton
           onClick={handleNotificationClick}
-          className="relative hover:bg-gray-100 transition-colors duration-200"
+          className="relative hover:bg-blue-50 transition-colors duration-200 rounded-full"
           size="large"
         >
           <Badge
             badgeContent={notificationCount}
-            color="error"
             sx={{
               "& .MuiBadge-badge": {
                 fontSize: "0.75rem",
                 height: "20px",
                 minWidth: "20px",
                 padding: "0 6px",
+                backgroundColor: "#0ea5e9",
+                color: "white",
+                fontWeight: "bold",
+                boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)"
               },
             }}
           >
-            <NotificationsIcon className="text-gray-700" />
+            <NotificationsIcon className="text-teal-600" />
           </Badge>
         </IconButton>
 
@@ -177,101 +180,128 @@ export const Header = () => {
           onClose={handleClose}
           PaperProps={{
             sx: {
-              width: "400px",
-              maxHeight: "500px",
+              width: "420px",
+              maxHeight: "540px",
               overflowY: "auto",
               mt: 1.5,
+              borderRadius: "12px",
               boxShadow:
-                "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)",
+                "0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.05)",
+              border: "1px solid rgba(229, 231, 235, 0.5)",
               "& .MuiList-root": {
-                padding: "8px",
+                padding: "0",
               },
             },
           }}
         >
+          {/* Notification Header */}
+          <div className="bg-gradient-to-r from-blue-600 to-teal-600 text-white px-5 py-4 rounded-t-lg">
+            <div className="flex items-center justify-between">
+              <Typography variant="h6" className="font-semibold text-white">
+                Notifications
+              </Typography>
+              {notificationCount > 0 && (
+                <div className="bg-white/20 backdrop-blur-sm text-white text-xs px-2.5 py-1 rounded-full">
+                  {notificationCount} new
+                </div>
+              )}
+            </div>
+          </div>
+          
           {notificationCount > 0 ? (
-            notifications
-              .map((notification: Notification) => (
-                <MenuItem
-                  key={notification?.idNotification}
-                  onClick={handleClose}
-                  className=""
-                >
-                  <div className="flex items-center gap-4 w-full p-2">
-                    <div className="bg-blue-100 rounded-full w-10 h-10 flex items-center justify-center flex-shrink-0">
-                      <span className="text-blue-600 text-sm font-medium">
-                        New
-                      </span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <Typography
-                        variant="body2"
-                        className="text-gray-900 line-clamp-2"
-                      >
-                        {notification?.message}
-                      </Typography>
-                      {!notification?.is_read &&
-                        notification?.type === "INVITED" && (
-                          <div className="flex gap-2 mt-2">
+            <>
+              <div className="py-1 max-h-[400px] overflow-auto">
+                {notifications.map((notification: Notification) => (
+                  <MenuItem
+                    key={notification?.idNotification}
+                    onClick={handleClose}
+                    className="px-0 py-1 hover:bg-blue-50/50 transition-colors duration-200"
+                    sx={{ borderRadius: '8px', margin: '0 8px' }}
+                  >
+                    <div className="flex items-start gap-4 w-full p-3">
+                      <div className="bg-gradient-to-br from-blue-500 to-teal-500 text-white rounded-full w-12 h-12 flex items-center justify-center flex-shrink-0 shadow-sm">
+                        <span className="font-medium">
+                          {notification?.type === "INVITED" ? "Inv" : "New"}
+                        </span>
+                      </div>
+                      <div className="flex-1 min-w-0 pt-0.5">
+                        <Typography
+                          variant="body2"
+                          className="text-gray-800 font-medium mb-1 line-clamp-2"
+                        >
+                          {notification?.message}
+                        </Typography>
+                        <Typography variant="caption" className="text-gray-500">
+                          {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                        </Typography>
+                        
+                        {!notification?.is_read && notification?.type === "INVITED" && (
+                          <div className="flex gap-2 mt-3">
                             <button
-                              onClick={() =>
-                                handleAcceptInvite(
-                                  notification?.invitation_idInvitation
-                                )
-                              }
-                              className="px-3 py-1.5 text-xs font-medium rounded-md text-green-700 bg-green-100 
-                                   hover:bg-green-200 transition-colors duration-200"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleAcceptInvite(notification?.invitation_idInvitation);
+                              }}
+                              className="px-4 py-1.5 text-sm font-medium rounded-md text-white bg-gradient-to-r from-blue-500 to-teal-500 
+                                   hover:from-blue-600 hover:to-teal-600 transition-all duration-200 shadow-sm hover:shadow"
                             >
                               Accept
                             </button>
                             <button
-                              className="px-3 py-1.5 text-xs font-medium rounded-md text-red-700 bg-red-100 
-                                   hover:bg-red-200 transition-colors duration-200"
+                              onClick={(e) => e.stopPropagation()}
+                              className="px-4 py-1.5 text-sm font-medium rounded-md text-gray-700 bg-gray-100 
+                                   hover:bg-gray-200 transition-colors duration-200"
                             >
-                              Reject
+                              Decline
                             </button>
                           </div>
                         )}
+                      </div>
+                      
+                      {!notification?.is_read && (
+                        <div className="w-2.5 h-2.5 bg-blue-500 rounded-full mt-2"></div>
+                      )}
                     </div>
-                  </div>
-                </MenuItem>
-              ))
-              .concat(
-                <MenuItem
-                  onClick={loadMoreNotifications}
-                  className="flex justify-center py-2 hover:bg-gray-50"
-                  key="load-more"
-                >
-                  <Typography variant="body2" className="text-blue-600">
-                    Load More
-                  </Typography>
-                </MenuItem>
-              )
-          ) : (
-            <MenuItem className="flex flex-col items-center py-10 hover:bg-transparent">
-              <div className="flex flex-col items-center justify-center">
-                <div className="relative">
-                  <img
-                    src={DEFAULT_IMAGE_URL}
-                    alt="No notifications"
-                    className=" object-contain mb-4 rounded-xl transform transition-transform hover:scale-105 duration-300"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-b from-transparent to-white/10 rounded-xl"></div>
-                </div>
-                <Typography
-                  className="text-gray-600 font-medium text-lg animate-fade-in"
-                  sx={{
-                    textShadow: "0 1px 2px rgba(0,0,0,0.05)",
-                    letterSpacing: "0.025em",
-                  }}
-                >
-                  No new notifications
-                </Typography>
-                <Typography className="text-gray-400 text-sm mt-1">
-                  We'll notify you when something arrives
-                </Typography>
+                  </MenuItem>
+                ))}
               </div>
-            </MenuItem>
+              
+              {/* Footer with Load More */}
+              <div className="border-t border-gray-100 p-2">
+                <button
+                  onClick={loadMoreNotifications}
+                  className="w-full py-2.5 text-teal-600 hover:text-teal-700 text-sm font-medium transition-colors flex items-center justify-center bg-transparent hover:bg-blue-50/50 rounded-md"
+                >
+                  Load more
+                  <svg className="w-4 h-4 ml-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+              </div>
+            </>
+          ) : (
+            <div className="flex flex-col items-center py-12 px-4 hover:bg-transparent">
+              <div className="relative bg-gradient-to-b from-blue-50 to-teal-50 p-4 rounded-2xl mb-5 w-40 h-40 flex items-center justify-center">
+                <img
+                  src={DEFAULT_IMAGE_URL}
+                  alt="No notifications"
+                  className="object-contain w-32 h-32 rounded-xl transform transition-transform hover:scale-105 duration-300"
+                />
+                <div className="absolute inset-0 bg-gradient-to-b from-transparent to-teal-50/50 rounded-2xl"></div>
+              </div>
+              <Typography
+                className="text-gray-800 font-semibold text-lg"
+                sx={{
+                  textShadow: "0 1px 2px rgba(0,0,0,0.05)",
+                  letterSpacing: "0.025em",
+                }}
+              >
+                All caught up!
+              </Typography>
+              <Typography className="text-gray-500 text-sm mt-1 text-center max-w-xs">
+                We'll notify you when new invitations or updates arrive
+              </Typography>
+            </div>
           )}
         </Menu>
 
