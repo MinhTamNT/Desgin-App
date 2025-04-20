@@ -27,6 +27,19 @@ export const initializeFabric = ({
   const canvas = new fabric.Canvas(canvasRef.current, {
     width: canvasElement?.clientWidth,
     height: canvasElement?.clientHeight,
+    // Improve selection and movement behavior
+    preserveObjectStacking: true,
+    // Enable uniform scaling with shift key
+    uniformScaling: true,
+    // Improve selection controls
+    centeredScaling: true,
+    centeredRotation: true,
+  });
+  
+  // Set default origin to center for all objects
+  fabric.Object.prototype.set({
+    originX: 'center',
+    originY: 'center',
   });
 
   fabricRef.current = canvas;
@@ -77,6 +90,13 @@ export const handleCanvasMouseDown = ({
     // set active object to target
     canvas.setActiveObject(target);
 
+    // Set the origin to center for better rotation/scaling behavior
+    if (target.type === "activeSelection") {
+      (target as fabric.ActiveSelection).getObjects().forEach(obj => {
+        obj.setCoords();
+      });
+    }
+    
     /**
      * setCoords() is used to update the controls of the object
      * setCoords: http://fabricjs.com/docs/fabric.Object.html#setCoords
@@ -93,6 +113,11 @@ export const handleCanvasMouseDown = ({
 
     // if shapeRef is not null, add it to canvas
     if (shapeRef.current) {
+      // Set originX and originY to center for better manipulation
+      shapeRef.current.set({
+        originX: 'center',
+        originY: 'center'
+      });
       // add: http://fabricjs.com/docs/fabric.Canvas.html#add
       canvas.add(shapeRef.current);
     }
@@ -152,7 +177,8 @@ export const handleCanvaseMouseMove = ({
         width: pointer.x - (shapeRef.current?.left || 0),
         height: pointer.y - (shapeRef.current?.top || 0),
       });
-
+      break;
+      
     default:
       break;
   }
@@ -180,15 +206,12 @@ export const handleCanvasMouseUp = ({
   isDrawing.current = false;
   if (selectedShapeRef.current === "freeform") return;
 
-  // sync shape in storage as drawing is stopped
   syncShapeInStorage(shapeRef.current);
 
-  // set everything to null
   shapeRef.current = null;
   activeObjectRef.current = null;
   selectedShapeRef.current = null;
 
-  // if canvas is not in drawing mode, set active element to default nav element after 700ms
   if (!canvas.isDrawingMode) {
     setTimeout(() => {
       setActiveElement(defaultNavElement);
@@ -204,40 +227,44 @@ export const handleCanvasObjectModified = ({
   if (!target) return;
 
   if (target.type === "activeSelection") {
+    const selectionMatrix = target.calcTransformMatrix();
     const objects = (target as fabric.ActiveSelection).getObjects();
 
-    // Update coordinates for each object in the selection
-    objects.forEach((item) => {
-      item.setCoords(); // Update the object's coordinates
-      const coords = item.getCoords();
-      item.aCoords = {
-        tl: coords[0],
-        tr: coords[1],
-        br: coords[2],
-        bl: coords[3],
-      };
-
-      console.log("Item after move:", {
-        left: item.left,
-        top: item.top,
-        aCoords: item.aCoords,
+    objects.forEach((object) => {
+      const objectCenter = object.getCenterPoint();
+      
+      const newPoint = fabric.util.transformPoint(objectCenter, selectionMatrix);
+      
+      object.set({
+        left: newPoint.x,
+        top: newPoint.y,
+        scaleX: (object.scaleX || 1) * (target.scaleX || 1),
+        scaleY: (object.scaleY || 1) * (target.scaleY || 1),
+        angle: (object.angle || 0) + (target.angle || 0),
       });
-
-      // Sync the updated object
-      syncShapeInStorage(item);
+      
+      object.setCoords();
+      
+      syncShapeInStorage(object);
     });
-
-    // Update the selection itself
+    
+    target.set({
+      scaleX: 1,
+      scaleY: 1,
+      angle: 0,
+      left: target.left,
+      top: target.top,
+    });
+    
     target.setCoords();
   } else {
     target.setCoords();
-    
-
     syncShapeInStorage(target);
   }
 
-  if (options.target) {
-    options.target.canvas?.renderAll();
+  // Render all changes to the canvas
+  if (options.target?.canvas) {
+    options.target.canvas.renderAll();
   }
 };
 
@@ -266,7 +293,16 @@ export const handleCanvasObjectMoving = ({
 
   // Update the object's coordinates
   target.setCoords();
- 
+  
+  // For group selection during movement, continuously update position data
+  if (target.type === "activeSelection") {
+    const objects = (target as fabric.ActiveSelection).getObjects();
+        
+    objects.forEach((object) => {
+      // Just update coordinates for visual feedback during movement
+      object.setCoords();
+    });
+  }
 
   // Render the canvas for smooth movement
   target.canvas?.renderAll();
