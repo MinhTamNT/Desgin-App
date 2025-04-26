@@ -36,24 +36,16 @@ const MiniMap: React.FC<MiniMapProps> = ({ mainFabricCanvas }) => {
       
       const objects = mainFabricCanvas.getObjects();
       
-      // Get viewport information from fabric canvas
       const vpt = mainFabricCanvas.viewportTransform || [1, 0, 0, 1, 0, 0];
       const zoom = mainFabricCanvas.getZoom() || 1;
       
-      // Calculate the visible area in the canvas (accounting for zoom and pan)
       const canvasWidth = mainFabricCanvas.getWidth();
       const canvasHeight = mainFabricCanvas.getHeight();
       
-      // The transform values from viewportTransform:
-      // vpt[0] = horizontal scale, vpt[1] = horizontal skew
-      // vpt[2] = vertical skew, vpt[3] = vertical scale
-      // vpt[4] = horizontal translation, vpt[5] = vertical translation
-      
-      // Calculate the view offset (for panning effect)
+    
       const viewOffsetX = vpt[4] / zoom;
       const viewOffsetY = vpt[5] / zoom;
       
-      // Calculate the scale for the minimap
       const scaleX = MINI_WIDTH / canvasWidth;
       const scaleY = MINI_HEIGHT / canvasHeight;
       
@@ -67,7 +59,6 @@ const MiniMap: React.FC<MiniMapProps> = ({ mainFabricCanvas }) => {
           }
           ctx.fillRect(0, 0, MINI_WIDTH, MINI_HEIGHT);
           
-          // Sort objects by z-index to draw in correct order
           const sortedObjects = [...objects].sort((a, b) => {
             return ((a as any).zIndex || 0) - ((b as any).zIndex || 0);
           });
@@ -78,18 +69,15 @@ const MiniMap: React.FC<MiniMapProps> = ({ mainFabricCanvas }) => {
 
             ctx.save();
             
-            // Get object properties, accounting for group offsets and transformations
             let left = obj.left || 0;
             let top = obj.top || 0;
             let width = obj.getScaledWidth ? obj.getScaledWidth() : (obj.width || 10);
             let height = obj.getScaledHeight ? obj.getScaledHeight() : (obj.height || 10);
             let angle = obj.angle || 0;
             
-            // Account for object origin/center point
             const originX = obj.originX || 'left';
             const originY = obj.originY || 'top';
             
-            // Apply canvas view offset (for panning) and scaling to minimap
             const adjustedLeft = left - viewOffsetX;
             const adjustedTop = top - viewOffsetY;
             
@@ -169,27 +157,22 @@ const MiniMap: React.FC<MiniMapProps> = ({ mainFabricCanvas }) => {
                 ctx.lineWidth = Math.max(1, (obj.strokeWidth || 1) * scaleX);
                 ctx.stroke();
               } catch (err) {
-                // Fallback if line properties aren't accessible
                 ctx.moveTo(miniX, miniY);
                 ctx.lineTo(miniX + miniWidth, miniY + miniHeight);
                 ctx.stroke();
               }
             }
             else if (objType === "path") {
-              // For path, draw a visible marker
               ctx.arc(miniX, miniY, 3, 0, Math.PI * 2);
               ctx.fill();
               
-              // Try to draw an approximation of the path if possible
               if ((obj as any).path) {
                 try {
                   const path = (obj as any).path;
                   
-                  // Draw a simplified version of the path
-                  if (Array.isArray(path) && path.length > 0) {
+                    if (Array.isArray(path) && path.length > 0) {
                     ctx.beginPath();
                     
-                    // Start at the first point
                     const firstPoint = path[0];
                     if (Array.isArray(firstPoint) && firstPoint.length >= 2) {
                       ctx.moveTo(
@@ -216,8 +199,47 @@ const MiniMap: React.FC<MiniMapProps> = ({ mainFabricCanvas }) => {
                 }
               }
             }
+            else if (objType === "image") {
+              try {
+                const imgElement = (obj as fabric.Image).getElement() as HTMLImageElement;
+                if (imgElement && imgElement.complete) {
+                  // Draw the image on the minimap
+                  ctx.drawImage(
+                    imgElement,
+                    miniX + offsetX,
+                    miniY + offsetY,
+                    miniWidth,
+                    miniHeight
+                  );
+                } else {
+                  ctx.fillStyle = "#cccccc";
+                  ctx.fillRect(
+                    miniX + offsetX, 
+                    miniY + offsetY, 
+                    miniWidth, 
+                    miniHeight
+                  );
+                  ctx.strokeRect(
+                    miniX + offsetX, 
+                    miniY + offsetY, 
+                    miniWidth, 
+                    miniHeight
+                  );
+                }
+              } catch (err) {
+                console.warn("Error drawing image in minimap:", err);
+                // Fallback for error cases
+                ctx.fillStyle = "#cccccc";
+                ctx.fillRect(
+                  miniX + offsetX, 
+                  miniY + offsetY, 
+                  miniWidth, 
+                  miniHeight
+                );
+              }
+            }
             else {
-              // Fallback for other types (including images)
+              // Fallback for other types
               ctx.fillRect(
                 miniX + offsetX, 
                 miniY + offsetY, 

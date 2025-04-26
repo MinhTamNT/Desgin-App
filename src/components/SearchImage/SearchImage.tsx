@@ -335,14 +335,12 @@ const SearchImageModal = ({ onClose }: SearchImageModalProps) => {
                         className="w-full h-36 object-cover"
                       />
                       <div className="absolute inset-0 bg-blue-500/0 group-hover:bg-blue-500/10 transition-colors duration-200 flex items-center justify-center opacity-0 group-hover:opacity-100">
-                        <span className="bg-white/80 backdrop-blur-sm text-blue-600 text-xs px-2 py-1 rounded-md shadow-sm font-medium">
+                        <span className="bg-white/80 backdrop-blur-sm text-blupe-600 text-xs px-2 py-1 rounded-md shadow-sm font-medium">
                           Double-click to use
                         </span>
                       </div>
                     </div>
-                    <div className="px-3 py-2 text-xs text-gray-500">
-                      Match: {Math.round((1 - item.distance) * 100)}%
-                    </div>
+                   
                   </div>
                 ))}
               </div>

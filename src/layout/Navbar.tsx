@@ -1,10 +1,27 @@
 import { useQuery } from "@apollo/client";
-import { FaHome, FaProjectDiagram } from "react-icons/fa";
-import { useNavigate } from "react-router-dom";
-import { image } from "../assets/image/image";
+import { useNavigate, useLocation } from "react-router-dom";
 import { GET_PROJECT } from "../utils/Project/Project";
 import { Project } from "../lib/interface";
 import { useCallback } from "react";
+import {
+  Box,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  Typography,
+  Paper,
+  Skeleton,
+  useTheme,
+  alpha,
+  Badge
+} from "@mui/material";
+import HomeIcon from "@mui/icons-material/Home";
+import ChatIcon from "@mui/icons-material/Chat";
+import FolderIcon from "@mui/icons-material/Folder";
+import HistoryIcon from "@mui/icons-material/History";
+import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 
 interface ProjectsData {
   getUserProjects: {
@@ -16,12 +33,7 @@ interface ProjectsData {
   };
 }
 
-const STYLES = {
-  navItem:
-    "flex items-center p-4 rounded-lg cursor-pointer transition-all duration-300 hover:bg-indigo-50 hover:scale-[1.02] group",
-  icon: "text-indigo-400 group-hover:text-indigo-600 transition-colors duration-300",
-  text: "font-medium text-gray-700 group-hover:text-indigo-600 ml-4",
-} as const;
+
 
 const ProjectList = ({
   data,
@@ -34,41 +46,75 @@ const ProjectList = ({
   error?: Error;
   onProjectClick: (id: string) => void;
 }) => {
+  const theme = useTheme();
+
   if (loading) {
     return (
-      <div className="animate-pulse p-4">
-        <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-      </div>
+      <Box sx={{ p: 1 }}>
+        <Skeleton animation="wave" height={40} />
+        <Skeleton animation="wave" height={40} />
+        <Skeleton animation="wave" height={40} />
+      </Box>
     );
   }
 
   if (error) {
     return (
-      <div className="p-4 text-sm text-red-600 bg-red-50 rounded-lg">
-        Error: {error.message}
-      </div>
+      <Paper 
+        elevation={0} 
+        sx={{ 
+          p: 2, 
+          bgcolor: alpha(theme.palette.error.main, 0.1),
+          borderRadius: 2,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1
+        }}
+      >
+        <ErrorOutlineIcon color="error" fontSize="small" />
+        <Typography variant="body2" color="error">
+          {error.message}
+        </Typography>
+      </Paper>
     );
   }
 
   return (
-    <ul className="space-y-1">
+    <List disablePadding sx={{ mt: 1 }}>
       {data?.getUserProjects.projects?.map((item: Project) => (
-        <li key={item.idProject}>
-          <div
+        <ListItem key={item.idProject} disablePadding sx={{ mb: 0.5 }}>
+          <ListItemButton 
             onClick={() => onProjectClick(item.idProject)}
-            className={STYLES.navItem}
+            sx={{ 
+              borderRadius: 2,
+              py: 1,
+              '&:hover': {
+                bgcolor: alpha(theme.palette.primary.main, 0.1)
+              }
+            }}
           >
-            <FaProjectDiagram size={18} className={STYLES.icon} />
-            <span className={`${STYLES.text} truncate`}>{item.name}</span>
-          </div>
-        </li>
+            <ListItemIcon sx={{ minWidth: 36, color: theme.palette.primary.main }}>
+              <FolderIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText 
+              primary={item.name} 
+              primaryTypographyProps={{ 
+                noWrap: true,
+                fontSize: '0.9rem',
+                fontWeight: 500
+              }}
+            />
+          </ListItemButton>
+        </ListItem>
       ))}
-    </ul>
+    </List>
   );
 };
 
 export const Navbar = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const theme = useTheme();
 
   const { data, loading, error } = useQuery<ProjectsData>(GET_PROJECT, {
     variables: { pageIndex: 1, pageSize: 10, nameProject: "" },
@@ -88,43 +134,272 @@ export const Navbar = () => {
     [navigateTo]
   );
 
+  const isActive = (path: string) => {
+    return location.pathname === path || location.pathname.startsWith(`${path}/`);
+  };
+
   return (
-    <div className="hidden lg:flex flex-col w-72 p-6 bg-white border-r border-gray-100 min-h-screen">
-      <div className="flex items-center justify-center mb-10">
-        <img
-          src={image.logo}
-          alt="logo-app"
-          className="h-72 w-auto object-contain"
-        />
-      </div>
-
-      <nav className="space-y-2">
-        <div onClick={() => navigateTo("/")} className={STYLES.navItem}>
-          <FaHome size={20} className={STYLES.icon} />
-          <span className={STYLES.text}>Home</span>
-        </div>
-        <div
-          onClick={() => navigateTo("/conversation")}
-          className={STYLES.navItem}
+    <Box
+      sx={{
+        display: { xs: 'none', lg: 'flex' },
+        flexDirection: 'column',
+        width: 280,
+        p: 3,
+        bgcolor: theme.palette.background.paper,
+        borderRight: `1px solid ${theme.palette.divider}`,
+        minHeight: '100vh',
+        position: 'relative',
+        overflow: 'hidden'
+      }}
+    >
+      {/* Text-based Logo */}
+      <Box 
+        sx={{ 
+          display: 'flex', 
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center', 
+          mb: 5, 
+          mt: 3,
+          position: 'relative'
+        }}
+      >
+        <Box
+          sx={{
+            position: 'relative',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+          }}
         >
-          <FaProjectDiagram size={20} className={STYLES.icon} />
-          <span className={STYLES.text}>Conversation</span>
-        </div>
-      </nav>
+          {/* Pixel pattern background */}
+          <Box 
+            sx={{
+              position: 'absolute',
+              top: '-5px',
+              right: '-20px',
+              zIndex: 0,
+              opacity: 0.2,
+              display: 'grid',
+              gridTemplateColumns: 'repeat(4, 6px)',
+              gridTemplateRows: 'repeat(4, 6px)',
+              gap: '3px',
+              transform: 'rotate(-10deg)'
+            }}
+          >
+            {Array(16).fill(0).map((_, i) => (
+              <Box 
+                key={i} 
+                sx={{ 
+                  width: '6px', 
+                  height: '6px', 
+                  bgcolor: i % 3 === 0 ? theme.palette.primary.main : 
+                          i % 3 === 1 ? theme.palette.secondary.main : 
+                          theme.palette.primary.light,
+                  borderRadius: '1px'
+                }} 
+              />
+            ))}
+          </Box>
 
-      <div className="mt-10">
-        <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
-          Recent Projects
-        </h3>
-        <div className="space-y-1">
-          <ProjectList
-            data={data}
-            loading={loading}
-            error={error}
-            onProjectClick={handleProjectClick}
-          />
-        </div>
-      </div>
-    </div>
+          {/* Logo text */}
+          <Typography 
+            variant="h4" 
+            component="div"
+            sx={{
+              fontWeight: 800,
+              fontSize: '1.9rem',
+              letterSpacing: '0.5px',
+              position: 'relative',
+              zIndex: 2,
+              background: `linear-gradient(90deg, ${theme.palette.primary.dark} 0%, ${theme.palette.primary.main} 100%)`,
+              backgroundClip: 'text',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              textShadow: '0px 2px 4px rgba(0,0,0,0.08)',
+              fontFamily: '"Poppins", "Roboto", "Helvetica", "Arial", sans-serif'
+            }}
+          >
+            PIXEL
+          </Typography>
+
+          {/* App text with pixelated effect */}
+          <Box
+            sx={{
+              position: 'relative',
+              mt: -1,
+              zIndex: 1,
+              display: 'flex',
+              alignItems: 'center'
+            }}
+          >
+            <Typography
+              variant="h6"
+              component="div"
+              sx={{
+                fontWeight: 600,
+                fontSize: '1rem',
+                letterSpacing: '3px',
+                textTransform: 'uppercase',
+                color: theme.palette.text.secondary,
+                fontFamily: '"Roboto Mono", monospace',
+                borderBottom: `2px solid ${alpha(theme.palette.primary.main, 0.3)}`,
+                pb: 0.5,
+                px: 1
+              }}
+            >
+              App
+            </Typography>
+
+            {/* Pixel dot */}
+            <Box 
+              sx={{ 
+                width: '8px', 
+                height: '8px', 
+                bgcolor: theme.palette.primary.main,
+                ml: 0.5,
+                borderRadius: '1px' 
+              }} 
+            />
+          </Box>
+        </Box>
+
+        {/* Tagline */}
+        <Typography 
+          variant="caption" 
+          sx={{ 
+            mt: 1.5, 
+            color: alpha(theme.palette.text.secondary, 0.7),
+            letterSpacing: '0.5px',
+            fontSize: '0.7rem',
+            textTransform: 'uppercase'
+          }}
+        >
+          Collaborative Design Tool
+        </Typography>
+      </Box>
+
+      {/* Main Navigation */}
+      <Paper
+        elevation={0}
+        sx={{
+          borderRadius: 3,
+          mb: 3,
+          overflow: 'hidden',
+          bgcolor: alpha(theme.palette.primary.main, 0.03)
+        }}
+      >
+        <List disablePadding>
+          <ListItem disablePadding>
+            <ListItemButton
+              onClick={() => navigateTo("/")}
+              selected={isActive("/")}
+              sx={{
+                borderRadius: 2,
+                py: 1.5,
+                mb: 0.5,
+                '&.Mui-selected': {
+                  bgcolor: alpha(theme.palette.primary.main, 0.1),
+                  '&:hover': {
+                    bgcolor: alpha(theme.palette.primary.main, 0.15),
+                  },
+                  '&::after': {
+                    content: '""',
+                    position: 'absolute',
+                    left: 0,
+                    top: '20%',
+                    height: '60%',
+                    width: '3px',
+                    backgroundColor: theme.palette.primary.main,
+                    borderRadius: '0 4px 4px 0'
+                  }
+                }
+              }}
+            >
+              <ListItemIcon sx={{ minWidth: 40, color: isActive("/") ? theme.palette.primary.main : theme.palette.text.secondary }}>
+                <HomeIcon />
+              </ListItemIcon>
+              <ListItemText 
+                primary="Home" 
+                primaryTypographyProps={{ 
+                  fontWeight: isActive("/") ? 600 : 500
+                }}
+                sx={{ color: isActive("/") ? theme.palette.primary.main : theme.palette.text.primary }}
+              />
+            </ListItemButton>
+          </ListItem>
+          
+          <ListItem disablePadding>
+            <ListItemButton
+              onClick={() => navigateTo("/conversation")}
+              selected={isActive("/conversation")}
+              sx={{
+                borderRadius: 2,
+                py: 1.5,
+                '&.Mui-selected': {
+                  bgcolor: alpha(theme.palette.primary.main, 0.1),
+                  '&:hover': {
+                    bgcolor: alpha(theme.palette.primary.main, 0.15),
+                  },
+                  '&::after': {
+                    content: '""',
+                    position: 'absolute',
+                    left: 0,
+                    top: '20%',
+                    height: '60%',
+                    width: '3px',
+                    backgroundColor: theme.palette.primary.main,
+                    borderRadius: '0 4px 4px 0'
+                  }
+                }
+              }}
+            >
+              <ListItemIcon sx={{ minWidth: 40, color: isActive("/conversation") ? theme.palette.primary.main : theme.palette.text.secondary }}>
+                <Badge
+                  color="error"
+                  variant="dot"
+                  invisible={!isActive("/conversation")}
+                >
+                  <ChatIcon />
+                </Badge>
+              </ListItemIcon>
+              <ListItemText 
+                primary="Conversation" 
+                primaryTypographyProps={{ 
+                  fontWeight: isActive("/conversation") ? 600 : 500
+                }}
+                sx={{ color: isActive("/conversation") ? theme.palette.primary.main : theme.palette.text.primary }}
+              />
+            </ListItemButton>
+          </ListItem>
+        </List>
+      </Paper>
+
+      {/* Recent Projects Section */}
+      <Box sx={{ mt: 2 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', px: 2, mb: 1 }}>
+          <HistoryIcon sx={{ fontSize: 18, color: theme.palette.text.secondary, mr: 1 }} />
+          <Typography 
+            variant="subtitle2" 
+            sx={{ 
+              fontSize: '0.8rem', 
+              fontWeight: 600, 
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px',
+              color: theme.palette.text.secondary
+            }}
+          >
+            Recent Projects
+          </Typography>
+        </Box>
+        
+        <ProjectList
+          data={data}
+          loading={loading}
+          error={error}
+          onProjectClick={handleProjectClick}
+        />
+      </Box>
+    </Box>
   );
 };

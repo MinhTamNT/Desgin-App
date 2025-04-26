@@ -59,6 +59,8 @@ export const Live = ({ canvasRef, role, undo, redo }: Props) => {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (role === "ROLE_READ") return;
+      
       if (e.key === "c" || e.key === "C") {
         setIsCommenting(true);
         setCommentPosition({
@@ -72,9 +74,11 @@ export const Live = ({ canvasRef, role, undo, redo }: Props) => {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, []);
+  }, [role]);
 
   const handleKeyDownInInput = async (e: React.KeyboardEvent) => {
+    if (role === "ROLE_READ") return;
+    
     if (e.key === "Enter" && newComment.trim() !== "") {
       console.log("New comment:", newComment, "at position:", commentPosition);
       const x = commentPosition?.x;
@@ -96,8 +100,8 @@ export const Live = ({ canvasRef, role, undo, redo }: Props) => {
 
   const handlePointerMove = useCallback(
     (event: React.PointerEvent) => {
-      if (role === "ROLE_READ") return;
       event.preventDefault();
+      // Cho phép cập nhật vị trí con trỏ ngay cả với ROLE_READ để người dùng khác có thể thấy
       if (cursor === null || cursorState.mode !== CursorMode.ReactionSelector) {
         const x = event.clientX - event.currentTarget.getBoundingClientRect().x;
         const y = event.clientY - event.currentTarget.getBoundingClientRect().y;
@@ -106,20 +110,20 @@ export const Live = ({ canvasRef, role, undo, redo }: Props) => {
         });
       }
     },
-    [cursor, cursorState.mode, updatePersence, role]
+    [cursor, cursorState.mode, updatePersence]
   );
 
   const handlePointerLeave = useCallback(
     (event: React.PointerEvent) => {
-      if (role === "ROLE_READ") return;
       event.preventDefault();
+      // Vẫn cho phép cập nhật vị trí con trỏ khi rời đi cho cả ROLE_READ
       updatePersence({
         cursor: null,
         message: null,
       });
       setCursorState({ mode: CursorMode.Hidden });
     },
-    [updatePersence, role]
+    [updatePersence]
   );
 
   const handlePointerDown = useCallback(
@@ -232,6 +236,10 @@ export const Live = ({ canvasRef, role, undo, redo }: Props) => {
   });
 
   const handleContextMenuClick = useCallback((key: string) => {
+    if (role === "ROLE_READ" && (key === "Undo" || key === "Redo" || key === "Chat" || key === "Reactions")) {
+      return; 
+    }
+    
     console.log(key);
     switch (key) {
       case "Chat":
@@ -255,11 +263,26 @@ export const Live = ({ canvasRef, role, undo, redo }: Props) => {
       default:
         break;
     }
-  }, []);
+  }, [role, undo, redo]);
 
   const handleEmojiClick = (emojiObject: any) => {
-    setNewComment((prev) => prev + emojiObject.emoji); // Thêm emoji vào nội dung comment
+    setNewComment((prev) => prev + emojiObject.emoji); 
   };
+
+  useEffect(() => {
+    if (role === "ROLE_READ") {
+      const canvasElement = canvasRef.current;
+      if (canvasElement) {
+        // Chỉ thay đổi con trỏ, không làm ảnh hưởng đến việc hiển thị nội dung
+        canvasElement.style.cursor = "not-allowed";
+      }
+    } else {
+      const canvasElement = canvasRef.current;
+      if (canvasElement) {
+        canvasElement.style.cursor = "auto";
+      }
+    }
+  }, [role, canvasRef]);
 
   return (
     <ContextMenu>
@@ -269,8 +292,13 @@ export const Live = ({ canvasRef, role, undo, redo }: Props) => {
         onPointerLeave={handlePointerLeave}
         onPointerDown={handlePointerDown}
         onPointerUp={handlePointerUp}
-        className="relative flex h-full w-full  items-center "
+        className="relative flex h-full w-full items-center"
       >
+        {role === "ROLE_READ" && (
+          <div className="absolute top-4 right-4 z-50 bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-medium">
+            Chế độ chỉ xem
+          </div>
+        )}
         <div
           className="relative w-full h-full"
           style={{
@@ -310,20 +338,27 @@ export const Live = ({ canvasRef, role, undo, redo }: Props) => {
         <Comments />
       </ContextMenuTrigger>
       <ContextMenuContent className="right-menu-content bg-white border border-gray-200 shadow-lg rounded-lg p-2 w-64">
-        {shortcuts.map((shortcut) => (
-          <ContextMenuItem
-            key={shortcut.key}
-            className="right-menu-item flex items-center justify-between p-2 rounded-lg hover:bg-gray-100 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-            onClick={() => handleContextMenuClick(shortcut.name)}
-          >
-            <span className="right-menu-name font-medium text-gray-800">
-              {shortcut.name}
-            </span>
-            <span className="right-menu-shortcut text-xs text-gray-500">
-              {shortcut.shortcut}
-            </span>
-          </ContextMenuItem>
-        ))}
+        {shortcuts.map((shortcut) => {
+          const isDisabled = role === "ROLE_READ" && 
+            (shortcut.name === "Undo" || shortcut.name === "Redo" || 
+             shortcut.name === "Chat" || shortcut.name === "Reactions");
+          
+          return (
+            <ContextMenuItem
+              key={shortcut.key}
+              className={`right-menu-item flex items-center justify-between p-2 rounded-lg hover:bg-gray-100 transition-all duration-200 ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+              onClick={() => !isDisabled && handleContextMenuClick(shortcut.name)}
+              disabled={isDisabled}
+            >
+              <span className={`right-menu-name font-medium ${isDisabled ? 'text-gray-400' : 'text-gray-800'}`}>
+                {shortcut.name}
+              </span>
+              <span className="right-menu-shortcut text-xs text-gray-500">
+                {shortcut.shortcut}
+              </span>
+            </ContextMenuItem>
+          );
+        })}
       </ContextMenuContent>
     </ContextMenu>
   );

@@ -80,6 +80,7 @@ export const Project = () => {
   const userRole = useSelector(
     (state: RootState) => state?.role?.role?.userRole
   );
+  console.log(userRole);
   const other = useOthers();
   const room = useRoom();
   const navigate = useNavigate();
@@ -114,8 +115,13 @@ export const Project = () => {
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
     event.stopPropagation();
-    const file = event.target.files ? event.target.files[0] : "";
+    const file = event.target.files ? event.target.files[0] : null;
     try {
+      if (!file || !(file instanceof File)) {
+        console.warn("No file selected or file is not a File object");
+        return;
+      }
+      
       const reader = new FileReader();
       reader.onload = async (event) => {
         if (event.target?.result) {
@@ -133,14 +139,6 @@ export const Project = () => {
         }
       };
       reader.readAsDataURL(file);
-      if (newImage) {
-        handleImageUpload({
-          file: newImage?.url,
-          canvas: fabricRef.current as any,
-          shapeRef,
-          syncShapeInStorage,
-        });
-      }
     } catch (error) {
       console.error("Error uploading the image:", error);
     }
@@ -230,7 +228,7 @@ export const Project = () => {
       return;
     }
 
-    if (userRole.access === "ROLE_READ") {
+    if (userRole?.role === "ROLE_READ") {
       canvas.selection = false;
       canvas.forEachObject((obj) => {
         obj.selectable = false;
@@ -512,7 +510,7 @@ export const Project = () => {
         <LeftSidebar allShape={Array.from(canvasObjects ?? [])}  />
         <Live
           canvasRef={canvasRef}
-          role={userRole.access}
+          role={userRole?.role}
           undo={undo}
           redo={redo}
         />
