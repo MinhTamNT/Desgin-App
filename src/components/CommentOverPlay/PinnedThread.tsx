@@ -30,7 +30,6 @@ export const PinnedThread = ({ thread, onFocus, ...props }: Props) => {
       }
     }
   }, [currentUser, updateMyPresence]);
-  // Hook debug u0111u1ec3 theo du00f5i khi nu00e0o thread.metadata.userName cu00f3 su1eb5n
   useEffect(() => {
     if (thread && thread.metadata) {
       console.log('Thread metadata available:', {

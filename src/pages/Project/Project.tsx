@@ -14,6 +14,8 @@ import { useEffect, useRef, useState } from "react";
 import { Live } from "../../components/Live/Live";
 import { uploadImageToCloudinary } from "../../helper/UpdateImage";
 import NavbarProject from "../../layout/Project/NavbarProject";
+import ImageSearchModal from "../../components/ImageSearch/ImageSearchModal";
+import ScreenshotSelector from "../../components/ScreenshotSelector/ScreenshotSelector";
 import RightSidebar from "../../layout/Project/RightSidebar";
 import {
   handleCanvaseMouseMove,
@@ -74,6 +76,12 @@ export const Project = () => {
     fontWeight: "",
     stroke: "#aabbcc",
   });
+
+  // Image search state
+  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
+  const [isScreenshotSelectorOpen, setIsScreenshotSelectorOpen] = useState(false);
+  const [screenshotImage, setScreenshotImage] = useState<string | undefined>(undefined);
+  const lastShiftPressTimeRef = useRef<number>(0);
   const user = useSelector(
     (state: RootState) => state?.user?.user?.currentUser
   );
@@ -391,6 +399,40 @@ export const Project = () => {
       }
     };
 
+    const handleShiftKeyPress = (e: KeyboardEvent) => {
+      if (e.key === "Shift") {
+        const now = Date.now();
+        
+        // Check if this is a single press and it's been a while since last press
+        if (now - lastShiftPressTimeRef.current > 500) {
+          // Activate screenshot selection mode on single press
+          e.preventDefault();
+          setIsScreenshotSelectorOpen(true);
+        }
+        
+        lastShiftPressTimeRef.current = now;
+      }
+      
+      if (e.key === "Delete" || e.key === "Backspace") {
+        if (fabricRef.current) {
+          handleDelete(
+            fabricRef.current as fabric.Canvas,
+            deleteShapeFromStorage
+          );
+        }
+      }
+
+      handleKeyDown({
+        e,
+        canvas,
+        undo,
+        redo,
+        syncShapeInStorage,
+        deleteShapeFromStorage,
+      });
+    };
+    
+    window.addEventListener("keydown", handleShiftKeyPress);
     window.addEventListener("paste", handlePaste);
     window.addEventListener("resize", handleResizeEvent);
     window.addEventListener("keydown", (e) => {
@@ -407,6 +449,7 @@ export const Project = () => {
       canvas.dispose();
 
       window.removeEventListener("resize", handleResizeEvent);
+      window.removeEventListener("keydown", handleShiftKeyPress);
       window.removeEventListener("keydown", (e) =>
         handleKeyDown({
           e,
@@ -421,11 +464,25 @@ export const Project = () => {
     };
   }, [canvasRef, userRole]);
 
+  // Handle screenshot captured from the selection tool
+  const handleScreenshotCaptured = (imageData: string) => {
+    setScreenshotImage(imageData);
+    setIsScreenshotSelectorOpen(false);
+    setIsSearchModalOpen(true);
+  };
+
   useEffect(() => {
     if (canvasObjects) {
       renderCanvas({ fabricRef, activeObjectRef, canvasObjects });
     }
   }, [canvasObjects]);
+
+  const handleAddSearchResultToCanvas = (imageUrl: string) => {
+    const event = new CustomEvent('addImageToCanvas', {
+      detail: { imagePath: imageUrl }
+    });
+    window.dispatchEvent(event);
+  };
 
   useEffect(() => {
     const handleAddImageToCanvas = async (event: CustomEvent) => {
@@ -524,6 +581,23 @@ export const Project = () => {
           isEditingRef={isEditingRef}
         />
       </section>
+      
+      {/* Image Search Modal */}
+      <ImageSearchModal
+        open={isSearchModalOpen}
+        onClose={() => setIsSearchModalOpen(false)}
+        searchImage={screenshotImage}
+        onSelectImage={handleAddSearchResultToCanvas}
+      />
+      
+      {/* Screenshot Selection Overlay */}
+      {isScreenshotSelectorOpen && (
+        <ScreenshotSelector
+          onClose={() => setIsScreenshotSelectorOpen(false)}
+          onCapture={handleScreenshotCaptured}
+          canvasRef={canvasRef}
+        />
+      )}
     </main>
   );
 };

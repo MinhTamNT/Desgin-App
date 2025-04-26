@@ -16,6 +16,8 @@ import { FaUser, FaSignOutAlt, FaSearch } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState, persistor } from "../Redux/store";
 import { useMutation, useQuery, useSubscription } from "@apollo/client";
+import { toast } from "react-toastify";
+import { GET_PROJECT } from "../utils/Project/Project";
 import {
   GET_NOTIFICATION,
   NOTIFICATION_SUBSCRIPTION,
@@ -86,7 +88,12 @@ export const Header = () => {
     },
   });
 
-  const [updateInvite] = useMutation(UPDATE_INVITE);
+  const [updateInvite] = useMutation(UPDATE_INVITE, {
+    refetchQueries: [
+      { query: GET_PROJECT, variables: { pageIndex: 1, pageSize: 6, nameProject: "" } }
+    ],
+    awaitRefetchQueries: true
+  });
   const user = useSelector(
     (state: RootState) => state?.user?.user?.currentUser
   );
@@ -117,8 +124,27 @@ export const Header = () => {
           status: "ACCEPTED",
         },
       });
+      handleClose(); // Đóng menu thông báo sau khi chấp nhận
+      toast.success("Bạn đã được thêm vào dự án!");
     } catch (error) {
       console.log(error);
+      toast.error("Có lỗi xảy ra khi chấp nhận lời mời");
+    }
+  };
+  
+  const handleRejectInvite = async (idInvite: string) => {
+    try {
+      await updateInvite({
+        variables: {
+          invitationIdInvitation: idInvite,
+          status: "REJECTED",
+        },
+      });
+      handleClose(); // Đóng menu thông báo sau khi từ chối
+      toast.info("Đã từ chối lời mời dự án");
+    } catch (error) {
+      console.log(error);
+      toast.error("Có lỗi xảy ra khi từ chối lời mời");
     }
   };
 
@@ -248,7 +274,10 @@ export const Header = () => {
                               Accept
                             </button>
                             <button
-                              onClick={(e) => e.stopPropagation()}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleRejectInvite(notification?.invitation_idInvitation);
+                              }}
                               className="px-4 py-1.5 text-sm font-medium rounded-md text-gray-700 bg-gray-100 
                                    hover:bg-gray-200 transition-colors duration-200"
                             >

@@ -10,14 +10,12 @@ const NewThreadCursor = ({ display }: { display: boolean }) => {
   });
 
   useEffect(() => {
-    // Function to update cursor position
     const updatePosition = (e: MouseEvent) => {
       const canvas = document.getElementById("canvas");
 
       if (canvas) {
         const canvasRect = canvas.getBoundingClientRect();
 
-        // Check if the cursor is inside the canvas
         if (
           e.clientX >= canvasRect.left &&
           e.clientX <= canvasRect.right &&
@@ -28,8 +26,7 @@ const NewThreadCursor = ({ display }: { display: boolean }) => {
             x: e.clientX - canvasRect.left,
             y: e.clientY - canvasRect.top,
           });
-        } else {
-          // Hide the cursor if it's outside the canvas
+        } else {  
           setCoords({
             x: DEFAULT_CURSOR_POSITION,
             y: DEFAULT_CURSOR_POSITION,
@@ -38,16 +35,13 @@ const NewThreadCursor = ({ display }: { display: boolean }) => {
       }
     };
 
-    // Add event listener for mouse movement
     if (display) {
       window.addEventListener("mousemove", updatePosition);
     }
-
-    // Cleanup event listener on unmount or when `display` changes
     return () => {
       window.removeEventListener("mousemove", updatePosition);
     };
-  }, [display]); // Only re-run the effect when `display` changes
+  }, [display]);
 
   return (
     <Portal.Root>
@@ -59,7 +53,6 @@ const NewThreadCursor = ({ display }: { display: boolean }) => {
           left: 0,
         }}
       >
-        {/* Render the cursor */}
         {display && (
           <div className="w-4 h-4 bg-blue-500 rounded-full shadow-lg"></div>
         )}

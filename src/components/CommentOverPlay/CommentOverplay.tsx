@@ -17,9 +17,6 @@ const CommentsOverlay = () => {
   const { threads } = useThreads();
   const currentUser = useSelector((state: RootState) => state?.user?.user?.currentUser);
   
-  // Log số lượng thread và thông tin người dùng hiện tại
-  console.log(`Rendering ${threads.length} threads. Current user: ${currentUser?.name || 'Unknown'}`);
-  
   const maxZIndex = useMaxZIndex();
 
   return (
@@ -47,7 +44,6 @@ const OverlayThread = ({ thread, maxZIndex }: OverPlayProp) => {
   useEffect(() => {
     if (thread && user && !isLoading) {
       if (!thread.metadata.userName || !thread.metadata.userAvatar) {
-        console.log(`Cập nhật thông tin người dùng cho thread ${thread.id}`);
         
         editThreadMetadata({
           threadId: thread.id,
@@ -82,12 +78,9 @@ const OverlayThread = ({ thread, maxZIndex }: OverPlayProp) => {
   const x = thread.metadata.x;
   const y = thread.metadata.y;
   
-          const userName = thread.metadata.userName || 'Người dùng';
+  const userName = thread.metadata.userName || 'Người dùng';
   const userAvatar = thread.metadata.userAvatar || '';
   
-  console.log(`Rendering thread ${thread.id} by ${userName} at position x=${x}, y=${y}`);
-  
-  // Thêm class tùy chỉnh với avatar của người dùng nếu có
   const customClassWithUserAvatar = userAvatar ? 
     `thread-${thread.id}-user-${userName.replace(/\s+/g, '-').toLowerCase()}` : '';
   
@@ -104,7 +97,6 @@ const OverlayThread = ({ thread, maxZIndex }: OverPlayProp) => {
         transform: 'translate(-50%, -50%)',
         margin: 0,
         padding: 0,
-        // Thêm biến tùy chỉnh data-user-avatar với URL avatar
         '--user-avatar': `url(${userAvatar})`
       } as React.CSSProperties}
     >
