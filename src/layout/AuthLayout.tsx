@@ -20,7 +20,7 @@ export const AuthLayout: React.FC = () => {
   const location = useLocation();
   const isLoginPage = location.pathname === "/auth";
   const isProjectPage = location.pathname.startsWith("/project/");
-
+  const isPermisionPage = location.pathname.startsWith("/permision");
   const projectPath = isProjectPage
     ? location.pathname.substring("/project/".length)
     : "home-room";
@@ -39,7 +39,7 @@ export const AuthLayout: React.FC = () => {
                     isProjectPage ? "bg-project-background" : ""
                   }`}
                 >
-                  {!isLoginPage && !isProjectPage && (
+                  {!isLoginPage && !isProjectPage && !isPermisionPage && (
                     <>
                       <Sidebar />
                       <div className="pl-[60px] h-full">
@@ -54,6 +54,7 @@ export const AuthLayout: React.FC = () => {
                     </>
                   )}
                   {isLoginPage && <Outlet />}
+                  {isPermisionPage && <Outlet />}
                   {isProjectPage && (
                     <div className="project-page-content">
                       <Outlet />

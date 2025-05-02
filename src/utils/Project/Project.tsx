@@ -100,6 +100,35 @@ const USER_STATUS_CHANGED = gql`
     }
   }
 `;
+const CHECK_PROJECT = gql`
+  query CheckProject($projectId: String!) {
+    checkProject(projectId: $projectId) {
+      RetCode
+      RetMessgae
+    }
+  }
+`;
+
+const REQUEST_PROJECT_ACCESS = gql`
+  mutation SendProjectAccessRequestEmail(
+    $projectId: String!
+    $message: String!
+    $nameRequest: String!
+    $imageRequest: String!
+    $emailRequest: String!
+  ) {
+    sendProjectAccessRequestEmail(
+      projectId: $projectId
+      message: $message
+      nameRequest: $nameRequest
+      imageRequest: $imageRequest
+      emailRequest: $emailRequest
+    ) {
+      RetCode
+      RetMessgae
+    }
+  }
+`;
 export {
   ADD_PROJECT,
   GET_PROJECT,
@@ -109,4 +138,6 @@ export {
   UPDATE_ROLE,
   REMOVED_MEMBER_PROJECT,
   USER_STATUS_CHANGED,
+  CHECK_PROJECT,
+  REQUEST_PROJECT_ACCESS,
 };

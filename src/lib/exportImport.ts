@@ -2,13 +2,13 @@ import { fabric } from "fabric";
 import { LiveMap } from "@liveblocks/client";
 import { v4 as uuidv4 } from "uuid";
 
-// Simple encryption/decryption using a key
 const encryptionKey = "design-app-secure-key-2025";
 
 const encryptData = (data: string): string => {
-  let result = '';
+  let result = "";
   for (let i = 0; i < data.length; i++) {
-    const charCode = data.charCodeAt(i) ^ encryptionKey.charCodeAt(i % encryptionKey.length);
+    const charCode =
+      data.charCodeAt(i) ^ encryptionKey.charCodeAt(i % encryptionKey.length);
     result += String.fromCharCode(charCode);
   }
   return btoa(result);
@@ -18,9 +18,10 @@ const decryptData = (encryptedData: string): string => {
   try {
     // Decode from base64
     const data = atob(encryptedData);
-    let result = '';
+    let result = "";
     for (let i = 0; i < data.length; i++) {
-      const charCode = data.charCodeAt(i) ^ encryptionKey.charCodeAt(i % encryptionKey.length);
+      const charCode =
+        data.charCodeAt(i) ^ encryptionKey.charCodeAt(i % encryptionKey.length);
       result += String.fromCharCode(charCode);
     }
     return result;
@@ -30,7 +31,6 @@ const decryptData = (encryptedData: string): string => {
   }
 };
 
-// Function to export canvas to JSON
 export const exportCanvasToJSON = (
   canvas: fabric.Canvas | null,
   canvasObjects: LiveMap<string, any> | null
@@ -39,33 +39,31 @@ export const exportCanvasToJSON = (
     throw new Error("Canvas is not initialized");
   }
 
-  // Create the data structure for export
   const exportData = {
-    canvasJSON: canvas.toJSON(['objectId', 'hasUploaded']),
+    canvasJSON: canvas.toJSON(["objectId", "hasUploaded"]),
     objectMap: Array.from(canvasObjects?.entries() || []),
-    version: "1.0", // Version for future compatibility
+    version: "1.0",
     exportedAt: new Date().toISOString(),
   };
 
-  // Convert to JSON string
   const jsonString = JSON.stringify(exportData, null, 2);
-  
-  // Encrypt the data
+
   return encryptData(jsonString);
 };
 
-// Function to download the exported JSON
-export const downloadJSON = (jsonData: string, fileName: string = "design-export.json"): void => {
+export const downloadJSON = (
+  jsonData: string,
+  fileName: string = uuidv4()
+): void => {
   const blob = new Blob([jsonData], { type: "application/json" });
   const url = URL.createObjectURL(blob);
-  
+
   const link = document.createElement("a");
   link.href = url;
   link.download = fileName;
   document.body.appendChild(link);
   link.click();
-  
-  // Clean up
+
   setTimeout(() => {
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
@@ -82,7 +80,7 @@ export const importCanvasFromJSON = async (
   try {
     const decryptedData = decryptData(jsonData);
     const importData = JSON.parse(decryptedData);
-    
+
     if (!importData.canvasJSON || !fabricRef.current) {
       throw new Error("Invalid import data or canvas not initialized");
     }
@@ -93,7 +91,7 @@ export const importCanvasFromJSON = async (
     }
 
     const tempCanvas = new fabric.Canvas(null);
-    
+
     return new Promise((resolve) => {
       tempCanvas.loadFromJSON(importData.canvasJSON, () => {
         const currentCanvas = fabricRef.current;
@@ -101,50 +99,56 @@ export const importCanvasFromJSON = async (
           resolve(false);
           return;
         }
-        
-        const existingObjects = currentCanvas.getObjects();
-        const existingCount = existingObjects.length;
-        
+
         const importedObjects = tempCanvas.getObjects();
         
-        let offsetX = 0;
-        let offsetY = 0;
-        
-        if (!replaceExisting && existingCount > 0) {
-          let maxRight = 0;
-          existingObjects.forEach(obj => {
-            const objRight = obj.left! + (obj.width! * obj.scaleX!);
-            if (objRight > maxRight) {
-              maxRight = objRight;
-            }
-          });
-          
-          offsetX = maxRight + 50;
+        if (importedObjects.length === 0) {
+          resolve(true);
+          return;
         }
         
+        const bounds = {
+          left: Number.MAX_VALUE,
+          top: Number.MAX_VALUE,
+          right: Number.MIN_VALUE,
+          bottom: Number.MIN_VALUE
+        };
+        
         importedObjects.forEach(obj => {
+          const objBounds = obj.getBoundingRect();
+          bounds.left = Math.min(bounds.left, objBounds.left);
+          bounds.top = Math.min(bounds.top, objBounds.top);
+          bounds.right = Math.max(bounds.right, objBounds.left + objBounds.width);
+          bounds.bottom = Math.max(bounds.bottom, objBounds.top + objBounds.height);
+        });
+        
+        const importedCenterX = bounds.left + (bounds.right - bounds.left) / 2;
+        const importedCenterY = bounds.top + (bounds.bottom - bounds.top) / 2;
+        
+        const canvasCenterX = currentCanvas.getWidth() / 2;
+        const canvasCenterY = currentCanvas.getHeight() / 2;
+        
+        const offsetX = canvasCenterX - importedCenterX;
+        const offsetY = canvasCenterY - importedCenterY;
+
+        importedObjects.forEach((obj) => {
           const clonedObj = fabric.util.object.clone(obj);
-          
-          if (!replaceExisting) {
-            clonedObj.set({
-              left: (clonedObj.left || 0) + offsetX,
-              top: (clonedObj.top || 0) + offsetY
-            });
-          }
-          
+
+          clonedObj.set({
+            left: (clonedObj.left || 0) + offsetX,
+            top: (clonedObj.top || 0) + offsetY,
+          });
+
           if (!(clonedObj as any).objectId) {
             (clonedObj as any).objectId = uuidv4();
           }
-          
+
           currentCanvas.add(clonedObj);
-          
           syncShapeInStorage(clonedObj);
         });
-        
+
         currentCanvas.renderAll();
-        
         tempCanvas.dispose();
-        
         resolve(true);
       });
     });

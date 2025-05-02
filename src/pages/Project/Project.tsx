@@ -1,7 +1,6 @@
 import { LiveMap } from "@liveblocks/client";
 import { useMutation, useRedo, useStorage, useUndo } from "@liveblocks/react";
 import { fabric } from "fabric";
-import MiniMap from "../../components/MiniMap/MiniMap";
 import "reactflow/dist/style.css";
 declare module "fabric" {
   namespace fabric {
@@ -32,7 +31,12 @@ import {
   renderCanvas,
 } from "../../lib/cavans";
 import { handleImageUpload } from "../../lib/shape";
-import { exportCanvasToJSON, downloadJSON, importCanvasFromJSON, readFileAsText } from "../../lib/exportImport";
+import {
+  exportCanvasToJSON,
+  downloadJSON,
+  importCanvasFromJSON,
+  readFileAsText,
+} from "../../lib/exportImport";
 import { ActiveElement, Attributes } from "../../type/type";
 import { defaultNavElement } from "../../utils";
 import { handleDelete, handleKeyDown } from "../../utils/Key/key-event";
@@ -47,6 +51,9 @@ import { useOthers } from "@liveblocks/react/suspense";
 import "../../index.css";
 import LeftSidebar from "../../layout/Project/LeftSidebar";
 import Loading from "../../components/Loading/Loading";
+import { useQuery } from "@apollo/client";
+import { useParams } from "react-router-dom";
+import { CHECK_PROJECT } from "../../utils/Project/Project";
 interface UserRequest {
   idUser: string;
 }
@@ -54,6 +61,7 @@ interface UserRequest {
 export const Project = () => {
   const undo = useUndo();
   const redo = useRedo();
+  const { idProject } = useParams();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const fabricRef = useRef<fabric.Canvas | null>(null);
   const isDrawing = useRef(false);
@@ -79,16 +87,38 @@ export const Project = () => {
   });
 
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
-  const [isScreenshotSelectorOpen, setIsScreenshotSelectorOpen] = useState(false);
-  const [screenshotImage, setScreenshotImage] = useState<string | undefined>(undefined);
+  const [isScreenshotSelectorOpen, setIsScreenshotSelectorOpen] =
+    useState(false);
+  const [screenshotImage, setScreenshotImage] = useState<string | undefined>(
+    undefined
+  );
   const [isLoading, setIsLoading] = useState(false);
+  const {
+    data: projectData,
+    loading: loadingProjectData,
+    error: errorProjectData,
+  } = useQuery(CHECK_PROJECT, {
+    variables: { projectId: idProject ?? "" },
+  });
+  console.log(projectData);
   const user = useSelector(
     (state: RootState) => state?.user?.user?.currentUser
   );
   const userRole = useSelector(
     (state: RootState) => state?.role?.role?.userRole
   );
-  console.log(userRole);
+
+  useEffect(() => {
+    if (loadingProjectData) return;
+    if (errorProjectData) {
+      console.log(errorProjectData);
+    }
+    console.log(projectData);
+    if (projectData?.checkProject?.RetCode < 0) {
+      navigate(`/permision/${idProject}`);
+    }
+  }, [loadingProjectData, errorProjectData, projectData]);
+
   const other = useOthers();
   const navigate = useNavigate();
   useSubscription(NOTIFICATION_SUBSCRIPTION, {
@@ -128,7 +158,7 @@ export const Project = () => {
         console.warn("No file selected or file is not a File object");
         return;
       }
-      
+
       const reader = new FileReader();
       reader.onload = async (event) => {
         if (event.target?.result) {
@@ -228,22 +258,21 @@ export const Project = () => {
   };
 
   const handleExportDesign = () => {
-
     setIsLoading(true);
 
     try {
-       if(isLoading){
-        <Loading  />
-       }
-      
+      if (isLoading) {
+        <Loading />;
+      }
+
       setTimeout(() => {
         try {
           const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
           const fileName = `design-export-${timestamp}.json`;
-          
+
           const jsonData = exportCanvasToJSON(fabricRef.current, canvasObjects);
           downloadJSON(jsonData, fileName);
-          
+
           toast.success("Design exported successfully!");
         } catch (error) {
           console.error("Error exporting design:", error);
@@ -258,14 +287,17 @@ export const Project = () => {
     }
   };
 
-  const handleImportDesign = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImportDesign = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
     try {
       // Create a modal for user to choose import mode
       const importModal = document.createElement("div");
-      importModal.className = "absolute inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50";
+      importModal.className =
+        "absolute inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50";
       importModal.innerHTML = `
         <div class="bg-white p-6 rounded-lg flex flex-col items-center max-w-md">
           <h3 class="text-xl font-bold mb-4">Chọn chế độ nhập</h3>
@@ -284,14 +316,15 @@ export const Project = () => {
         </div>
       `;
       document.body.appendChild(importModal);
-      
+
       const jsonContent = await readFileAsText(file);
-      
+
       const handleImportAction = async (replaceExisting: boolean) => {
         document.body.removeChild(importModal);
-        
+
         const loadingOverlay = document.createElement("div");
-        loadingOverlay.className = "absolute inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50";
+        loadingOverlay.className =
+          "absolute inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50";
         loadingOverlay.innerHTML = `
           <div class="bg-white p-5 rounded-lg flex flex-col items-center">
             <div class="spinner-border animate-spin inline-block w-8 h-8 border-4 rounded-full text-blue-500 mb-3"></div>
@@ -299,43 +332,53 @@ export const Project = () => {
           </div>
         `;
         document.body.appendChild(loadingOverlay);
-        
+
         try {
           const success = await importCanvasFromJSON(
-            jsonContent, 
-            fabricRef, 
-            syncShapeInStorage, 
+            jsonContent,
+            fabricRef,
+            syncShapeInStorage,
             deleteAllShapes,
             replaceExisting
           );
-          
+
           if (success) {
-            toast.success(replaceExisting 
-              ? "Thiết kế đã được nhập và thay thế thiết kế cũ!" 
-              : "Thiết kế đã được nhập và thêm vào thiết kế hiện tại!");
+            toast.success(
+              replaceExisting
+                ? "Thiết kế đã được nhập và thay thế thiết kế cũ!"
+                : "Thiết kế đã được nhập và thêm vào thiết kế hiện tại!"
+            );
           } else {
             toast.error("Không thể nhập thiết kế. Vui lòng kiểm tra lại file.");
           }
         } catch (error) {
           console.error("Error importing design:", error);
-          toast.error("Lỗi khi nhập thiết kế. File có thể bị hỏng hoặc không hợp lệ.");
+          toast.error(
+            "Lỗi khi nhập thiết kế. File có thể bị hỏng hoặc không hợp lệ."
+          );
         } finally {
           document.body.removeChild(loadingOverlay);
         }
       };
-      
-      document.getElementById("replace-design")?.addEventListener("click", () => handleImportAction(true));
-      document.getElementById("merge-design")?.addEventListener("click", () => handleImportAction(false));
-      document.getElementById("cancel-import")?.addEventListener("click", () => {
-        document.body.removeChild(importModal);
-        toast.info("Đã hủy nhập thiết kế");
-      });
-      
-      event.target.value = '';
+
+      document
+        .getElementById("replace-design")
+        ?.addEventListener("click", () => handleImportAction(true));
+      document
+        .getElementById("merge-design")
+        ?.addEventListener("click", () => handleImportAction(false));
+      document
+        .getElementById("cancel-import")
+        ?.addEventListener("click", () => {
+          document.body.removeChild(importModal);
+          toast.info("Đã hủy nhập thiết kế");
+        });
+
+      event.target.value = "";
     } catch (error) {
       console.error("Error reading import file:", error);
       toast.error("Lỗi khi đọc file. Vui lòng thử lại với file khác.");
-      event.target.value = '';
+      event.target.value = "";
     }
   };
 
@@ -510,8 +553,6 @@ export const Project = () => {
       }
     };
 
-  
-    
     window.addEventListener("paste", handlePaste);
     window.addEventListener("resize", handleResizeEvent);
     window.addEventListener("keydown", (e) => {
@@ -556,8 +597,8 @@ export const Project = () => {
   }, [canvasObjects]);
 
   const handleAddSearchResultToCanvas = (imageUrl: string) => {
-    const event = new CustomEvent('addImageToCanvas', {
-      detail: { imagePath: imageUrl }
+    const event = new CustomEvent("addImageToCanvas", {
+      detail: { imagePath: imageUrl },
     });
     window.dispatchEvent(event);
   };
@@ -582,8 +623,8 @@ export const Project = () => {
             canvas.renderAll();
           }
 
-          if(isLoading){
-            <Loading />
+          if (isLoading) {
+            <Loading />;
             setIsLoading(false);
           }
 
@@ -635,18 +676,15 @@ export const Project = () => {
         handleActiveElement={handleActiveElement}
         handleImageUpload={handleImageUploads}
         imageInputRef={imageInputRef}
-        handleExportDesign={handleExportDesign}
-        handleImportDesign={handleImportDesign}
       />
       <section className="flex h-full flex-row">
-        <LeftSidebar allShape={Array.from(canvasObjects ?? [])}  />
+        <LeftSidebar allShape={Array.from(canvasObjects ?? [])} />
         <Live
           canvasRef={canvasRef}
           role={userRole?.role}
           undo={undo}
           redo={redo}
         />
-        <MiniMap mainFabricCanvas={fabricRef.current} />
         <RightSidebar
           elementAttributes={elementAtrributes}
           setElementAttributes={setElementAtrributes}
@@ -654,16 +692,18 @@ export const Project = () => {
           activeObjectRef={activeObjectRef}
           syncShapeInStorage={syncShapeInStorage}
           isEditingRef={isEditingRef}
+          handleExportDesign={handleExportDesign}
+          handleImportDesign={handleImportDesign}
         />
       </section>
-      
+
       <ImageSearchModal
         open={isSearchModalOpen}
         onClose={() => setIsSearchModalOpen(false)}
         searchImage={screenshotImage}
         onSelectImage={handleAddSearchResultToCanvas}
       />
-      
+
       {isScreenshotSelectorOpen && (
         <ScreenshotSelector
           onClose={() => setIsScreenshotSelectorOpen(false)}

@@ -1,6 +1,6 @@
 import { memo, useRef, useState } from "react";
 import { GoPlus } from "react-icons/go";
-import { FaFileExport, FaFileImport } from "react-icons/fa";
+
 import { ActiveUser } from "../../components/Avatar/AvavtarActive";
 import { Button } from "../../components/Button/Button";
 import { NewThread } from "../../components/NewThread/NewThread";
@@ -15,8 +15,7 @@ const NavbarProject = ({
   handleActiveElement,
   handleImageUpload,
   imageInputRef,
-  handleExportDesign,
-  handleImportDesign,
+  
 }: NavbarProps) => {
   const [modalOpen, setModalOpen] = useState(false); 
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -54,31 +53,7 @@ const NavbarProject = ({
           </button>
 
           {/* Export Design Button */}
-          <button
-            onClick={handleExportDesign}
-            className="bg-green-600 uppercase p-2 flex items-center hover:bg-green-700 text-white font-bold lg:py-2 lg:px-4 rounded shadow-md transition duration-300 ease-in-out transform hover:-translate-y-1 hover:scale-110"
-            title="Export Design"
-          >
-            <FaFileExport size={22} className="mr-2" />
-            Export
-          </button>
-
-          {/* Import Design Button */}
-          <button
-            onClick={triggerImportInput}
-            className="bg-purple-600 uppercase p-2 flex items-center hover:bg-purple-700 text-white font-bold lg:py-2 lg:px-4 rounded shadow-md transition duration-300 ease-in-out transform hover:-translate-y-1 hover:scale-110"
-            title="Import Design"
-          >
-            <FaFileImport size={22} className="mr-2" />
-            Import
-          </button>
-          <input 
-            type="file"
-            ref={importInputRef}
-            style={{ display: 'none' }}
-            accept=".json"
-            onChange={handleImportDesign}
-          />
+         
         </div>
 
         <ul className="flex flex-row flex-wrap">
