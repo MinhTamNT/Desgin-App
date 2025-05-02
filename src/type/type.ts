@@ -105,6 +105,8 @@ export type NavbarProps = {
   imageInputRef: React.MutableRefObject<HTMLInputElement | null>;
   handleImageUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleActiveElement: (element: ActiveElement) => void;
+  handleExportDesign?: () => void;
+  handleImportDesign?: (e: React.ChangeEvent<HTMLInputElement>) => void;
 };
 
 export type ShapesMenuProps = {

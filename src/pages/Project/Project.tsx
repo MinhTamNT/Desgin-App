@@ -32,6 +32,7 @@ import {
   renderCanvas,
 } from "../../lib/cavans";
 import { handleImageUpload } from "../../lib/shape";
+import { exportCanvasToJSON, downloadJSON, importCanvasFromJSON, readFileAsText } from "../../lib/exportImport";
 import { ActiveElement, Attributes } from "../../type/type";
 import { defaultNavElement } from "../../utils";
 import { handleDelete, handleKeyDown } from "../../utils/Key/key-event";
@@ -43,9 +44,9 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { CanvasObject } from "../../lib/interface";
 import { useOthers } from "@liveblocks/react/suspense";
-import { useRoom } from "@liveblocks/react";
 import "../../index.css";
 import LeftSidebar from "../../layout/Project/LeftSidebar";
+import Loading from "../../components/Loading/Loading";
 interface UserRequest {
   idUser: string;
 }
@@ -77,11 +78,10 @@ export const Project = () => {
     stroke: "#aabbcc",
   });
 
-  // Image search state
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [isScreenshotSelectorOpen, setIsScreenshotSelectorOpen] = useState(false);
   const [screenshotImage, setScreenshotImage] = useState<string | undefined>(undefined);
-  const lastShiftPressTimeRef = useRef<number>(0);
+  const [isLoading, setIsLoading] = useState(false);
   const user = useSelector(
     (state: RootState) => state?.user?.user?.currentUser
   );
@@ -90,7 +90,6 @@ export const Project = () => {
   );
   console.log(userRole);
   const other = useOthers();
-  const room = useRoom();
   const navigate = useNavigate();
   useSubscription(NOTIFICATION_SUBSCRIPTION, {
     onSubscriptionData: ({ subscriptionData }) => {
@@ -138,7 +137,7 @@ export const Project = () => {
           );
           if (newImage) {
             handleImageUpload({
-              file: newImage?.url,
+              file: newImage.secure_url,
               canvas: fabricRef.current as any,
               shapeRef,
               syncShapeInStorage,
@@ -225,6 +224,118 @@ export const Project = () => {
       default:
         selectedShapeRef.current = element?.value as string;
         break;
+    }
+  };
+
+  const handleExportDesign = () => {
+
+    setIsLoading(true);
+
+    try {
+       if(isLoading){
+        <Loading  />
+       }
+      
+      setTimeout(() => {
+        try {
+          const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+          const fileName = `design-export-${timestamp}.json`;
+          
+          const jsonData = exportCanvasToJSON(fabricRef.current, canvasObjects);
+          downloadJSON(jsonData, fileName);
+          
+          toast.success("Design exported successfully!");
+        } catch (error) {
+          console.error("Error exporting design:", error);
+          toast.error("Failed to export design");
+        } finally {
+          setIsLoading(false);
+        }
+      }, 500); // Small delay to allow UI update
+    } catch (error) {
+      console.error("Error in export process:", error);
+      toast.error("An unexpected error occurred");
+    }
+  };
+
+  const handleImportDesign = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      // Create a modal for user to choose import mode
+      const importModal = document.createElement("div");
+      importModal.className = "absolute inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50";
+      importModal.innerHTML = `
+        <div class="bg-white p-6 rounded-lg flex flex-col items-center max-w-md">
+          <h3 class="text-xl font-bold mb-4">Chọn chế độ nhập</h3>
+          <p class="text-gray-700 mb-4">Bạn muốn thay thế thiết kế hiện tại hoặc thêm thiết kế mới vào thiết kế đang có?</p>
+          <div class="flex gap-4">
+            <button id="replace-design" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">
+              Thay thế
+            </button>
+            <button id="merge-design" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+              Thêm vào
+            </button>
+            <button id="cancel-import" class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400">
+              Hủy
+            </button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(importModal);
+      
+      const jsonContent = await readFileAsText(file);
+      
+      const handleImportAction = async (replaceExisting: boolean) => {
+        document.body.removeChild(importModal);
+        
+        const loadingOverlay = document.createElement("div");
+        loadingOverlay.className = "absolute inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50";
+        loadingOverlay.innerHTML = `
+          <div class="bg-white p-5 rounded-lg flex flex-col items-center">
+            <div class="spinner-border animate-spin inline-block w-8 h-8 border-4 rounded-full text-blue-500 mb-3"></div>
+            <div class="text-white">Đang nhập thiết kế...</div>
+          </div>
+        `;
+        document.body.appendChild(loadingOverlay);
+        
+        try {
+          const success = await importCanvasFromJSON(
+            jsonContent, 
+            fabricRef, 
+            syncShapeInStorage, 
+            deleteAllShapes,
+            replaceExisting
+          );
+          
+          if (success) {
+            toast.success(replaceExisting 
+              ? "Thiết kế đã được nhập và thay thế thiết kế cũ!" 
+              : "Thiết kế đã được nhập và thêm vào thiết kế hiện tại!");
+          } else {
+            toast.error("Không thể nhập thiết kế. Vui lòng kiểm tra lại file.");
+          }
+        } catch (error) {
+          console.error("Error importing design:", error);
+          toast.error("Lỗi khi nhập thiết kế. File có thể bị hỏng hoặc không hợp lệ.");
+        } finally {
+          document.body.removeChild(loadingOverlay);
+        }
+      };
+      
+      document.getElementById("replace-design")?.addEventListener("click", () => handleImportAction(true));
+      document.getElementById("merge-design")?.addEventListener("click", () => handleImportAction(false));
+      document.getElementById("cancel-import")?.addEventListener("click", () => {
+        document.body.removeChild(importModal);
+        toast.info("Đã hủy nhập thiết kế");
+      });
+      
+      event.target.value = '';
+    } catch (error) {
+      console.error("Error reading import file:", error);
+      toast.error("Lỗi khi đọc file. Vui lòng thử lại với file khác.");
+      event.target.value = '';
     }
   };
 
@@ -373,7 +484,7 @@ export const Project = () => {
               document.body.appendChild(loadingOverlay);
 
               try {
-                const newImage = await uploadImageToCloudinary(file);
+                const newImage = await uploadImageToCloudinary(file as any);
                 if (newImage) {
                   handleImageUpload({
                     file: newImage.secure_url,
@@ -454,7 +565,7 @@ export const Project = () => {
   useEffect(() => {
     const handleAddImageToCanvas = async (event: CustomEvent) => {
       const { imagePath } = event.detail;
-
+      setIsLoading(true);
       fabric.Image.fromURL(imagePath, async (img) => {
         if (img) {
           img.scaleToWidth(200);
@@ -464,7 +575,6 @@ export const Project = () => {
             selectable: true,
           });
 
-          // Add the image to the canvas
           const canvas = fabricRef.current;
           if (canvas) {
             canvas.add(img);
@@ -472,14 +582,10 @@ export const Project = () => {
             canvas.renderAll();
           }
 
-          // Add loading overlay
-          const loadingOverlay = document.createElement("div");
-          loadingOverlay.className =
-            "absolute inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50";
-          loadingOverlay.innerHTML = `
-            <div class="spinner-border animate-spin inline-block w-8 h-8 border-4 rounded-full text-white"></div>
-          `;
-          document.body.appendChild(loadingOverlay);
+          if(isLoading){
+            <Loading />
+            setIsLoading(false);
+          }
 
           try {
             const response = await fetch(imagePath);
@@ -506,8 +612,8 @@ export const Project = () => {
           } catch (error) {
             console.error("Error uploading image to Cloudinary:", error);
           } finally {
-            if (loadingOverlay) {
-              document.body.removeChild(loadingOverlay);
+            if (isLoading) {
+              setIsLoading(false);
             }
           }
         }
@@ -529,6 +635,8 @@ export const Project = () => {
         handleActiveElement={handleActiveElement}
         handleImageUpload={handleImageUploads}
         imageInputRef={imageInputRef}
+        handleExportDesign={handleExportDesign}
+        handleImportDesign={handleImportDesign}
       />
       <section className="flex h-full flex-row">
         <LeftSidebar allShape={Array.from(canvasObjects ?? [])}  />
@@ -549,7 +657,6 @@ export const Project = () => {
         />
       </section>
       
-      {/* Image Search Modal */}
       <ImageSearchModal
         open={isSearchModalOpen}
         onClose={() => setIsSearchModalOpen(false)}
@@ -557,7 +664,6 @@ export const Project = () => {
         onSelectImage={handleAddSearchResultToCanvas}
       />
       
-      {/* Screenshot Selection Overlay */}
       {isScreenshotSelectorOpen && (
         <ScreenshotSelector
           onClose={() => setIsScreenshotSelectorOpen(false)}

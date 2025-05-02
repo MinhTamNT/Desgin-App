@@ -195,7 +195,7 @@ const MiniMap: React.FC<MiniMapProps> = ({ mainFabricCanvas }) => {
                     }
                   }
                 } catch (err) {
-                  // Fallback already drawn above
+                  console.error("Error drawing path:", err);  
                 }
               }
             }
@@ -203,7 +203,6 @@ const MiniMap: React.FC<MiniMapProps> = ({ mainFabricCanvas }) => {
               try {
                 const imgElement = (obj as fabric.Image).getElement() as HTMLImageElement;
                 if (imgElement && imgElement.complete) {
-                  // Draw the image on the minimap
                   ctx.drawImage(
                     imgElement,
                     miniX + offsetX,
@@ -228,7 +227,6 @@ const MiniMap: React.FC<MiniMapProps> = ({ mainFabricCanvas }) => {
                 }
               } catch (err) {
                 console.warn("Error drawing image in minimap:", err);
-                // Fallback for error cases
                 ctx.fillStyle = "#cccccc";
                 ctx.fillRect(
                   miniX + offsetX, 
@@ -239,8 +237,7 @@ const MiniMap: React.FC<MiniMapProps> = ({ mainFabricCanvas }) => {
               }
             }
             else {
-              // Fallback for other types
-              ctx.fillRect(
+                ctx.fillRect(
                 miniX + offsetX, 
                 miniY + offsetY, 
                 miniWidth, 
@@ -254,10 +251,8 @@ const MiniMap: React.FC<MiniMapProps> = ({ mainFabricCanvas }) => {
           setIsVisible(true);
         } catch (err) {
           console.warn("Error drawing object in minimap:", err);
-          // Continue execution, don't return
         }
       } else {
-        // If canvas is empty, just show an empty minimap
         ctx.fillStyle = "#f8f8f8";
         ctx.fillRect(0, 0, MINI_WIDTH, MINI_HEIGHT);
         ctx.strokeStyle = "#ddd";
@@ -275,13 +270,11 @@ const MiniMap: React.FC<MiniMapProps> = ({ mainFabricCanvas }) => {
     }
   }, [mainFabricCanvas]);
 
-  // Debounced update function to prevent too many updates
   const debouncedUpdate = useCallback(() => {
     if (updateTimeoutRef.current) {
       window.clearTimeout(updateTimeoutRef.current);
     }
     
-    // Schedule update after 100ms of inactivity
     updateTimeoutRef.current = window.setTimeout(() => {
       updateMiniMap();
       updateTimeoutRef.current = null;
@@ -309,17 +302,14 @@ const MiniMap: React.FC<MiniMapProps> = ({ mainFabricCanvas }) => {
       mainFabricCanvas.on(eventName, debouncedUpdate);
     });
     
-    // Set up a periodic refresh to ensure minimap stays updated
     const refreshInterval = setInterval(updateMiniMap, 5000);
     
-    // Clean up function
     return () => {
       if (updateTimeoutRef.current) {
         window.clearTimeout(updateTimeoutRef.current);
       }
       clearInterval(refreshInterval);
       
-      // Remove all event listeners
       events.forEach(eventName => {
         mainFabricCanvas.off(eventName, debouncedUpdate);
       });
@@ -331,7 +321,7 @@ const MiniMap: React.FC<MiniMapProps> = ({ mainFabricCanvas }) => {
       style={{
         position: "absolute",
         bottom: 10,
-        right: 10,
+        right: 260,
         background: "#fff",
         padding: 4,
         border: "1px solid #ccc",
