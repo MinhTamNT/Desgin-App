@@ -3,7 +3,8 @@ import "./SearchImage.css";
 import { createPortal } from "react-dom";
 import Select from "react-select";
 import { API, endPoints } from "../../config/APIConfig";
-
+import { v4 as uuidv4 } from 'uuid';
+uuidv4();
 type SearchImageModalProps = {
   onClose: () => void;
 };
@@ -97,7 +98,8 @@ const SearchImageModal = ({ onClose }: SearchImageModalProps) => {
       if (imageSrc) {
         const response = await fetch(imageSrc);
         const blob = await response.blob();
-        formData.append("file", blob);
+        const file = new File([blob], uuidv4(), { type: blob.type });
+        formData.append("file", file);
       }
 
       if (selectedTags.length > 0) {

@@ -64,9 +64,9 @@ export type ActiveElement = {
   icon: string;
 } | null;
 
-export interface CustomFabricObject<T extends fabric.Object>
-  extends fabric.Object {
+export interface CustomFabricObject extends fabric.Object {
   objectId?: string;
+  locked?: boolean;
 }
 
 export type ModifyShape = {
@@ -158,7 +158,7 @@ export type CanvasObjectModified = {
 };
 
 export type CanvasPathCreated = {
-  options: (fabric.IEvent & { path: CustomFabricObject<fabric.Path> }) | any;
+  options: (fabric.IEvent & { path: CustomFabricObject }) | any;
   syncShapeInStorage: (shape: fabric.Object) => void;
 };
 

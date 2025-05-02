@@ -10,6 +10,7 @@ import {
   CanvasPathCreated,
   CanvasSelectionCreated,
   RenderCanvas,
+  CustomFabricObject
 } from "../type/type";
 import { defaultNavElement } from "./defaultNavElement";
 import { createSpecificShape } from "./shape";
@@ -85,9 +86,13 @@ export const handleCanvasMouseDown = ({
     (target.type === selectedShapeRef.current ||
       target.type === "activeSelection")
   ) {
+    // Kiểm tra xem đối tượng có bị khóa không
+    // @ts-ignore - chúng ta đã thêm thuộc tính locked vào CustomFabricObject
+    const isLocked = target.locked === true;
+    
     isDrawing.current = false;
 
-    // set active object to target
+    // set active object to target (ngay cả khi đối tượng đã bị khóa)
     canvas.setActiveObject(target);
 
     // Set the origin to center for better rotation/scaling behavior
@@ -136,6 +141,11 @@ export const handleCanvaseMouseMove = ({
   // if selected shape is freeform, return
   if (!isDrawing.current) return;
   if (selectedShapeRef.current === "freeform") return;
+  
+  // Kiểm tra đối tượng hiện tại có bị khóa không
+  const activeObject = canvas.getActiveObject();
+  // @ts-ignore - chúng ta đã thêm thuộc tính locked vào CustomFabricObject
+  if (activeObject && activeObject.locked === true) return;
 
   canvas.isDrawingMode = false;
 
@@ -203,7 +213,13 @@ export const handleCanvasMouseUp = ({
   syncShapeInStorage,
   setActiveElement,
 }: CanvasMouseUp) => {
+  // if selected shape is not freeform, return drawing to false
   isDrawing.current = false;
+  
+  // Kiểm tra đối tượng hiện tại có bị khóa không
+  const activeObject = canvas.getActiveObject();
+  // @ts-ignore - chúng ta đã thêm thuộc tính locked vào CustomFabricObject
+  if (activeObject && activeObject.locked === true) return;
   if (selectedShapeRef.current === "freeform") return;
 
   syncShapeInStorage(shapeRef.current);
@@ -223,8 +239,12 @@ export const handleCanvasObjectModified = ({
   options,
   syncShapeInStorage,
 }: CanvasObjectModified) => {
-  const target = options.target;
-  if (!target) return;
+  const target = options.target as CustomFabricObject;
+  
+  // Nếu đối tượng đã bị khóa, không cho phép sửa đổi
+  if (target.locked === true) {
+    return;
+  }
 
   if (target.type === "activeSelection") {
     const selectionMatrix = target.calcTransformMatrix();
@@ -317,9 +337,33 @@ export const handleCanvasSelectionCreated = ({
   if (isEditingRef.current) return;
 
   if (!options?.selected) return;
-
-  // get the selected element
+  
+  // Lấy đối tượng được chọn
   const selectedElement = options?.selected[0] as fabric.Object;
+  
+  // Kiểm tra trạng thái khóa trên đối tượng được chọn
+  // @ts-ignore - chúng ta đã thêm thuộc tính locked vào CustomFabricObject
+  const isLocked = selectedElement?.locked === true;
+  
+  // Thực hiện các thao tác phù hợp dựa trên trạng thái khóa
+  if (isLocked) {
+    // Nếu đối tượng bị khóa, cập nhật UI nhưng không cho phép di chuyển hoặc chỉnh sửa
+    // Có thể cập nhật thanh công cụ hiển thị trạng thái khóa ở đây nếu cần
+    selectedElement.lockMovementX = true;
+    selectedElement.lockMovementY = true;
+    selectedElement.lockRotation = true;
+    selectedElement.lockScalingX = true;
+    selectedElement.lockScalingY = true;
+    selectedElement.hasControls = false; // Ẩn điều khiển chỉnh sửa
+  } else {
+    // Nếu đối tượng không bị khóa, đảm bảo nó có thể chỉnh sửa bình thường
+    selectedElement.lockMovementX = false;
+    selectedElement.lockMovementY = false;
+    selectedElement.lockRotation = false;
+    selectedElement.lockScalingX = false;
+    selectedElement.lockScalingY = false;
+    selectedElement.hasControls = true; // Hiển thị điều khiển chỉnh sửa
+  }
 
   // if only one element is selected, set element attributes
   if (selectedElement && options.selected.length === 1) {
@@ -397,6 +441,19 @@ export const renderCanvas = ({
           // if element is active, keep it in active state so that it can be edited further
           if (activeObjectRef.current?.objectId === objectId) {
             fabricRef.current?.setActiveObject(enlivenedObj);
+          }
+          
+          // Kiểm tra và áp dụng trạng thái khóa cho đối tượng
+          // @ts-ignore - chúng ta đã thêm thuộc tính locked vào CustomFabricObject
+          if (enlivenedObj.locked) {
+            enlivenedObj.lockMovementX = true;
+            enlivenedObj.lockMovementY = true;
+            enlivenedObj.lockRotation = true;
+            enlivenedObj.lockScalingX = true;
+            enlivenedObj.lockScalingY = true;
+            // Vẫn giữ controls để người dùng có thể chọn đối tượng
+            // nhưng sẽ không thể chỉnh sửa được
+            enlivenedObj.hasControls = false;
           }
 
           // add object to canvas

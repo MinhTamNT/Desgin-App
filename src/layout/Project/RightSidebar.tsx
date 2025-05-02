@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import Color from "../../components/Color/Color";
 import { Dimensions } from "../../components/Dimensions/Dimensions";
@@ -19,9 +19,59 @@ export default function RightSidebar({
 }: RightSidebarProps) {
   const role = useSelector((state: RootState) => state?.role?.role?.userRole);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isObjectLocked, setIsObjectLocked] = useState(false);
   const handleCloseModal = () => setIsModalOpen(false);
+  
+  useEffect(() => {
+    const updateLockStatus = () => {
+      if (activeObjectRef.current) {
+        setIsObjectLocked(activeObjectRef.current.locked || false);
+      } else {
+        setIsObjectLocked(false);
+      }
+    };
+
+    updateLockStatus();
+
+    const handleSelectionChanged = () => {
+      updateLockStatus();
+    };
+
+    if (fabricRef.current) {
+      fabricRef.current.on('selection:created', handleSelectionChanged);
+      fabricRef.current.on('selection:updated', handleSelectionChanged);
+      fabricRef.current.on('selection:cleared', handleSelectionChanged);
+    }
+
+    return () => {
+      if (fabricRef.current) {
+        fabricRef.current.off('selection:created', handleSelectionChanged);
+        fabricRef.current.off('selection:updated', handleSelectionChanged);
+        fabricRef.current.off('selection:cleared', handleSelectionChanged);
+      }
+    };
+  }, [activeObjectRef, fabricRef]);
+
+  const handleToggleLock = () => {
+    if (!activeObjectRef.current || !fabricRef.current) return;
+
+    const newLockState = !isObjectLocked;
+    
+    activeObjectRef.current.locked = newLockState;
+    
+    setIsObjectLocked(newLockState);
+    
+    if (role === "ROLE_WRITE") {
+      syncShapeInStorage(activeObjectRef.current);
+    }
+    
+    fabricRef.current.renderAll();
+  };
+
   const handleInputChange = (property: string, value: string) => {
     if (!fabricRef.current) isEditingRef.current = true;
+
+    if (isObjectLocked) return;
 
     setElementAttributes((prev) => ({ ...prev, [property]: value }));
 
@@ -102,6 +152,32 @@ export default function RightSidebar({
           fontWeight={elementAttributes.fontWeight}
           handleInputChange={handleInputChange}
         />
+      </div>
+
+      {/* Lock/Unlock Section */}
+      <div className="px-4 py-3 border-b border-[#3a3a3a]/50">
+        <div className="flex items-center mb-2">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+          </svg>
+          <h4 className="text-xs font-semibold uppercase tracking-wide text-gray-400">Khóa đối tượng</h4>
+        </div>
+        <button
+          onClick={handleToggleLock}
+          disabled={!activeObjectRef.current}
+          className={`w-full p-2.5 rounded-md transition-all flex items-center justify-center font-medium text-sm shadow-md hover:shadow-lg active:scale-[0.98] ${isObjectLocked 
+            ? "bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white" 
+            : "bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 text-white"}`}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
+            {isObjectLocked ? (
+              <path d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" />
+            ) : (
+              <path d="M10 2a5 5 0 00-5 5v2a2 2 0 00-2 2v5a2 2 0 002 2h10a2 2 0 002-2v-5a2 2 0 00-2-2H7V7a3 3 0 015.905-.75 1 1 0 001.937-.5A5.002 5.002 0 0010 2z" />
+            )}
+          </svg>
+          {isObjectLocked ? "Mở khóa đối tượng" : "Khóa đối tượng"}
+        </button>
       </div>
 
       {/* Color Section */}

@@ -399,40 +399,8 @@ export const Project = () => {
       }
     };
 
-    const handleShiftKeyPress = (e: KeyboardEvent) => {
-      if (e.key === "Shift") {
-        const now = Date.now();
-        
-        // Check if this is a single press and it's been a while since last press
-        if (now - lastShiftPressTimeRef.current > 500) {
-          // Activate screenshot selection mode on single press
-          e.preventDefault();
-          setIsScreenshotSelectorOpen(true);
-        }
-        
-        lastShiftPressTimeRef.current = now;
-      }
-      
-      if (e.key === "Delete" || e.key === "Backspace") {
-        if (fabricRef.current) {
-          handleDelete(
-            fabricRef.current as fabric.Canvas,
-            deleteShapeFromStorage
-          );
-        }
-      }
-
-      handleKeyDown({
-        e,
-        canvas,
-        undo,
-        redo,
-        syncShapeInStorage,
-        deleteShapeFromStorage,
-      });
-    };
+  
     
-    window.addEventListener("keydown", handleShiftKeyPress);
     window.addEventListener("paste", handlePaste);
     window.addEventListener("resize", handleResizeEvent);
     window.addEventListener("keydown", (e) => {
@@ -449,7 +417,6 @@ export const Project = () => {
       canvas.dispose();
 
       window.removeEventListener("resize", handleResizeEvent);
-      window.removeEventListener("keydown", handleShiftKeyPress);
       window.removeEventListener("keydown", (e) =>
         handleKeyDown({
           e,
