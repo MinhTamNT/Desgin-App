@@ -676,6 +676,7 @@ export const Project = () => {
         handleActiveElement={handleActiveElement}
         handleImageUpload={handleImageUploads}
         imageInputRef={imageInputRef}
+        projectVisibility={projectData?.checkProject?.visibility || "private"}
       />
       <section className="flex h-full flex-row">
         <LeftSidebar allShape={Array.from(canvasObjects ?? [])} />

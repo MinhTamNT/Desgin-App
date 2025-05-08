@@ -17,6 +17,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootState, persistor } from "../Redux/store";
 import { useMutation, useQuery, useSubscription } from "@apollo/client";
 import { toast } from "react-toastify";
+import {toast as ToastHost , Toaster} from "react-hot-toast"
 import { GET_PROJECT } from "../utils/Project/Project";
 import {
   GET_NOTIFICATION,
@@ -73,12 +74,89 @@ export const Header = () => {
     onSubscriptionData: ({ subscriptionData }) => {
       if (subscriptionData?.data) {
         const newNotification = subscriptionData.data.notificationCreated;
+        console.log(newNotification)
         console.log("New Notification:", newNotification);
         if (
           newNotification.userRequest.map(
             (user: { idUser: string }) => user.idUser === currentUser?.sub
           )
         ) {
+         
+          ToastHost.custom((t) => (
+            <div
+              className={`${
+                t.visible ? 'animate-enter' : 'animate-leave'
+              } max-w-md w-full bg-white pointer-events-auto flex border-l-4 border-black`}
+              style={{
+                borderRadius: '0',
+                boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
+                transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+                transform: t.visible ? 'translateY(0)' : 'translateY(-20px)',
+                opacity: t.visible ? 1 : 0
+              }}
+            >
+              {/* Left accent bar */}
+              <div className="w-1 bg-gradient-to-b from-black to-gray-700 h-full absolute left-0 top-0" />
+              
+              <div className="flex-1 w-0 p-5">
+                <div className="flex items-start">
+                  <div className="flex-shrink-0 bg-gray-100 p-2 rounded-none flex items-center justify-center" style={{ boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.05)' }}>
+                    {newNotification.type === "INVITATION" ? (
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                      </svg>
+                    ) : (
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    )}
+                  </div>
+                  <div className="ml-4 flex-1">
+                    <div className="flex justify-between items-start">
+                      <h3 className="text-xs font-bold text-black uppercase tracking-wider letter-spacing-1">
+                        New Notification
+                      </h3>
+                      <span className="text-xs text-gray-400">{new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                    </div>
+                    
+                    <p className="mt-2 text-sm text-gray-700 leading-relaxed">
+                      {newNotification.message}
+                    </p>
+                    
+                    {newNotification.type === "INVITATION" && (
+                      <div className="mt-4 flex space-x-3">
+                        <button 
+                          onClick={() => handleAcceptInvite(newNotification.invitation_idInvitation)}
+                          className="px-4 py-1.5 bg-black text-white text-xs font-medium uppercase tracking-wider hover:bg-gray-800 transition-colors focus:outline-none"
+                          style={{ letterSpacing: '0.05em' }}
+                        >
+                          Accept
+                        </button>
+                        <button 
+                          onClick={() => handleRejectInvite(newNotification.invitation_idInvitation)}
+                          className="px-4 py-1.5 bg-white text-black border border-black text-xs font-medium uppercase tracking-wider hover:bg-gray-100 transition-colors focus:outline-none"
+                          style={{ letterSpacing: '0.05em' }}
+                        >
+                          Decline
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <div className="flex border-l border-gray-100">
+                <button
+                  onClick={() => ToastHost.dismiss(t.id)}
+                  className="w-full border border-transparent p-4 flex items-center justify-center text-sm font-medium text-gray-400 hover:text-black hover:bg-gray-50 transition-all duration-200 focus:outline-none"
+                  aria-label="Close notification"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M18 6L6 18M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          ))
           setNotifications((prev) => [...prev, newNotification]);
         }
       }
@@ -160,7 +238,10 @@ export const Header = () => {
 
   return (
     <header className="flex items-center justify-between px-6 py-4 bg-white border-b border-gray-200">
-      {/* Search Bar */}
+      <Toaster
+        position="top-center"
+        reverseOrder={false}
+      />
       <div className="hidden lg:flex flex-1 max-w-2xl mr-8">
         <Box className="relative w-full">
           <FaSearch className="absolute top-1/2 left-4 -translate-y-1/2 text-gray-400" />

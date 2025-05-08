@@ -35,7 +35,11 @@ const GET_PROJECT = gql`
         idProject
         is_host_user
         name
-        updatedAt
+        updatedAt,
+        PublicProjectCount,
+        PrivateProjectCount,
+        JoinedProjectsNotOwner,
+        OwnedProjects
       }
     }
   }
@@ -129,6 +133,16 @@ const REQUEST_PROJECT_ACCESS = gql`
     }
   }
 `;
+
+const UPDATE_PROJECT_VISIBILITY = gql`
+  mutation UpdateProjectVisibility($projectId: String!, $visibility: String!) {
+    UpdateProjectVisibility(projectId: $projectId, visibility: $visibility) {
+      RetCode
+      RetMessgae
+    }
+  }
+`;
+
 export {
   ADD_PROJECT,
   GET_PROJECT,
@@ -140,4 +154,5 @@ export {
   USER_STATUS_CHANGED,
   CHECK_PROJECT,
   REQUEST_PROJECT_ACCESS,
+  UPDATE_PROJECT_VISIBILITY,
 };

@@ -19,6 +19,11 @@ export interface Project {
   access: string;
   is_host_user: boolean;
   image?: string;
+  visibility?: 'public' | 'private';
+  PublicProjectCount: number
+  PrivateProjectCount: number
+  JoinedProjectsNotOwner: number
+  OwnedProjects: number
 }
 
 export interface Notification {

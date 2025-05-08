@@ -107,7 +107,7 @@ export type NavbarProps = {
   imageInputRef: React.MutableRefObject<HTMLInputElement | null>;
   handleImageUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleActiveElement: (element: ActiveElement) => void;
-  
+  projectVisibility?: 'public' | 'private';
 };
 
 export type ShapesMenuProps = {

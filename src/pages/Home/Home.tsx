@@ -299,7 +299,7 @@ export const Home: React.FC = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
               </svg>
             </div>
-            <h4 className="text-3xl font-bold text-gray-800">{projects.length}</h4>
+            <h4 className="text-3xl font-bold text-gray-800">{projects.map((t, index) => t?.OwnedProjects)}</h4>
             <p className="text-sm text-gray-500 mt-1">Total Projects</p>
           </motion.div>
           
@@ -312,7 +312,9 @@ export const Home: React.FC = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>
             </div>
-            <h4 className="text-3xl font-bold text-gray-800">{projects.filter((p) => p.is_host_user).length}</h4>
+            <h4 className="text-3xl font-bold text-gray-800">
+              {projects?.[0]?.OwnedProjects}
+            </h4>
             <p className="text-sm text-gray-500 mt-1">Owned Projects</p>
           </motion.div>
           
@@ -325,7 +327,7 @@ export const Home: React.FC = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
               </svg>
             </div>
-            <h4 className="text-3xl font-bold text-gray-800">{projects.filter((p) => !p.is_host_user).length}</h4>
+            <h4 className="text-3xl font-bold text-gray-800">{projects?.[0]?.PublicProjectCount}</h4>
             <p className="text-sm text-gray-500 mt-1">Shared Projects</p>
           </motion.div>
           

@@ -1,5 +1,8 @@
 import { memo, useRef, useState } from "react";
 import { GoPlus } from "react-icons/go";
+import { useParams } from "react-router-dom";
+import { FaLock, FaGlobe } from "react-icons/fa";
+import { useMutation } from "@apollo/client";
 
 import { ActiveUser } from "../../components/Avatar/AvavtarActive";
 import { Button } from "../../components/Button/Button";
@@ -9,17 +12,22 @@ import { User } from "../../lib/interface";
 import { ActiveElement, NavbarProps } from "../../type/type";
 import { navElements } from "../../utils";
 import ManageMembersModal from "../../components/MemberRoleModalProps/MemberRoleModalProps";
+import { toast } from "react-toastify";
+import { UPDATE_PROJECT_VISIBILITY } from "../../utils/Project/Project";
 
 const NavbarProject = ({
   activeElement,
   handleActiveElement,
   handleImageUpload,
   imageInputRef,
-  
+  projectVisibility = "private",
 }: NavbarProps) => {
   const [modalOpen, setModalOpen] = useState(false); 
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const importInputRef = useRef<HTMLInputElement>(null);
+  const [visibility, setVisibility] = useState(projectVisibility);
+  const { idProject } = useParams();
+  const [updateVisibility, { loading: updatingVisibility }] = useMutation(UPDATE_PROJECT_VISIBILITY);
 
   const isActive = (value: string | Array<ActiveElement>) =>
     (activeElement && activeElement.value === value) ||
@@ -40,6 +48,28 @@ const NavbarProject = ({
     }
   };
 
+  const toggleVisibility = async () => {
+    const newVisibility = visibility === "public" ? "private" : "public";
+    try {
+      const response = await updateVisibility({
+        variables: {
+          projectId: idProject,
+          visibility: newVisibility
+        }
+      });
+      
+      if (response.data?.UpdateProjectVisibility?.RetCode > 0) {
+        setVisibility(newVisibility);
+        toast.success(`Project is now ${newVisibility}`);
+      } else {
+        toast.error(response.data?.updateProjectVisibility?.RetMessgae || "Failed to update visibility");
+      }
+    } catch (error) {
+      toast.error("Failed to update project visibility");
+      console.error(error);
+    }
+  };
+
   return (
     <>
       <nav className="flex select-none flex-wrap items-center justify-between gap-4 bg-[#2c2c2c] shadow-md px-5 py-3 text-black">
@@ -52,8 +82,40 @@ const NavbarProject = ({
             Invite Member
           </button>
 
-          {/* Export Design Button */}
-         
+          {/* Project Visibility Toggle */}
+          <div className="relative inline-block ml-3">
+            <button 
+              onClick={toggleVisibility}
+              disabled={updatingVisibility}
+              className="relative flex items-center justify-between bg-transparent border border-gray-600 hover:border-white text-white text-sm font-medium px-5 py-2.5 rounded-md transition-all duration-300 overflow-hidden group"
+            >
+              <div className="flex items-center space-x-2 z-10 relative">
+                {updatingVisibility ? (
+                  <>
+                    <div className="h-4 w-4 rounded-full border-2 border-t-transparent border-white animate-spin mr-2"></div>
+                    <span>Updating...</span>
+                  </>
+                ) : visibility === "public" ? (
+                  <>
+                    <FaGlobe className="mr-2" size={16} />
+                    <span>Public</span>
+                  </>
+                ) : (
+                  <>
+                    <FaLock className="mr-2" size={16} />
+                    <span>Private</span>
+                  </>
+                )}
+              </div>
+              <div className="h-5 w-5 flex items-center justify-center ml-3 bg-gray-700 rounded-full transition-all duration-300 group-hover:bg-white group-hover:text-black">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="h-3 w-3">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+              {/* Background animation */}
+              <div className="absolute inset-0 bg-gradient-to-r from-gray-800 to-gray-900 w-0 group-hover:w-full transition-all duration-300 ease-in-out -z-10"></div>
+            </button>
+          </div>
         </div>
 
         <ul className="flex flex-row flex-wrap">

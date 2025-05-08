@@ -414,7 +414,8 @@ const PermisionPage = () => {
                     align="center"
                     sx={{ mt: 2, fontStyle: "italic" }}
                   >
-                    Chúng tôi sẽ thông báo khi yêu cầu của bạn được phê duyệt.
+                    Yêu cầu của bạn đã được gửi đi. Bạn sẽ nhận được thông báo
+                    khi người chủ sở hữu cấp quyền.
                   </Typography>
                 </motion.div>
               </Box>
