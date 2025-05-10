@@ -236,6 +236,14 @@ export const Header = () => {
     });
   };
 
+  const handleMarkAllAsRead = () => {
+    // Add mark all as read functionality here
+  };
+
+  const handleMarkAsRead = (idNotification: string) => {
+    // Add mark as read functionality here
+  };
+
   return (
     <header className="flex items-center justify-between px-6 py-4 bg-white border-b border-gray-200">
       <Toaster
@@ -287,14 +295,14 @@ export const Header = () => {
           onClose={handleClose}
           PaperProps={{
             sx: {
-              width: "420px",
-              maxHeight: "540px",
+              width: "450px",
+              maxHeight: "600px",
               overflowY: "auto",
               mt: 1.5,
-              borderRadius: "12px",
+              borderRadius: "8px",
               boxShadow:
-                "0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.05)",
-              border: "1px solid rgba(229, 231, 235, 0.5)",
+                "0 10px 30px -5px rgba(0,0,0,0.15), 0 8px 15px -6px rgba(0,0,0,0.1)",
+              border: "1px solid rgba(229, 231, 235, 0.8)",
               "& .MuiList-root": {
                 padding: "0",
               },
@@ -302,43 +310,68 @@ export const Header = () => {
           }}
         >
           {/* Notification Header */}
-          <div className="bg-gradient-to-r from-blue-600 to-teal-600 text-white px-5 py-4 rounded-t-lg">
-            <div className="flex items-center justify-between">
-              <Typography variant="h6" className="font-semibold text-white">
-                Notifications
-              </Typography>
+          <div className="bg-black text-white px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+            <Typography variant="h6" className="font-semibold text-white" sx={{ letterSpacing: '0.02em' }}>
+              Notifications
+            </Typography>
+            <div className="flex items-center gap-3">
               {notificationCount > 0 && (
-                <div className="bg-white/20 backdrop-blur-sm text-white text-xs px-2.5 py-1 rounded-full">
+                <div className="bg-white/15 text-white text-xs px-2.5 py-1 rounded-md flex items-center">
                   {notificationCount} new
                 </div>
+              )}
+              {notificationCount > 0 && (
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleMarkAllAsRead();
+                  }}
+                  className="text-xs text-white/80 hover:text-white transition-colors flex items-center gap-1 px-2 py-1 rounded hover:bg-white/10"
+                >
+                  <span>Mark all read</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </button>
               )}
             </div>
           </div>
           
           {notificationCount > 0 ? (
             <>
-              <div className="py-1 max-h-[400px] overflow-auto">
+              <div className="py-1 max-h-[400px] overflow-auto custom-scrollbar">
                 {notifications.map((notification: Notification) => (
                   <MenuItem
                     key={notification?.idNotification}
-                    onClick={handleClose}
-                    className="px-0 py-1 hover:bg-blue-50/50 transition-colors duration-200"
-                    sx={{ borderRadius: '8px', margin: '0 8px' }}
+                    onClick={(e) => {
+                      handleClose();
+                      if (!notification.is_read) {
+                        handleMarkAsRead(notification.idNotification);
+                      }
+                    }}
+                    className="px-0 py-1.5 hover:bg-gray-50 transition-colors duration-200"
+                    sx={{ borderRadius: '0', margin: '0', borderBottom: '1px solid rgba(229, 231, 235, 0.5)' }}
                   >
-                    <div className="flex items-start gap-4 w-full p-3">
-                      <div className="bg-gradient-to-br from-blue-500 to-teal-500 text-white rounded-full w-12 h-12 flex items-center justify-center flex-shrink-0 shadow-sm">
-                        <span className="font-medium">
-                          {notification?.type === "INVITED" ? "Inv" : "New"}
+                    <div className="flex items-start gap-4 w-full p-4">
+                      <div className={`${notification.is_read ? 'bg-gray-200' : 'bg-black'} text-white rounded-md w-10 h-10 flex items-center justify-center flex-shrink-0 shadow-sm transition-colors duration-300`}>
+                        <span className="font-medium text-xs">
+                          {notification?.type === "INVITED" ? "INV" : "NEW"}
                         </span>
                       </div>
                       <div className="flex-1 min-w-0 pt-0.5">
-                        <Typography
-                          variant="body2"
-                          className="text-gray-800 font-medium mb-1 line-clamp-2"
-                        >
-                          {notification?.message}
-                        </Typography>
-                        <Typography variant="caption" className="text-gray-500">
+                        <div className="flex items-start justify-between w-full">
+                          <Typography
+                            variant="body2"
+                            className={`${notification.is_read ? 'text-gray-600' : 'text-gray-900'} font-medium mb-1 line-clamp-2 transition-colors duration-300`}
+                            sx={{ fontSize: '0.9rem' }}
+                          >
+                            {notification?.message}
+                          </Typography>
+                          {!notification?.is_read && (
+                            <div className="w-2.5 h-2.5 bg-teal-500 rounded-full mt-1 ml-2 flex-shrink-0"></div>
+                          )}
+                        </div>
+                        <Typography variant="caption" className="text-gray-500" sx={{ fontSize: '0.75rem' }}>
                           {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                         </Typography>
                         
@@ -349,8 +382,7 @@ export const Header = () => {
                                 e.stopPropagation();
                                 handleAcceptInvite(notification?.invitation_idInvitation);
                               }}
-                              className="px-4 py-1.5 text-sm font-medium rounded-md text-white bg-gradient-to-r from-blue-500 to-teal-500 
-                                   hover:from-blue-600 hover:to-teal-600 transition-all duration-200 shadow-sm hover:shadow"
+                              className="px-4 py-1.5 text-xs font-medium rounded-md text-white bg-black hover:bg-gray-800 transition-all duration-200 shadow-sm hover:shadow"
                             >
                               Accept
                             </button>
@@ -359,50 +391,43 @@ export const Header = () => {
                                 e.stopPropagation();
                                 handleRejectInvite(notification?.invitation_idInvitation);
                               }}
-                              className="px-4 py-1.5 text-sm font-medium rounded-md text-gray-700 bg-gray-100 
-                                   hover:bg-gray-200 transition-colors duration-200"
+                              className="px-4 py-1.5 text-xs font-medium rounded-md text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors duration-200 border border-gray-200"
                             >
                               Decline
                             </button>
                           </div>
                         )}
                       </div>
-                      
-                      {!notification?.is_read && (
-                        <div className="w-2.5 h-2.5 bg-blue-500 rounded-full mt-2"></div>
-                      )}
                     </div>
                   </MenuItem>
                 ))}
               </div>
               
               {/* Footer with Load More */}
-              <div className="border-t border-gray-100 p-2">
+              <div className="border-t border-gray-100 p-3 bg-gray-50">
                 <button
                   onClick={loadMoreNotifications}
-                  className="w-full py-2.5 text-teal-600 hover:text-teal-700 text-sm font-medium transition-colors flex items-center justify-center bg-transparent hover:bg-blue-50/50 rounded-md"
+                  className="w-full py-2 text-gray-600 hover:text-gray-800 text-sm font-medium transition-colors flex items-center justify-center bg-white hover:bg-gray-50 rounded-md border border-gray-200 shadow-sm"
                 >
                   Load more
                   <svg className="w-4 h-4 ml-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 9l-7 7-7-7" />
                   </svg>
                 </button>
               </div>
             </>
           ) : (
-            <div className="flex flex-col items-center py-12 px-4 hover:bg-transparent">
-              <div className="relative bg-gradient-to-b from-blue-50 to-teal-50 p-4 rounded-2xl mb-5 w-40 h-40 flex items-center justify-center">
+            <div className="flex flex-col items-center py-12 px-4 bg-gray-50">
+              <div className="relative bg-white p-6 rounded-lg mb-5 w-40 h-40 flex items-center justify-center border border-gray-100 shadow-sm">
                 <img
                   src={DEFAULT_IMAGE_URL}
                   alt="No notifications"
-                  className="object-contain w-32 h-32 rounded-xl transform transition-transform hover:scale-105 duration-300"
+                  className="object-contain w-32 h-32 rounded-lg transform transition-transform hover:scale-105 duration-300"
                 />
-                <div className="absolute inset-0 bg-gradient-to-b from-transparent to-teal-50/50 rounded-2xl"></div>
               </div>
               <Typography
                 className="text-gray-800 font-semibold text-lg"
                 sx={{
-                  textShadow: "0 1px 2px rgba(0,0,0,0.05)",
                   letterSpacing: "0.025em",
                 }}
               >

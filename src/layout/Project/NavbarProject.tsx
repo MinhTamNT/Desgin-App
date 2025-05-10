@@ -14,6 +14,8 @@ import { navElements } from "../../utils";
 import ManageMembersModal from "../../components/MemberRoleModalProps/MemberRoleModalProps";
 import { toast } from "react-toastify";
 import { UPDATE_PROJECT_VISIBILITY } from "../../utils/Project/Project";
+import { useSelector } from "react-redux";
+import { RootState } from "../../Redux/store";
 
 const NavbarProject = ({
   activeElement,
@@ -28,7 +30,10 @@ const NavbarProject = ({
   const [visibility, setVisibility] = useState(projectVisibility);
   const { idProject } = useParams();
   const [updateVisibility, { loading: updatingVisibility }] = useMutation(UPDATE_PROJECT_VISIBILITY);
-
+  
+  const userRole = useSelector(
+      (state: RootState) => state?.role?.role?.userRole
+    );
   const isActive = (value: string | Array<ActiveElement>) =>
     (activeElement && activeElement.value === value) ||
     (Array.isArray(value) &&
@@ -76,6 +81,7 @@ const NavbarProject = ({
         <div className="flex gap-2">
           <button
             onClick={handleOpenManageMembersModal} 
+            disabled = {userRole.isHost === false}
             className="bg-blue-500 uppercase p-2 flex items-center hover:bg-blue-700 text-white font-bold lg:py-2 lg:px-4 rounded shadow-md transition duration-300 ease-in-out transform hover:-translate-y-1 hover:scale-110"
           >
             <GoPlus size={24} />
@@ -86,7 +92,7 @@ const NavbarProject = ({
           <div className="relative inline-block ml-3">
             <button 
               onClick={toggleVisibility}
-              disabled={updatingVisibility}
+              disabled={updatingVisibility || userRole.isHost === false}
               className="relative flex items-center justify-between bg-transparent border border-gray-600 hover:border-white text-white text-sm font-medium px-5 py-2.5 rounded-md transition-all duration-300 overflow-hidden group"
             >
               <div className="flex items-center space-x-2 z-10 relative">

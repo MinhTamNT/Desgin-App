@@ -100,14 +100,13 @@ export const Project = () => {
   } = useQuery(CHECK_PROJECT, {
     variables: { projectId: idProject ?? "" },
   });
-  console.log(projectData);
   const user = useSelector(
     (state: RootState) => state?.user?.user?.currentUser
   );
   const userRole = useSelector(
     (state: RootState) => state?.role?.role?.userRole
   );
-
+  console.log(userRole)
   useEffect(() => {
     if (loadingProjectData) return;
     if (errorProjectData) {
@@ -126,10 +125,9 @@ export const Project = () => {
       if (subscriptionData?.data) {
         const newNotification = subscriptionData.data.notificationCreated;
         console.log("New Notification:", newNotification);
-
         const userIds = newNotification.userRequest.map(
           (idUser: UserRequest) => idUser.idUser === user?.sub
-        );
+        ); 
         const isCheck = userIds.includes(true);
         console.log(isCheck);
         if (isCheck === false) {

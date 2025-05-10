@@ -13,6 +13,7 @@ import {
 import { SEARCH_USER } from "../../utils/User/User";
 import { INVITE_USER } from "../../utils/Inivitation/inivitaton";
 import debounce from "lodash/debounce";
+import { toast } from "react-toastify";
 
 interface Member {
   User: [User & { idUser: string }];
@@ -243,13 +244,17 @@ const ManageMembersModal = ({
 
   const handleInviteUser = async (user: User) => {
     try {
-      await inviteUser({
+     const res =  await inviteUser({
         variables: {
           emailContent: "You are invited to the project",
           projectId: idProject,
           userInvited: user.idUser,
         },
       });
+      console.log(res)
+      if(res?.data?.InvitedUser?.RetCode < 0){
+        toast.error(res?.data?.InvitedUser?.RetMessgae )
+      }
       setSelectedUser(null);
       onClose();
     } catch (error) {
