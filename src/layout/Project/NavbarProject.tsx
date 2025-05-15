@@ -79,49 +79,50 @@ const NavbarProject = ({
     <>
       <nav className="flex select-none flex-wrap items-center justify-between gap-4 bg-[#2c2c2c] shadow-md px-5 py-3 text-black">
         <div className="flex gap-2">
-          <button
+        <button
             onClick={handleOpenManageMembersModal} 
-            disabled = {userRole.isHost === false}
-            className="bg-blue-500 uppercase p-2 flex items-center hover:bg-blue-700 text-white font-bold lg:py-2 lg:px-4 rounded shadow-md transition duration-300 ease-in-out transform hover:-translate-y-1 hover:scale-110"
+            disabled={userRole.isHost === false}
+            className={`
+              flex items-center gap-2 px-4 py-2 rounded 
+              transition-all duration-300 font-medium text-sm
+              ${userRole.isHost 
+                ? "bg-white text-black hover:bg-gray-200" 
+                : "bg-gray-700 text-gray-400 cursor-not-allowed"}
+            `}
           >
-            <GoPlus size={24} />
-            Invite Member
+            <GoPlus size={18} />
+            <span>Invite</span>
           </button>
 
           {/* Project Visibility Toggle */}
-          <div className="relative inline-block ml-3">
-            <button 
-              onClick={toggleVisibility}
-              disabled={updatingVisibility || userRole.isHost === false}
-              className="relative flex items-center justify-between bg-transparent border border-gray-600 hover:border-white text-white text-sm font-medium px-5 py-2.5 rounded-md transition-all duration-300 overflow-hidden group"
-            >
-              <div className="flex items-center space-x-2 z-10 relative">
-                {updatingVisibility ? (
-                  <>
-                    <div className="h-4 w-4 rounded-full border-2 border-t-transparent border-white animate-spin mr-2"></div>
-                    <span>Updating...</span>
-                  </>
-                ) : visibility === "public" ? (
-                  <>
-                    <FaGlobe className="mr-2" size={16} />
-                    <span>Public</span>
-                  </>
-                ) : (
-                  <>
-                    <FaLock className="mr-2" size={16} />
-                    <span>Private</span>
-                  </>
-                )}
-              </div>
-              <div className="h-5 w-5 flex items-center justify-center ml-3 bg-gray-700 rounded-full transition-all duration-300 group-hover:bg-white group-hover:text-black">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="h-3 w-3">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </div>
-              {/* Background animation */}
-              <div className="absolute inset-0 bg-gradient-to-r from-gray-800 to-gray-900 w-0 group-hover:w-full transition-all duration-300 ease-in-out -z-10"></div>
-            </button>
-          </div>
+          <button 
+            onClick={toggleVisibility}
+            disabled={updatingVisibility || userRole.isHost === false}
+            className={`
+              flex items-center gap-2 px-4 py-2 rounded
+              transition-all duration-300 font-medium text-sm
+              ${userRole.isHost && !updatingVisibility 
+                ? "bg-white border border-gray-700 hover:border-white" 
+                : "text-gray-400 cursor-not-allowed"}
+            `}
+          >
+            {updatingVisibility ? (
+              <>
+                <div className="h-4 w-4 rounded-full border-2 border-t-transparent border-white animate-spin"></div>
+                <span>Updating...</span>
+              </>
+            ) : visibility === "public" ? (
+              <>
+                <FaGlobe size={14} />
+                <span>Public</span>
+              </>
+            ) : (
+              <>
+                <FaLock size={14} />
+                <span>Private</span>
+              </>
+            )}
+          </button>
         </div>
 
         <ul className="flex flex-row flex-wrap">

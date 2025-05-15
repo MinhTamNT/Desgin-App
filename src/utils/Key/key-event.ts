@@ -10,7 +10,7 @@ export const handleDelete = (
   if (!activeObjects || activeObjects.length === 0) return;
 
   if (activeObjects.length > 0) {
-    activeObjects.forEach((obj: CustomFabricObject<any>) => {
+    activeObjects.forEach((obj: CustomFabricObject) => {
       if (!obj.objectId) return;
       canvas.remove(obj);
       deleteShapeFromStorage(obj.objectId);
@@ -50,6 +50,10 @@ export const handlePaste = (
   if (clipboardData) {
     try {
       const parsedObjects = JSON.parse(clipboardData);
+      
+      // Determine offset amount (increase for each paste operation)
+      const offsetAmount = 35;
+      
       parsedObjects.forEach((objData: fabric.Object) => {
         // convert the plain javascript objects retrieved from localStorage into fabricjs objects (deserialization)
         fabric.util.enlivenObjects(
@@ -58,11 +62,11 @@ export const handlePaste = (
             enlivenedObjects.forEach((enlivenedObj) => {
               // Offset the pasted objects to avoid overlap with existing objects
               enlivenedObj.set({
-                left: enlivenedObj.left || 0 + 35,
-                top: enlivenedObj.top || 0 + 35,
+                left: (enlivenedObj.left || 0) + offsetAmount,
+                top: (enlivenedObj.top || 0) + offsetAmount,
                 objectId: uuidv4(),
-                fill: "#aabbcc",
-              } as CustomFabricObject<any>);
+                fill: enlivenedObj.fill || "#aabbcc",
+              } as CustomFabricObject);
 
               canvas.add(enlivenedObj);
               syncShapeInStorage(enlivenedObj);

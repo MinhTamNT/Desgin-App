@@ -677,7 +677,16 @@ export const Project = () => {
         projectVisibility={projectData?.checkProject?.visibility || "private"}
       />
       <section className="flex h-full flex-row">
-        <LeftSidebar allShape={Array.from(canvasObjects ?? [])} />
+        <LeftSidebar 
+          allShape={Array.from(canvasObjects ?? []).map(([id, obj]) => [
+            id,
+            {
+              ...obj,
+              objectId: id,
+              type: obj.type || 'unknown'
+            }
+          ])}
+        />
         <Live
           canvasRef={canvasRef}
           role={userRole?.role}
