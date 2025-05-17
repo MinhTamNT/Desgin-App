@@ -28,7 +28,10 @@ export const Dimensions = ({
             key={item.label}
             className="flex flex-1 items-center gap-3 rounded-sm"
           >
-            <Label htmlFor={item.property} className="text-[10px] font-bold">
+            <Label
+              htmlFor={item.property}
+              className="text-[10px] text-white font-bold"
+            >
               {item.label}
             </Label>
             <Input
@@ -36,7 +39,7 @@ export const Dimensions = ({
               id={item.property}
               placeholder="100"
               value={item.property === "width" ? width : height}
-              className="input-ring"
+              className="input-ring text-white"
               min={10}
               onChange={(e: any) =>
                 handleInputChange(item.property, e.target.value)

@@ -106,7 +106,7 @@ export const Project = () => {
   const userRole = useSelector(
     (state: RootState) => state?.role?.role?.userRole
   );
-  console.log(userRole)
+  console.log(userRole);
   useEffect(() => {
     if (loadingProjectData) return;
     if (errorProjectData) {
@@ -127,7 +127,7 @@ export const Project = () => {
         console.log("New Notification:", newNotification);
         const userIds = newNotification.userRequest.map(
           (idUser: UserRequest) => idUser.idUser === user?.sub
-        ); 
+        );
         const isCheck = userIds.includes(true);
         console.log(isCheck);
         if (isCheck === false) {
@@ -667,6 +667,30 @@ export const Project = () => {
     };
   }, [fabricRef]);
 
+  const [zoom, setZoom] = useState(0.5);
+
+  const handleZoomIn = () => {
+    if (fabricRef.current) {
+      const newZoom = Math.min(zoom + 0.1, 3);
+      fabricRef.current.setZoom(newZoom);
+      setZoom(newZoom);
+    }
+  };
+
+  const handleZoomOut = () => {
+    if (fabricRef.current) {
+      const newZoom = Math.max(zoom - 0.1, 0.2);
+      fabricRef.current.setZoom(newZoom);
+      setZoom(newZoom);
+    }
+  };
+
+  useEffect(() => {
+    if (fabricRef.current) {
+      fabricRef.current.setZoom(zoom);
+    }
+  }, [fabricRef, zoom]);
+
   return (
     <main className="h-screen overflow-hidden">
       <NavbarProject
@@ -676,34 +700,45 @@ export const Project = () => {
         imageInputRef={imageInputRef}
         projectVisibility={projectData?.checkProject?.visibility || "private"}
       />
-      <section className="flex h-full flex-row">
-        <LeftSidebar 
-          allShape={Array.from(canvasObjects ?? []).map(([id, obj]) => [
-            id,
-            {
-              ...obj,
-              objectId: id,
-              type: obj.type || 'unknown'
-            }
-          ])}
-        />
-        <Live
-          canvasRef={canvasRef}
-          role={userRole?.role}
-          undo={undo}
-          redo={redo}
-        />
-        <RightSidebar
-          elementAttributes={elementAtrributes}
-          setElementAttributes={setElementAtrributes}
-          fabricRef={fabricRef}
-          activeObjectRef={activeObjectRef}
-          syncShapeInStorage={syncShapeInStorage}
-          isEditingRef={isEditingRef}
-          handleExportDesign={handleExportDesign}
-          handleImportDesign={handleImportDesign}
-        />
-      </section>
+
+      <div className="relative h-[calc(100vh-64px)]">
+        {/* Left Sidebar - Fixed */}
+        <div className="fixed left-0 top-[64px] bottom-0 z-10">
+          <LeftSidebar
+            allShape={Array.from(canvasObjects ?? []).map(([id, obj]) => [
+              id,
+              {
+                ...obj,
+                objectId: id,
+                type: obj.type || "unknown",
+              },
+            ])}
+          />
+        </div>
+
+        {/* Main Content - Live Canvas */}
+        <div className="absolute inset-x-[280px] h-full">
+          <Live
+            canvasRef={canvasRef}
+            role={userRole?.role}
+            undo={undo}
+            redo={redo}
+          />
+        </div>
+
+        <div className="fixed right-0 top-[64px] bottom-0 z-10">
+          <RightSidebar
+            elementAttributes={elementAtrributes}
+            setElementAttributes={setElementAtrributes}
+            fabricRef={fabricRef}
+            activeObjectRef={activeObjectRef}
+            syncShapeInStorage={syncShapeInStorage}
+            isEditingRef={isEditingRef}
+            handleExportDesign={handleExportDesign}
+            handleImportDesign={handleImportDesign}
+          />
+        </div>
+      </div>
 
       <ImageSearchModal
         open={isSearchModalOpen}
@@ -719,6 +754,26 @@ export const Project = () => {
           canvasRef={canvasRef}
         />
       )}
+
+      <div className="fixed bottom-8 right-[290px] z-[100] flex flex-col items-center space-y-2">
+        <button
+          onClick={handleZoomIn}
+          className="w-10 h-10 rounded-full bg-white shadow-lg flex items-center justify-center text-2xl font-bold hover:bg-blue-100 transition"
+          title="Zoom In"
+        >
+          +
+        </button>
+        <span className="bg-white px-3 py-1 rounded shadow text-sm font-semibold">
+          {Math.round(zoom * 100)}%
+        </span>
+        <button
+          onClick={handleZoomOut}
+          className="w-10 h-10 rounded-full bg-white shadow-lg flex items-center justify-center text-2xl font-bold hover:bg-blue-100 transition"
+          title="Zoom Out"
+        >
+          –
+        </button>
+      </div>
     </main>
   );
 };

@@ -8,7 +8,14 @@ import { RightSidebarProps } from "../../type/type";
 import { fabric } from "fabric";
 import { RootState } from "../../Redux/store";
 import SearchImageModal from "../../components/SearchImage/SearchImage";
-import { FaFileExport, FaFileImport, FaImage, FaSlidersH, FaSearch } from "react-icons/fa";
+import {
+  FaFileExport,
+  FaFileImport,
+  FaImage,
+  FaSlidersH,
+  FaSearch,
+  FaRegEye,
+} from "react-icons/fa";
 
 export default function RightSidebar({
   activeObjectRef,
@@ -22,10 +29,12 @@ export default function RightSidebar({
 }: RightSidebarProps) {
   const role = useSelector((state: RootState) => state?.role?.role?.userRole);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'content' | 'importExport' | 'searchImages'>('content');
+  const [activeTab, setActiveTab] = useState<
+    "content" | "importExport" | "searchImages"
+  >("content");
   const handleCloseModal = () => setIsModalOpen(false);
   const importInputRef = useRef<HTMLInputElement>(null);
-  
+
   const handleInputChange = (property: string, value: string) => {
     if (!fabricRef.current) isEditingRef.current = true;
 
@@ -49,7 +58,7 @@ export default function RightSidebar({
       });
     }
   };
-  
+
   const triggerImportInput = () => {
     if (importInputRef.current) {
       importInputRef.current.click();
@@ -57,7 +66,8 @@ export default function RightSidebar({
   };
 
   // Tab styles
-  const tabBaseStyle = "flex-1 py-2 text-center text-sm font-medium transition-all duration-200";
+  const tabBaseStyle =
+    "flex-1 py-3 text-center text-sm font-medium transition-all duration-200";
   const activeTabStyle = `${tabBaseStyle} text-white border-b-2 border-white`;
   const inactiveTabStyle = `${tabBaseStyle} text-gray-400 hover:text-gray-200 border-b-2 border-transparent hover:border-gray-700`;
 
@@ -111,34 +121,11 @@ export default function RightSidebar({
           fontFamily={elementAttributes.fontFamily}
           fontSize={elementAttributes.fontSize}
           fontWeight={elementAttributes.fontWeight}
-          textColor={(elementAttributes as any).textColor || elementAttributes.fill}
-          handleInputChange={handleInputChange}
-        />
-      </div>
-
-      <div className="px-4 py-3 border-b border-[#3a3a3a]/50">
-        <div className="flex items-center mb-2">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-4 w-4 mr-2 text-gray-400"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-          >
-            <path
-              fillRule="evenodd"
-              d="M10 18a1 1 0 01-.64-.23L5.5 14.65a1 1 0 01-.36-.77V3a1 1 0 011-1h8a1 1 0 011 1v10.88a1 1 0 01-.36.77l-3.86 3.12A1 1 0 0110 18z"
-              clipRule="evenodd"
-            />
-          </svg>
-          <h4 className="text-xs font-semibold uppercase tracking-wide text-gray-400">
-            Text Color
-          </h4>
-        </div>
-        <Color
-          inputRef={activeObjectRef}
-          attribute={(elementAttributes as any).textColor || elementAttributes.fill}
-          placeholder="Text Color"
-          attributeType="textColor"
+          textColor={
+            (elementAttributes as any).textColor || elementAttributes.fill
+          }
+          textAlign={elementAttributes.textAlign}
+          backgroundColor={elementAttributes.backgroundColor as any}
           handleInputChange={handleInputChange}
         />
       </div>
@@ -175,30 +162,157 @@ export default function RightSidebar({
   const renderImportExportTab = () => (
     <div className="px-4 py-6">
       <div className="mb-8">
-        <h4 className="text-sm font-semibold mb-3 text-white">Export Design</h4>
-        <p className="text-xs text-gray-400 mb-4">
-          Save your current design to a file for later use or sharing
-        </p>
-        <button
-          onClick={handleExportDesign}
-          className="w-full bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 text-white rounded-md p-3 transition-all flex items-center justify-center font-medium text-sm shadow-md hover:shadow-lg active:scale-[0.98]"
-        >
-          <FaFileExport size={18} className="mr-2" />
-          Export Design
-        </button>
+        <div className="flex items-center mb-4">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center mr-3">
+            <FaFileExport className="text-white" size={16} />
+          </div>
+          <div>
+            <h4 className="text-sm font-semibold text-white">Export Design</h4>
+            <p className="text-xs text-gray-400">
+              Save your design in different formats
+            </p>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <button
+            onClick={handleExportDesign}
+            className="w-full bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 text-white rounded-lg p-3 transition-all flex items-center justify-between font-medium text-sm shadow-md hover:shadow-lg active:scale-[0.98] group"
+          >
+            <div className="flex items-center">
+              <div className="w-8 h-8 rounded-md bg-white/10 flex items-center justify-center mr-3">
+                <FaFileExport className="text-white" size={14} />
+              </div>
+              <span>Export as JSON</span>
+            </div>
+            <span className="text-xs bg-white/10 px-2 py-1 rounded">
+              Editable
+            </span>
+          </button>
+
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              onClick={() => {
+                if (fabricRef.current) {
+                  const dataURL = fabricRef.current.toDataURL({
+                    format: "png",
+                    quality: 1,
+                  });
+                  const link = document.createElement("a");
+                  link.download = "design.png";
+                  link.href = dataURL;
+                  link.click();
+                }
+              }}
+              className="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white rounded-lg p-3 transition-all flex flex-col items-center justify-center font-medium text-sm shadow-md hover:shadow-lg active:scale-[0.98]"
+            >
+              <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center mb-2">
+                <FaImage className="text-white" size={18} />
+              </div>
+              <span>PNG</span>
+              <span className="text-xs text-white/70 mt-1">High Quality</span>
+            </button>
+
+            <button
+              onClick={() => {
+                if (fabricRef.current) {
+                  const dataURL = fabricRef.current.toDataURL({
+                    format: "jpeg",
+                    quality: 0.9,
+                  });
+                  const link = document.createElement("a");
+                  link.download = "design.jpg";
+                  link.href = dataURL;
+                  link.click();
+                }
+              }}
+              className="w-full bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white rounded-lg p-3 transition-all flex flex-col items-center justify-center font-medium text-sm shadow-md hover:shadow-lg active:scale-[0.98]"
+            >
+              <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center mb-2">
+                <FaImage className="text-white" size={18} />
+              </div>
+              <span>JPG</span>
+              <span className="text-xs text-white/70 mt-1">Web Optimized</span>
+            </button>
+          </div>
+
+          <button
+            onClick={() => {
+              if (fabricRef.current) {
+                const dataURL = fabricRef.current.toDataURL({
+                  format: "png",
+                  quality: 1,
+                });
+                const previewWindow = window.open("", "_blank");
+                if (previewWindow) {
+                  previewWindow.document.write(`
+                    <html>
+                      <head>
+                        <title>Design Preview</title>
+                        <style>
+                          body { 
+                            margin: 0; 
+                            display: flex; 
+                            justify-content: center; 
+                            align-items: center; 
+                            min-height: 100vh;
+                            background: #f0f0f0;
+                          }
+                          img { 
+                            max-width: 100%; 
+                            max-height: 100vh;
+                            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                          }
+                        </style>
+                      </head>
+                      <body>
+                        <img src="${dataURL}" alt="Design Preview" />
+                      </body>
+                    </html>
+                  `);
+                  previewWindow.document.close();
+                }
+              }
+            }}
+            className="w-full bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white rounded-lg p-3 transition-all flex items-center justify-between font-medium text-sm shadow-md hover:shadow-lg active:scale-[0.98]"
+          >
+            <div className="flex items-center">
+              <div className="w-8 h-8 rounded-md bg-white/10 flex items-center justify-center mr-3">
+                <FaRegEye className="text-white" size={14} />
+              </div>
+              <span>Preview Design</span>
+            </div>
+            <span className="text-xs bg-white/10 px-2 py-1 rounded">
+              New Window
+            </span>
+          </button>
+        </div>
       </div>
 
-      <div className="pt-4 border-t border-[#3a3a3a]/50">
-        <h4 className="text-sm font-semibold mb-3 text-white">Import Design</h4>
-        <p className="text-xs text-gray-400 mb-4">
-          Import a previously saved design to continue working on it
-        </p>
+      <div className="pt-6 border-t border-[#3a3a3a]/50">
+        <div className="flex items-center mb-4">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center mr-3">
+            <FaFileImport className="text-white" size={16} />
+          </div>
+          <div>
+            <h4 className="text-sm font-semibold text-white">Import Design</h4>
+            <p className="text-xs text-gray-400">
+              Continue working on a saved design
+            </p>
+          </div>
+        </div>
+
         <button
           onClick={triggerImportInput}
-          className="w-full bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white rounded-md p-3 transition-all flex items-center justify-center font-medium text-sm shadow-md hover:shadow-lg active:scale-[0.98]"
+          className="w-full bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white rounded-lg p-3 transition-all flex items-center justify-between font-medium text-sm shadow-md hover:shadow-lg active:scale-[0.98]"
         >
-          <FaFileImport size={18} className="mr-2" />
-          Import Design
+          <div className="flex items-center">
+            <div className="w-8 h-8 rounded-md bg-white/10 flex items-center justify-center mr-3">
+              <FaFileImport className="text-white" size={14} />
+            </div>
+            <span>Import Design</span>
+          </div>
+          <span className="text-xs bg-white/10 px-2 py-1 rounded">JSON</span>
         </button>
 
         <input
@@ -225,47 +339,43 @@ export default function RightSidebar({
         <FaSearch size={18} className="mr-2" />
         Search Images Library
       </button>
-      
+
       <div className="mt-6 p-4 bg-[#222222] rounded-md border border-[#3a3a3a]/50">
         <p className="text-xs text-gray-300 mb-2">
-          <span className="font-semibold">Tip:</span> You can search for images by keywords and categories
+          <span className="font-semibold">Tip:</span> You can search for images
+          by keywords and categories
         </p>
         <p className="text-xs text-gray-400">
-          Images will be added directly to your canvas and can be resized and positioned as needed.
+          Images will be added directly to your canvas and can be resized and
+          positioned as needed.
         </p>
       </div>
     </div>
   );
 
   return (
-    <section className="flex flex-col text-white rounded-lg mt-1 bg-gradient-to-br from-[#2a2a2a] to-[#1a1a1a] shadow-lg border border-[#3a3a3a]/30 min-w-[280px] max-w-sm sm:max-w-[350px] sticky left-0 h-full max-sm:hidden select-none overflow-y-auto pb-20">
+    <section className="h-full w-[280px] bg-gradient-to-br from-[#2a2a2a] to-[#1a1a1a] shadow-lg border-l border-[#3a3a3a]/30">
       {/* Header */}
-      <div className="sticky top-0 bg-[#2a2a2a] z-10 px-4 py-3 border-b border-[#3a3a3a]/50">
+      <div className="sticky top-0 bg-[#2a2a2a] z-10 px-4 py-4 border-b border-[#3a3a3a]/50">
         <h3 className="text-sm font-bold tracking-wide flex items-center">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-4 w-4 mr-2"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-          >
-            <path
-              fillRule="evenodd"
-              d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z"
-              clipRule="evenodd"
-            />
-          </svg>
-          Design Properties
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center mr-3">
+            <FaSlidersH className="text-white" size={16} />
+          </div>
+          <p className="text-sm font-bold tracking-wide text-white">
+            Design Properties
+          </p>
         </h3>
-        <p className="text-xs text-gray-400 mt-1">
+        <p className="text-xs text-gray-400 mt-1 ml-11">
           Customize your selected element
         </p>
       </div>
 
-      {/* Tab Navigation */}
-      <div className="sticky top-[69px] bg-[#222] z-10 flex border-b border-[#3a3a3a]">
+      <div className="sticky top-[85px] bg-[#222] z-10 flex border-b border-[#3a3a3a]">
         <button
-          className={activeTab === 'content' ? activeTabStyle : inactiveTabStyle}
-          onClick={() => setActiveTab('content')}
+          className={
+            activeTab === "content" ? activeTabStyle : inactiveTabStyle
+          }
+          onClick={() => setActiveTab("content")}
         >
           <div className="flex items-center justify-center">
             <FaSlidersH className="mr-1.5" size={12} />
@@ -273,8 +383,10 @@ export default function RightSidebar({
           </div>
         </button>
         <button
-          className={activeTab === 'importExport' ? activeTabStyle : inactiveTabStyle}
-          onClick={() => setActiveTab('importExport')}
+          className={
+            activeTab === "importExport" ? activeTabStyle : inactiveTabStyle
+          }
+          onClick={() => setActiveTab("importExport")}
         >
           <div className="flex items-center justify-center">
             <FaFileExport className="mr-1.5" size={12} />
@@ -282,8 +394,10 @@ export default function RightSidebar({
           </div>
         </button>
         <button
-          className={activeTab === 'searchImages' ? activeTabStyle : inactiveTabStyle}
-          onClick={() => setActiveTab('searchImages')}
+          className={
+            activeTab === "searchImages" ? activeTabStyle : inactiveTabStyle
+          }
+          onClick={() => setActiveTab("searchImages")}
         >
           <div className="flex items-center justify-center">
             <FaImage className="mr-1.5" size={12} />
@@ -293,10 +407,10 @@ export default function RightSidebar({
       </div>
 
       {/* Tab Content */}
-      <div className="flex-1 overflow-y-auto">
-        {activeTab === 'content' && renderContentTab()}
-        {activeTab === 'importExport' && renderImportExportTab()}
-        {activeTab === 'searchImages' && renderSearchImagesTab()}
+      <div className="flex-1 mr-[-10px] overflow-y-auto">
+        {activeTab === "content" && renderContentTab()}
+        {activeTab === "importExport" && renderImportExportTab()}
+        {activeTab === "searchImages" && renderSearchImagesTab()}
       </div>
 
       {isModalOpen && <SearchImageModal onClose={handleCloseModal} />}

@@ -4,7 +4,7 @@ import {
   useMyPresence,
   useOthers,
 } from "@liveblocks/react/suspense";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState, useRef } from "react";
 import { useInterval } from "../../hook/useInterval";
 import {
   CursorMode,
@@ -24,10 +24,7 @@ import {
 } from "@radix-ui/react-context-menu";
 import { shortcuts } from "../../utils";
 import { Comments } from "../CommentOverPlay/Comments";
-import { useMutation } from "@apollo/client";
-import { ADD_COMMENT } from "../../utils/Comment/Comment";
-import { useSelector } from "react-redux";
-import { RootState } from "../../Redux/store";
+
 import "reactflow/dist/style.css";
 interface Props {
   canvasRef: React.MutableRefObject<HTMLCanvasElement | null>;
@@ -39,69 +36,17 @@ interface Props {
 export const Live = ({ canvasRef, role, undo, redo }: Props) => {
   const others = useOthers();
   const [{ cursor }, updatePersence] = useMyPresence() as any;
-  const [isCommenting, setIsCommenting] = useState(false);
-  const [commentPosition, setCommentPosition] = useState<{
-    x: number;
-    y: number;
-  } | null>(null);
-  const [newComment, setNewComment] = useState("");
+  const containerRef = useRef<HTMLDivElement>(null);
+
   const [cursorState, setCursorState] = useState<CursorState>({
     mode: CursorMode.Hidden,
   });
-  const [addComment] = useMutation(ADD_COMMENT);
+
   const [reactions, setReactions] = useState<Reaction[]>([]);
-  const [showCreatePageModal, setShowCreatePageModal] = useState(false);
-  const [pageName, setPageName] = useState("");
-  const [pageContent, setPageContent] = useState("");
-  const currentUser = useSelector(
-    (state: RootState) => state.user.user.currentUser
-  );
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (role === "ROLE_READ") return;
-      
-      if (e.key === "c" || e.key === "C") {
-        setIsCommenting(true);
-        setCommentPosition({
-          x: window.innerWidth / 2,
-          y: window.innerHeight / 2,
-        }); // Hiển thị ở giữa màn hình
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [role]);
-
-  const handleKeyDownInInput = async (e: React.KeyboardEvent) => {
-    if (role === "ROLE_READ") return;
-    
-    if (e.key === "Enter" && newComment.trim() !== "") {
-      console.log("New comment:", newComment, "at position:", commentPosition);
-      const x = commentPosition?.x;
-      const y = commentPosition?.y;
-      await addComment({
-        variables: {
-          content: newComment,
-          x: x,
-          y: y,
-          userId: currentUser?.sub,
-        },
-      });
-
-      setIsCommenting(false);
-      setNewComment("");
-      setCommentPosition(null);
-    }
-  };
 
   const handlePointerMove = useCallback(
     (event: React.PointerEvent) => {
       event.preventDefault();
-      // Cho phép cập nhật vị trí con trỏ ngay cả với ROLE_READ để người dùng khác có thể thấy
       if (cursor === null || cursorState.mode !== CursorMode.ReactionSelector) {
         const x = event.clientX - event.currentTarget.getBoundingClientRect().x;
         const y = event.clientY - event.currentTarget.getBoundingClientRect().y;
@@ -235,39 +180,44 @@ export const Live = ({ canvasRef, role, undo, redo }: Props) => {
     ]);
   });
 
-  const handleContextMenuClick = useCallback((key: string) => {
-    if (role === "ROLE_READ" && (key === "Undo" || key === "Redo" || key === "Chat" || key === "Reactions")) {
-      return; 
-    }
-    
-    console.log(key);
-    switch (key) {
-      case "Chat":
-        setCursorState({
-          mode: CursorMode.Chat,
-          previousMessage: null,
-          message: "",
-        });
-        break;
-      case "Undo":
-        undo();
-        break;
-      case "Redo":
-        redo();
-        break;
-      case "Reactions":
-        setCursorState({
-          mode: CursorMode.ReactionSelector,
-        });
-        break;
-      default:
-        break;
-    }
-  }, [role, undo, redo]);
+  const handleContextMenuClick = useCallback(
+    (key: string) => {
+      if (
+        role === "ROLE_READ" &&
+        (key === "Undo" ||
+          key === "Redo" ||
+          key === "Chat" ||
+          key === "Reactions")
+      ) {
+        return;
+      }
 
-  const handleEmojiClick = (emojiObject: any) => {
-    setNewComment((prev) => prev + emojiObject.emoji); 
-  };
+      console.log(key);
+      switch (key) {
+        case "Chat":
+          setCursorState({
+            mode: CursorMode.Chat,
+            previousMessage: null,
+            message: "",
+          });
+          break;
+        case "Undo":
+          undo();
+          break;
+        case "Redo":
+          redo();
+          break;
+        case "Reactions":
+          setCursorState({
+            mode: CursorMode.ReactionSelector,
+          });
+          break;
+        default:
+          break;
+      }
+    },
+    [role, undo, redo]
+  );
 
   useEffect(() => {
     if (role === "ROLE_READ") {
@@ -284,6 +234,53 @@ export const Live = ({ canvasRef, role, undo, redo }: Props) => {
     }
   }, [role, canvasRef]);
 
+  // Thêm biến để theo dõi trạng thái hoạt động
+  const [isActive, setIsActive] = useState(false);
+
+  // Cập nhật khi có tương tác với canvas
+  useEffect(() => {
+    const handleActivity = () => {
+      setIsActive(true);
+      // Tự động reset sau một khoảng thời gian
+      setTimeout(() => setIsActive(false), 200);
+    };
+
+    window.addEventListener("mousemove", handleActivity);
+    window.addEventListener("mousedown", handleActivity);
+    window.addEventListener("keydown", handleActivity);
+    window.addEventListener("touchstart", handleActivity);
+    window.addEventListener("touchmove", handleActivity);
+
+    return () => {
+      window.removeEventListener("mousemove", handleActivity);
+      window.removeEventListener("mousedown", handleActivity);
+      window.removeEventListener("keydown", handleActivity);
+      window.removeEventListener("touchstart", handleActivity);
+      window.removeEventListener("touchmove", handleActivity);
+    };
+  }, []);
+
+  useInterval(() => {
+    if (isActive && cursor) {
+      updatePersence({
+        cursor: { x: cursor.x, y: cursor.y },
+      });
+    }
+  }, 50);
+
+  useEffect(() => {
+    if (canvasRef.current && containerRef.current) {
+      const resizeCanvas = () => {
+        const rect = containerRef.current!.getBoundingClientRect();
+        canvasRef.current!.width = rect.width;
+        canvasRef.current!.height = rect.height;
+      };
+      resizeCanvas();
+      window.addEventListener("resize", resizeCanvas);
+      return () => window.removeEventListener("resize", resizeCanvas);
+    }
+  }, [canvasRef]);
+
   return (
     <ContextMenu>
       <ContextMenuTrigger
@@ -292,65 +289,82 @@ export const Live = ({ canvasRef, role, undo, redo }: Props) => {
         onPointerLeave={handlePointerLeave}
         onPointerDown={handlePointerDown}
         onPointerUp={handlePointerUp}
-        className="relative flex h-full w-full items-center"
+        className="relative flex h-screen w-screen items-center justify-center overflow-hidden"
       >
         {role === "ROLE_READ" && (
           <div className="absolute top-4 right-4 z-50 bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-medium">
             Chế độ chỉ xem
           </div>
         )}
-        <div
-          className="relative w-full h-full"
-          style={{
-            backgroundImage: `
-              linear-gradient(to right, rgba(224, 224, 224, 0.8) 1px, transparent 1px),
-              linear-gradient(to bottom, rgba(224, 224, 224, 0.8) 1px, transparent 1px)
-            `,
-            backgroundSize: "5px 5px",
-            backgroundColor: "#f9f9f9",
-            boxShadow: "inset 0 0 10px rgba(0, 0, 0, 0.1)",
-          }}
-        >
-          <canvas ref={canvasRef} className="w-full h-full" />
-        </div>
-        {reactions.map((reaction) => (
-          <FlyingReaction
-            key={reaction.timestamp.toString()}
-            x={reaction.point.x}
-            y={reaction.point.y}
-            timestamp={reaction.timestamp}
-            value={reaction.value}
-          />
-        ))}
-        {cursor && (
-          <CursorChat
-            cursor={cursor}
-            cursorState={cursorState}
-            setCursorState={setCursorState}
-            updateMyPresence={updatePersence}
-          />
-        )}
-        {cursorState.mode === CursorMode.ReactionSelector &&
-          role !== "ROLE_READ" && (
-            <ReactionSelector setReaction={setReaction} />
+        <div ref={containerRef} className="w-full h-full relative">
+          <div
+            className="relative w-full h-full min-h-screen"
+            style={{
+              backgroundImage: `
+                linear-gradient(to right, rgba(0,0,0,0.04) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(0,0,0,0.04) 1px, transparent 1px),
+                radial-gradient(circle at 50% 50%, rgba(0,0,0,0.03) 0%, transparent 60%)
+              `,
+              backgroundSize: "20px 20px, 20px 20px, 100% 100%",
+              backgroundColor: "#f7f7f9",
+              boxShadow: "inset 0 0 40px rgba(0,0,0,0.07)",
+            }}
+          >
+            <canvas
+              ref={canvasRef}
+              className="absolute inset-0 w-full h-full"
+            />
+          </div>
+          {reactions.map((reaction) => (
+            <FlyingReaction
+              key={reaction.timestamp.toString()}
+              x={reaction.point.x}
+              y={reaction.point.y}
+              timestamp={reaction.timestamp}
+              value={reaction.value}
+            />
+          ))}
+          {cursor && (
+            <CursorChat
+              cursor={cursor}
+              cursorState={cursorState}
+              setCursorState={setCursorState}
+              updateMyPresence={updatePersence}
+            />
           )}
-        <LiveCursor others={others} />
-        <Comments />
+          {cursorState.mode === CursorMode.ReactionSelector &&
+            role !== "ROLE_READ" && (
+              <ReactionSelector setReaction={setReaction} />
+            )}
+          <LiveCursor others={others} />
+          <Comments />
+        </div>
       </ContextMenuTrigger>
       <ContextMenuContent className="right-menu-content bg-white border border-gray-200 shadow-lg rounded-lg p-2 w-64">
         {shortcuts.map((shortcut) => {
-          const isDisabled = role === "ROLE_READ" && 
-            (shortcut.name === "Undo" || shortcut.name === "Redo" || 
-             shortcut.name === "Chat" || shortcut.name === "Reactions");
-          
+          const isDisabled =
+            role === "ROLE_READ" &&
+            (shortcut.name === "Undo" ||
+              shortcut.name === "Redo" ||
+              shortcut.name === "Chat" ||
+              shortcut.name === "Reactions");
+
           return (
             <ContextMenuItem
               key={shortcut.key}
-              className={`right-menu-item flex items-center justify-between p-2 rounded-lg hover:bg-gray-100 transition-all duration-200 ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-              onClick={() => !isDisabled && handleContextMenuClick(shortcut.name)}
+              className={`right-menu-item flex items-center justify-between p-2 rounded-lg hover:bg-gray-100 transition-all duration-200 ${
+                isDisabled ? "opacity-50 cursor-not-allowed" : ""
+              }`}
+              onClick={() =>
+                !isDisabled && handleContextMenuClick(shortcut.name)
+              }
               disabled={isDisabled}
             >
-              <span className={`right-menu-name font-medium ${isDisabled ? 'text-gray-400' : 'text-gray-800'}`}>
+              <span
+                className={`right-menu-name font-medium ${
+                  isDisabled ? "text-gray-400" : "text-gray-800"
+                }`}
+              >
                 {shortcut.name}
               </span>
               <span className="right-menu-shortcut text-xs text-gray-500">

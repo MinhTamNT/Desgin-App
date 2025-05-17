@@ -58,16 +58,23 @@ export const createLine = (pointer: PointerEvent) => {
 };
 
 export const createText = (pointer: PointerEvent, text: string) => {
-  return new fabric.IText(text, {
+  return new fabric.Textbox(text, {
     left: pointer.x,
     top: pointer.y,
     fill: "#3a3a3a",
     fontFamily: "Helvetica",
     fontSize: 36,
     fontWeight: "400",
+    lineHeight: 1.2,
+    charSpacing: 0,
+    width: 200,
+    splitByGrapheme: false,
+    textAlign: "left",
+    backgroundColor: "transparent",
     shadow: new fabric.Shadow({ color: 'rgba(0,0,0,0.2)', blur: 2, offsetX: 1, offsetY: 1 }),
     objectId: uuidv4(),
-  } as fabric.ITextOptions);
+    name: "Text"
+  } as fabric.TextboxOptions);
 };
 
 export const createSpecificShape = (

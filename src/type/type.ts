@@ -56,6 +56,8 @@ export type Attributes = {
   fontWeight: string;
   fill: string;
   stroke: string;
+  textAlign?: string;
+  name?: string;
 };
 
 export type ActiveElement = {
@@ -64,7 +66,7 @@ export type ActiveElement = {
   icon: string;
 } | null;
 
-export interface CustomFabricObject extends fabric.Object {
+export interface CustomFabricObject<T extends fabric.Object = fabric.Object> extends T {
   objectId?: string;
   locked?: boolean;
 }

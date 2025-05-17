@@ -15,7 +15,12 @@ import {
 import { defaultNavElement } from "./defaultNavElement";
 import { createSpecificShape } from "./shape";
 
-// initialize fabric canvas
+let clickCount = 0;
+let lastClickedObject: fabric.Object | null = null;
+let dimensionTooltip: fabric.Text | null = null;
+let clickTimer: NodeJS.Timeout | null = null;
+const DOUBLE_CLICK_TIMEOUT = 300; // ms
+
 export const initializeFabric = ({
   fabricRef,
   canvasRef,
@@ -28,11 +33,8 @@ export const initializeFabric = ({
   const canvas = new fabric.Canvas(canvasRef.current, {
     width: canvasElement?.clientWidth,
     height: canvasElement?.clientHeight,
-    // Improve selection and movement behavior
     preserveObjectStacking: true,
-    // Enable uniform scaling with shift key
     uniformScaling: true,
-    // Improve selection controls
     centeredScaling: true,
     centeredRotation: true,
   });
@@ -84,7 +86,8 @@ export const handleCanvasMouseDown = ({
   if (
     target &&
     (target.type === selectedShapeRef.current ||
-      target.type === "activeSelection")
+      target.type === "activeSelection" || 
+      ["rect", "triangle", "circle", "image", "line", "path", "i-text", "text"].includes(target.type || ""))
   ) {
     // Kiểm tra xem đối tượng có bị khóa không
     // @ts-ignore - chúng ta đã thêm thuộc tính locked vào CustomFabricObject
@@ -107,8 +110,111 @@ export const handleCanvasMouseDown = ({
      * setCoords: http://fabricjs.com/docs/fabric.Object.html#setCoords
      */
     target.setCoords();
+    
+    // Xử lý hiển thị kích thước khi click vào đối tượng
+    if (lastClickedObject === target) {
+      // Nếu đây là cùng một đối tượng, tăng số lần click
+      if (clickTimer) {
+        clearTimeout(clickTimer);
+        clickTimer = null;
+        clickCount++;
+        
+        // Xử lý double click để nhập text
+        if (clickCount === 2) {
+          // Chuyển đối tượng thành IText nếu nó không phải là IText
+          if (target.type !== 'i-text' && target.type !== 'textbox') {
+            const centerX = target.left;
+            const centerY = target.top;
+            const bounds = target.getBoundingRect();
+            const width = bounds.width;
+            const height = bounds.height;
+            
+            const textbox = new fabric.Textbox('Nhập văn bản...', {
+              left: centerX,
+              top: centerY,
+              fontSize: 20,
+              fill: '#000000',
+              originY: 'center',
+              originX: 'center',  
+              objectId: uuid4(),
+              width: width,
+              splitByGrapheme: false,
+              textAlign: 'left',
+              name: "Text"
+            });
+            
+            canvas.add(textbox);
+            canvas.setActiveObject(textbox);
+            textbox.enterEditing();
+            
+            // Xóa tooltip kích thước nếu có
+            if (dimensionTooltip) {
+              canvas.remove(dimensionTooltip);
+              dimensionTooltip = null;
+            }
+          } else if (target.type === 'i-text' || target.type === 'textbox') {
+            // Nếu đã là IText, cho phép chỉnh sửa
+            (target as fabric.IText).enterEditing();
+            
+            // Xóa tooltip kích thước nếu có
+            if (dimensionTooltip) {
+              canvas.remove(dimensionTooltip);
+              dimensionTooltip = null;
+            }
+          }
+          
+          // Reset click count
+          clickCount = 0;
+        }
+      } else {
+        // Đặt timer để xử lý single click nếu không có double click
+        clickTimer = setTimeout(() => {
+          if (clickCount === 1) {
+            // Hiển thị kích thước khi click một lần
+            showDimensionTooltip(target, canvas);
+          }
+          clickCount = 0;
+          clickTimer = null;
+        }, DOUBLE_CLICK_TIMEOUT);
+      }
+    } else {
+      // Đây là một đối tượng mới
+      lastClickedObject = target;
+      clickCount = 1;
+      
+      // Xóa tooltip cũ nếu có
+      if (dimensionTooltip) {
+        canvas.remove(dimensionTooltip);
+        dimensionTooltip = null;
+      }
+      
+      // Đặt timer để xử lý single click
+      if (clickTimer) clearTimeout(clickTimer);
+      clickTimer = setTimeout(() => {
+        if (clickCount === 1) {
+          // Hiển thị kích thước khi click một lần
+          showDimensionTooltip(target, canvas);
+        }
+        clickCount = 0;
+        clickTimer = null;
+      }, DOUBLE_CLICK_TIMEOUT);
+    }
   } else {
     isDrawing.current = true;
+
+    // Xóa tooltip cũ nếu có
+    if (dimensionTooltip) {
+      canvas.remove(dimensionTooltip);
+      dimensionTooltip = null;
+    }
+    
+    // Reset click state khi click vào vùng trống
+    lastClickedObject = null;
+    clickCount = 0;
+    if (clickTimer) {
+      clearTimeout(clickTimer);
+      clickTimer = null;
+    }
 
     // create custom fabric object/shape and set it to shapeRef
     shapeRef.current = createSpecificShape(
@@ -128,6 +234,43 @@ export const handleCanvasMouseDown = ({
     }
   }
 };
+
+// Hàm hiển thị kích thước
+function showDimensionTooltip(target: fabric.Object, canvas: fabric.Canvas) {
+  // Xóa tooltip cũ nếu có
+  if (dimensionTooltip) {
+    canvas.remove(dimensionTooltip);
+  }
+  
+  // Lấy kích thước của đối tượng
+  const bounds = target.getBoundingRect();
+  const width = Math.round(bounds.width);
+  const height = Math.round(bounds.height);
+  
+  // Tạo tooltip hiển thị kích thước
+  dimensionTooltip = new fabric.Text(`${width} × ${height}`, {
+    left: target.left,
+    top: target.top - (bounds.height / 2) - 20,
+    fontSize: 14,
+    fill: '#ffffff',
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    padding: 5,
+    originX: 'center',
+    originY: 'center'
+  });
+  
+  canvas.add(dimensionTooltip);
+  canvas.renderAll();
+  
+  // Tự động ẩn tooltip sau 3 giây
+  setTimeout(() => {
+    if (dimensionTooltip) {
+      canvas.remove(dimensionTooltip);
+      dimensionTooltip = null;
+      canvas.renderAll();
+    }
+  }, 3000);
+}
 
 // handle mouse move event on canvas to draw shapes with different dimensions
 export const handleCanvaseMouseMove = ({
@@ -327,6 +470,7 @@ export const handleCanvasObjectMoving = ({
   // Render the canvas for smooth movement
   target.canvas?.renderAll();
 };
+
 // set element attributes when element is selected
 export const handleCanvasSelectionCreated = ({
   options,

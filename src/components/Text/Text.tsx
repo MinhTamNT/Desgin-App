@@ -11,12 +11,15 @@ import {
 } from "../../utils/index";
 import { TwitterPicker } from "react-color";
 import { useState } from "react";
+import { FaAlignLeft, FaAlignCenter, FaAlignRight } from "react-icons/fa";
 
 type TextProps = {
   fontFamily: string;
   fontSize: string;
   fontWeight: string;
   textColor?: string;
+  textAlign?: string;
+  backgroundColor?: string;
   handleInputChange: (property: string, value: string) => void;
 };
 
@@ -25,13 +28,21 @@ const Text = ({
   fontSize,
   fontWeight,
   textColor,
+  textAlign = "left",
+  backgroundColor,
   handleInputChange,
 }: TextProps) => {
   const [showColorPicker, setShowColorPicker] = useState(false);
+  const [showBgColorPicker, setShowBgColorPicker] = useState(false);
 
   const handleTextColorChange = (color: any) => {
     handleInputChange("textColor", color.hex);
     setShowColorPicker(false);
+  };
+
+  const handleBgColorChange = (color: any) => {
+    handleInputChange("backgroundColor", color.hex);
+    setShowBgColorPicker(false);
   };
 
   return (
@@ -134,6 +145,55 @@ const Text = ({
           </FormControl>
         </div>
 
+        {/* Text Alignment Controls */}
+        <div className="mt-2">
+          <InputLabel 
+            sx={{ 
+              fontSize: '12px',
+              color: 'rgba(255, 255, 255, 0.7)',
+              transform: 'none',
+              marginBottom: '4px'
+            }}
+          >
+            Text Alignment
+          </InputLabel>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              className={`flex-1 py-2 flex items-center justify-center rounded-md transition-all ${
+                textAlign === "left"
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+              }`}
+              onClick={() => handleInputChange("textAlign", "left")}
+            >
+              <FaAlignLeft />
+            </button>
+            <button
+              type="button"
+              className={`flex-1 py-2 flex items-center justify-center rounded-md transition-all ${
+                textAlign === "center"
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+              }`}
+              onClick={() => handleInputChange("textAlign", "center")}
+            >
+              <FaAlignCenter />
+            </button>
+            <button
+              type="button"
+              className={`flex-1 py-2 flex items-center justify-center rounded-md transition-all ${
+                textAlign === "right"
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+              }`}
+              onClick={() => handleInputChange("textAlign", "right")}
+            >
+              <FaAlignRight />
+            </button>
+          </div>
+        </div>
+
         {/* Text Color Picker */}
         <div className="mt-2">
           <InputLabel 
@@ -171,6 +231,48 @@ const Text = ({
                 color={textColor || '#ffffff'} 
                 onChange={handleTextColorChange}
                 colors={['#000000', '#ffffff', '#F44336', '#E91E63', '#9C27B0', '#673AB7', '#3F51B5', '#2196F3', '#03A9F4', '#00BCD4', '#009688', '#4CAF50', '#8BC34A', '#CDDC39', '#FFEB3B', '#FFC107', '#FF9800', '#FF5722', '#795548', '#607D8B']}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Background Color Picker */}
+        <div className="mt-4">
+          <InputLabel 
+            sx={{ 
+              fontSize: '12px',
+              color: 'rgba(255, 255, 255, 0.7)',
+              transform: 'none',
+              marginBottom: '4px'
+            }}
+          >
+            Background Color
+          </InputLabel>
+          <div 
+            className="w-full h-10 flex items-center px-3 cursor-pointer rounded"
+            style={{ 
+              backgroundColor: 'rgba(0, 0, 0, 0.5)',
+              border: '1px solid rgba(255, 255, 255, 0.2)'
+            }}
+            onClick={() => setShowBgColorPicker(!showBgColorPicker)}
+          >
+            <div 
+              className="w-5 h-5 rounded-sm mr-2" 
+              style={{ backgroundColor: backgroundColor || 'transparent' }}
+            />
+            <span className="text-xs text-white">{backgroundColor || 'transparent'}</span>
+          </div>
+          
+          {showBgColorPicker && (
+            <div className="absolute z-10 mt-1">
+              <div 
+                className="fixed inset-0" 
+                onClick={() => setShowBgColorPicker(false)}
+              />
+              <TwitterPicker 
+                color={backgroundColor || 'transparent'} 
+                onChange={handleBgColorChange}
+                colors={['transparent', '#000000', '#ffffff', '#F44336', '#E91E63', '#9C27B0', '#673AB7', '#3F51B5', '#2196F3', '#03A9F4', '#00BCD4', '#009688', '#4CAF50', '#8BC34A', '#CDDC39', '#FFEB3B', '#FFC107', '#FF9800', '#FF5722', '#795548', '#607D8B']}
               />
             </div>
           )}
