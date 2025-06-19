@@ -74,7 +74,7 @@ export const createText = (pointer: PointerEvent, text: string) => {
     shadow: new fabric.Shadow({ color: 'rgba(0,0,0,0.2)', blur: 2, offsetX: 1, offsetY: 1 }),
     objectId: uuidv4(),
     name: "Text"
-  } as fabric.TextboxOptions);
+  } as fabric.ITextOptions);
 };
 
 export const createSpecificShape = (
@@ -174,6 +174,13 @@ export const modifyShape = ({
 
   activeObjectRef.current = selectedElement;
 
+  selectedElement.dirty = true;
+  selectedElement.setCoords();
+
+  canvas.fire("object:modified", { target: selectedElement });
+
+  canvas.requestRenderAll();
+  
   syncShapeInStorage(selectedElement);
 };
 
@@ -184,20 +191,15 @@ export const bringElement = ({
 }: ElementDirection) => {
   if (!canvas) return;
 
-  // get the selected element. If there is no selected element or there are more than one selected element, return
   const selectedElement = canvas.getActiveObject();
 
   if (!selectedElement || selectedElement?.type === "activeSelection") return;
 
-  // bring the selected element to the front
   if (direction === "front") {
     canvas.bringToFront(selectedElement);
   } else if (direction === "back") {
     canvas.sendToBack(selectedElement);
   }
 
-  // canvas.renderAll();
   syncShapeInStorage(selectedElement);
-
-  // re-render all objects on the canvas
 };

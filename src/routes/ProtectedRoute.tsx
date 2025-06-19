@@ -25,7 +25,7 @@ export const ProtectedRoute = () => {
   useGraphQLSubscription(token as string);
 
   if (!token || isTokenExpired(token)) {
-    return <Navigate to="/auth" />;
+    return <Navigate to="/login" />;
   }
 
   if (typeof user === "undefined") {
@@ -33,7 +33,7 @@ export const ProtectedRoute = () => {
   }
 
   if (!user) {
-    return <Navigate to="/auth" />;
+    return <Navigate to="/login" />;
   }
 
   return (

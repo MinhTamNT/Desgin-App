@@ -18,7 +18,7 @@ const publicKey = import.meta.env.VITE_LIVE_BLOCK;
 
 export const AuthLayout: React.FC = () => {
   const location = useLocation();
-  const isLoginPage = location.pathname === "/auth";
+  const isLoginPage = location.pathname === "/login";
   const isProjectPage = location.pathname.startsWith("/project/");
   const isPermisionPage = location.pathname.startsWith("/permision");
   const projectPath = isProjectPage
@@ -28,7 +28,7 @@ export const AuthLayout: React.FC = () => {
 
   return (
     <GoogleOAuthProvider clientId={clientId || ""}>
-      <LiveblocksProvider publicApiKey={publicKey}>
+      <LiveblocksProvider publicApiKey={publicKey} throttle={100}>
         <Room idRoom={projectPath}>
           <Provider store={store}>
             <PersistGate loading={null} persistor={persistor}>

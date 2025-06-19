@@ -232,7 +232,7 @@ export const Header = () => {
     cookie.remove("access_token");
     dispatch(clearUser());
     persistor.purge().then(() => {
-      navigate("/auth");
+      navigate("/login");
     });
   };
 
